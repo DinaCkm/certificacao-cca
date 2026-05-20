@@ -4,16 +4,16 @@ import { Link } from "wouter";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-3">
+      <div className="max-w-5xl mx-auto">
         {/* Header */}
-        <div className="mb-12 text-center">
-          <h1 className="text-4xl font-bold text-blue-900 mb-2">ANEFAC CCA</h1>
-          <p className="text-xl text-gray-600">Protótipo - Sistema de Certificação</p>
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold text-blue-900 mb-1">ANEFAC CCA</h1>
+          <p className="text-sm text-gray-600">Protótipo - Sistema de Certificação</p>
         </div>
 
         {/* Navigation Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
           {[
             { step: 1, title: "Escolha da Jornada", desc: "Selecione o tipo de certificação" },
             { step: 2, title: "Perfil Profissional", desc: "Preencha seus dados profissionais" },
@@ -27,14 +27,14 @@ export default function Home() {
           ].map((item) => (
             <Link key={item.step} href={`/step-${item.step}`}>
               <a>
-                <Card className="p-6 hover:shadow-lg transition-all cursor-pointer border-2 border-blue-900/20 hover:border-blue-900">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-blue-900 text-white rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0">
+                <Card className="p-4 hover:shadow-md transition-all cursor-pointer border-2 border-blue-900/20 hover:border-blue-900">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-blue-900 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">
                       {item.step}
                     </div>
                     <div>
-                      <h3 className="font-bold text-lg text-blue-900">{item.title}</h3>
-                      <p className="text-sm text-gray-600">{item.desc}</p>
+                      <h3 className="font-bold text-sm text-blue-900">{item.title}</h3>
+                      <p className="text-xs text-gray-600">{item.desc}</p>
                     </div>
                   </div>
                 </Card>
@@ -44,9 +44,9 @@ export default function Home() {
         </div>
 
         {/* Test Links */}
-        <div className="mb-8 p-4 bg-amber-50 border-2 border-amber-300 rounded">
-          <p className="text-sm text-amber-900 font-semibold mb-3">Links de Teste Rápido:</p>
-          <div className="flex flex-wrap gap-3">
+        <div className="mb-6 p-3 bg-amber-50 border-2 border-amber-300 rounded">
+          <p className="text-xs text-amber-900 font-semibold mb-2">Links de Teste Rápido:</p>
+          <div className="flex flex-wrap gap-2">
             <Link href="/courses-platform?recovery=true">
               <a className="text-blue-600 hover:underline text-sm">Cursos de Recuperação</a>
             </Link>
@@ -60,9 +60,9 @@ export default function Home() {
         </div>
 
         {/* Info Box */}
-        <Card className="p-6 bg-blue-50 border-2 border-blue-200">
-          <h3 className="font-bold text-blue-900 mb-2">Sobre o Protótipo</h3>
-          <p className="text-gray-700">
+        <Card className="p-4 bg-blue-50 border-2 border-blue-200">
+          <h3 className="font-bold text-sm text-blue-900 mb-1">Sobre o Protótipo</h3>
+          <p className="text-sm text-gray-700">
             Este é um protótipo navegável que demonstra o fluxo completo do sistema de certificação CCA. 
             Clique em qualquer etapa acima para explorar a jornada do usuário.
           </p>

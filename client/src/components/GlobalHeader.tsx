@@ -10,17 +10,20 @@ import {
 
 export function GlobalHeader() {
   return (
-    <header className="bg-blue-900 text-white py-4 px-4 shadow-lg">
+    <header className="bg-gradient-to-r from-blue-900 to-blue-800 text-white py-3 px-4 shadow-md">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <Link href="/">
-          <a className="font-bold text-xl hover:text-blue-100">ANEFAC CCA</a>
+          <a className="flex items-center gap-3 hover:opacity-90 transition">
+            <img src="/manus-storage/anefac-logo_c90af10a.jpg" alt="ANEFAC" className="h-10" />
+            <span className="font-semibold text-sm">CCA</span>
+          </a>
         </Link>
 
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           {/* Tutoriais */}
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" className="text-white border-white hover:bg-blue-800">
+              <Button variant="outline" size="sm" className="text-white border-white hover:bg-blue-800 text-xs">
                 📚 Tutoriais
               </Button>
             </DialogTrigger>
@@ -54,7 +57,7 @@ export function GlobalHeader() {
           {/* Fale Conosco */}
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" className="text-white border-white hover:bg-blue-800">
+              <Button variant="outline" size="sm" className="text-white border-white hover:bg-blue-800 text-xs">
                 💬 Fale Conosco
               </Button>
             </DialogTrigger>
@@ -82,8 +85,8 @@ export function GlobalHeader() {
           {/* LGPD */}
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" className="text-white border-white hover:bg-blue-800">
-                🔒 LGPD
+              <Button variant="outline" size="sm" className="text-white border-white hover:bg-blue-800 text-xs">
+                🔐 LGPD
               </Button>
             </DialogTrigger>
             <DialogContent className="max-h-96 overflow-y-auto">
