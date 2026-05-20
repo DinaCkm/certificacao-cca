@@ -511,12 +511,15 @@ export function Step4() {
         </ul>
 
         {!proofTaken && (
-          <Button
-            className="w-full bg-green-600 hover:bg-green-700 text-lg py-6"
-            href="/exam-security-check"
-          >
-            🚀 Iniciar Prova
-          </Button>
+          <Link href="/exam-security-check">
+            <a>
+              <Button
+                className="w-full bg-green-600 hover:bg-green-700 text-lg py-6"
+              >
+                🚀 Realizar Prova
+              </Button>
+            </a>
+          </Link>
         )}
       </Card>
 
