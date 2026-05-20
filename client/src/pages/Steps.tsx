@@ -215,7 +215,7 @@ export function Step2() {
   );
 
   return (
-    <StepLayout step={2} title="Cadastro Minucioso">
+    <StepLayout step={2} title="Perfil Profissional">
       <div className="mb-6 flex gap-2 flex-wrap">
         {[
           { id: "dados", label: "👤 Dados Pessoais" },
@@ -567,9 +567,39 @@ export function Step5() {
       {resultType === "approved" && (
         <Card className="p-6 mb-8 bg-green-50 border-2 border-green-300">
           <div className="text-center">
-            <p className="text-sm text-green-700 font-bold">RESULTADO GERAL</p>
+            <p className="text-5xl mb-4">🎉</p>
+            <p className="text-3xl font-bold text-green-800 mb-2">Parabéns! Excelente Desempenho!</p>
+            <p className="text-sm text-green-700 font-bold mb-4">RESULTADO GERAL</p>
             <p className="text-5xl font-bold text-green-700 my-2">78%</p>
             <p className="text-lg font-bold text-green-800">✓ APROVADO</p>
+            <p className="text-sm text-green-700 mt-4">Você demonstrou domínio técnico adequado nas áreas avaliadas</p>
+          </div>
+        </Card>
+      )}
+
+      {resultType === "approved" && (
+        <Card className="p-6 mb-8 bg-blue-50 border-2 border-blue-300">
+          <h3 className="font-bold text-lg text-blue-900 mb-4">📊 Pontos de Melhoria Identificados</h3>
+          <p className="text-sm text-gray-700 mb-4">Mesmo com excelente desempenho, identificamos áreas para aperfeiçoamento:</p>
+          <div className="space-y-3 mb-6">
+            <div className="p-3 bg-white rounded border border-blue-200">
+              <p className="font-semibold text-gray-900">Planejamento e Orçamento</p>
+              <p className="text-sm text-gray-600">Seu desempenho: 72% | Recomendado: 85%+</p>
+            </div>
+            <div className="p-3 bg-white rounded border border-blue-200">
+              <p className="font-semibold text-gray-900">Gestão de Riscos</p>
+              <p className="text-sm text-gray-600">Seu desempenho: 68% | Recomendado: 85%+</p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <button className="flex-1 px-4 py-3 bg-blue-900 text-white rounded font-semibold hover:bg-blue-800">
+              📥 Download Relatório de Performance
+            </button>
+            <Link href="/courses-platform?improvement=true">
+              <a className="flex-1 px-4 py-3 bg-green-600 text-white rounded font-semibold hover:bg-green-700 text-center">
+                🚀 Aperfeiçoe-se Conosco
+              </a>
+            </Link>
           </div>
         </Card>
       )}
@@ -827,46 +857,102 @@ export function Step6() {
   );
 }
 
-// Step 7 - Entrevista Técnica
+// Step 7 - Agendamento de Entrevista Técnica
 export function Step7() {
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string | null>(null);
+
+  const availableDates = [
+    { date: "2024-07-15", day: "Segunda", available: true },
+    { date: "2024-07-16", day: "Terça", available: true },
+    { date: "2024-07-17", day: "Quarta", available: false },
+    { date: "2024-07-18", day: "Quinta", available: true },
+    { date: "2024-07-19", day: "Sexta", available: true },
+    { date: "2024-07-22", day: "Segunda", available: true },
+  ];
+
+  const availableTimes = [
+    "09:00", "09:30", "10:00", "10:30", "11:00", "14:00", "14:30", "15:00", "15:30", "16:00"
+  ];
+
   return (
-    <StepLayout step={7} title="Entrevista Técnica">
+    <StepLayout step={7} title="Agendamento da Entrevista Técnica">
+      <Card className="p-6 mb-8 bg-blue-50 border-2 border-blue-300">
+        <h3 className="font-bold text-lg text-blue-900 mb-2">📅 Próxima Etapa: Entrevista Técnica</h3>
+        <p className="text-sm text-gray-700">Selecione uma data e horário convenientes para sua entrevista com a comissão técnica. A entrevista durará aproximadamente 45 minutos.</p>
+      </Card>
+
       <Card className="p-6 mb-8">
-        <h3 className="font-bold text-lg mb-4">Agendamento</h3>
-        <div className="space-y-3">
-          <div className="p-3 bg-blue-50 rounded">
-            <p className="text-sm text-gray-600">Data Sugerida</p>
-            <p className="font-bold">25 de Junho de 2024</p>
-          </div>
-          <div className="p-3 bg-blue-50 rounded">
-            <p className="text-sm text-gray-600">Horário</p>
-            <p className="font-bold">14:00 - 15:00 (Brasília)</p>
-          </div>
-          <div className="p-3 bg-blue-50 rounded">
-            <p className="text-sm text-gray-600">Entrevistador</p>
-            <p className="font-bold">Comissão de Certificação ANEFAC</p>
-          </div>
+        <h3 className="font-bold text-lg mb-4">Datas Disponíveis</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {availableDates.map((item) => (
+            <button
+              key={item.date}
+              onClick={() => item.available && setSelectedDate(item.date)}
+              disabled={!item.available}
+              className={`p-4 rounded border-2 transition ${
+                selectedDate === item.date
+                  ? "border-blue-900 bg-blue-100"
+                  : item.available
+                  ? "border-gray-300 hover:border-blue-900"
+                  : "border-gray-200 bg-gray-100 cursor-not-allowed opacity-50"
+              }`}
+            >
+              <p className="font-bold text-sm">{item.day}</p>
+              <p className="text-xs text-gray-600">{item.date}</p>
+              {!item.available && <p className="text-xs text-red-600 mt-1">Indisponível</p>}
+            </button>
+          ))}
         </div>
       </Card>
 
-      <Card className="p-6 mb-8">
-        <h3 className="font-bold text-lg mb-4">Roteiro da Entrevista</h3>
-        <ul className="space-y-2">
-          {[
-            "Confirmação de experiência profissional",
-            "Validação de conhecimento técnico",
-            "Análise de lacunas identificadas",
-            "Discussão de casos práticos",
-            "Parecer final",
-          ].map((item, i) => (
-            <li key={i} className="p-2 bg-gray-50 rounded">
-              💬 {item}
-            </li>
-          ))}
-        </ul>
-      </Card>
+      {selectedDate && (
+        <Card className="p-6 mb-8">
+          <h3 className="font-bold text-lg mb-4">Horários Disponíveis para {selectedDate}</h3>
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+            {availableTimes.map((time) => (
+              <button
+                key={time}
+                onClick={() => setSelectedTime(time)}
+                className={`p-3 rounded border-2 transition font-semibold ${
+                  selectedTime === time
+                    ? "border-blue-900 bg-blue-900 text-white"
+                    : "border-gray-300 hover:border-blue-900"
+                }`}
+              >
+                {time}
+              </button>
+            ))}
+          </div>
+        </Card>
+      )}
 
-      <NavButtons step={7} nextLink="/step-8" />
+      {selectedDate && selectedTime && (
+        <Card className="p-6 mb-8 bg-green-50 border-2 border-green-300">
+          <h3 className="font-bold text-lg text-green-900 mb-4">✓ Agendamento Confirmado</h3>
+          <div className="space-y-3">
+            <div className="flex justify-between">
+              <span className="font-semibold text-gray-700">Data:</span>
+              <span className="font-bold text-gray-900">{selectedDate}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-semibold text-gray-700">Horário:</span>
+              <span className="font-bold text-gray-900">{selectedTime}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-semibold text-gray-700">Duração:</span>
+              <span className="font-bold text-gray-900">45 minutos</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-semibold text-gray-700">Modalidade:</span>
+              <span className="font-bold text-gray-900">Videoconferência</span>
+            </div>
+          </div>
+          <p className="text-sm text-green-700 mt-4">Um link de acesso será enviado por email 24 horas antes da entrevista.</p>
+        </Card>
+      )}
+
+      <NavButtons step={7} nextLink={selectedDate && selectedTime ? "/step-8" : undefined} />
     </StepLayout>
   );
 }

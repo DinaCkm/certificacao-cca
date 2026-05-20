@@ -16,7 +16,7 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           {[
             { step: 1, title: "Escolha da Jornada", desc: "Selecione o tipo de certificação" },
-            { step: 2, title: "Cadastro Minucioso", desc: "Preencha seus dados profissionais" },
+            { step: 2, title: "Perfil Profissional", desc: "Preencha seus dados profissionais" },
             { step: 3, title: "Compra", desc: "Finalize o pagamento" },
             { step: 4, title: "Prova/Preparatório", desc: "Realize a avaliação" },
             { step: 5, title: "Resultado", desc: "Veja seu desempenho" },
