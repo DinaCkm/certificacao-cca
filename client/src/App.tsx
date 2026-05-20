@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { GlobalHeader } from "./components/GlobalHeader";
 import { GlobalFooter } from "./components/GlobalFooter";
+import { NavigationSidebar } from "./components/NavigationSidebar";
 import Home from "./pages/Home";
 import { ExamSecurityCheck } from "./pages/ExamSecurityCheck";
 import { Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9, CoursesPage, CoursesRecoveryPage, CoursesPlatform, RecoveryCheckout, RetakeExamCheckout } from "./pages/Steps";
@@ -51,8 +52,11 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <GlobalHeader />
-          <div className="min-h-screen">
-            <Router />
+          <div className="flex">
+            <NavigationSidebar />
+            <div className="flex-1 min-h-screen">
+              <Router />
+            </div>
           </div>
           <GlobalFooter />
         </TooltipProvider>
