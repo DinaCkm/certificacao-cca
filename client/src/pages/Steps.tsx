@@ -513,7 +513,7 @@ export function Step4() {
         {!proofTaken && (
           <Button
             className="w-full bg-green-600 hover:bg-green-700 text-lg py-6"
-            onClick={() => setProofTaken(true)}
+            href="/exam-security-check"
           >
             🚀 Iniciar Prova
           </Button>
