@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
+import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Link, useLocation } from "wouter";
-import { useState } from "react";
 import { CoursesPlatform as CoursesPlatformComponent } from "./CoursesPlatform";
 import { RecoveryCheckout as RecoveryCheckoutComponent } from "./RecoveryCheckout";
 import { RetakeExamCheckout as RetakeExamCheckoutComponent } from "./RetakeExamCheckout";
