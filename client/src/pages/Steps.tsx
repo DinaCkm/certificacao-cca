@@ -148,69 +148,266 @@ export function Step1() {
 
 // Step 2 - Cadastro Minucioso
 export function Step2() {
+  const [activeTab, setActiveTab] = useState("dados");
   const [formData, setFormData] = useState({
+    // Dados Pessoais
     nome: "",
     cpf: "",
     email: "",
-    experiencia: "",
-    formacao: "",
+    telefone: "",
+    // Formação Acadêmica
+    graduacoes: [{id: 1, curso: "", instituicao: "", ano: ""}],
+    posGraduacoes: [{id: 1, curso: "", instituicao: "", ano: ""}],
+    mbas: [{id: 1, curso: "", instituicao: "", ano: ""}],
+    // Cursos Extracurriculares
+    cursos: [{id: 1, nome: "", instituicao: "", ano: "", cargaHoraria: ""}],
+    // Experiência Profissional
+    experiencias: [{id: 1, empresa: "", cargo: "", periodo: "", descricao: ""}],
+    // Projetos
+    projetos: [{id: 1, nome: "", descricao: "", tecnologias: "", resultado: ""}],
+    // Áreas de Destaque
+    competencias: "",
+    idiomas: "",
+    certificacoes: "",
+    // Autoavaliação
+    autoavaliacao: "5",
+    // Declarações
+    motivacao: "",
+    objetivos: "",
   });
+
+  const addField = (section: string) => {
+    const sections: any = {
+      graduacoes: { id: Date.now(), curso: "", instituicao: "", ano: "" },
+      posGraduacoes: { id: Date.now(), curso: "", instituicao: "", ano: "" },
+      mbas: { id: Date.now(), curso: "", instituicao: "", ano: "" },
+      cursos: { id: Date.now(), nome: "", instituicao: "", ano: "", cargaHoraria: "" },
+      experiencias: { id: Date.now(), empresa: "", cargo: "", periodo: "", descricao: "" },
+      projetos: { id: Date.now(), nome: "", descricao: "", tecnologias: "", resultado: "" },
+    };
+    setFormData((prev: any) => ({
+      ...prev,
+      [section]: [...prev[section], sections[section]],
+    }));
+  };
+
+  const updateField = (section: string, index: number, field: string, value: string) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      [section]: prev[section].map((item: any, i: number) =>
+        i === index ? { ...item, [field]: value } : item
+      ),
+    }));
+  };
+
+  const removeField = (section: string, index: number) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      [section]: prev[section].filter((_: any, i: number) => i !== index),
+    }));
+  };
+
+  const renderSection = (title: string, content: React.ReactNode) => (
+    <div className="mb-8">
+      <h3 className="text-xl font-bold text-blue-900 mb-4 pb-2 border-b-2 border-blue-900">{title}</h3>
+      {content}
+    </div>
+  );
 
   return (
     <StepLayout step={2} title="Cadastro Minucioso">
-      <Card className="p-6 mb-8">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Nome Completo</label>
-            <input
-              type="text"
-              placeholder="Seu nome"
-              className="w-full p-2 border border-gray-300 rounded"
-              value={formData.nome}
-              onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-            />
+      <div className="mb-6 flex gap-2 flex-wrap">
+        {[
+          { id: "dados", label: "👤 Dados Pessoais" },
+          { id: "formacao", label: "🎓 Formação" },
+          { id: "cursos", label: "📚 Cursos Extra" },
+          { id: "experiencia", label: "💼 Experiência" },
+          { id: "projetos", label: "🚀 Projetos" },
+          { id: "destaque", label: "⭐ Destaque" },
+          { id: "declaracoes", label: "📝 Declarações" },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2 rounded font-semibold transition ${
+              activeTab === tab.id
+                ? "bg-blue-900 text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <Card className="p-8 mb-8">
+        {/* Dados Pessoais */}
+        {activeTab === "dados" && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Nome Completo *</label>
+                <input type="text" placeholder="Seu nome" className="w-full p-3 border border-gray-300 rounded" value={formData.nome} onChange={(e) => setFormData({...formData, nome: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">CPF *</label>
+                <input type="text" placeholder="000.000.000-00" className="w-full p-3 border border-gray-300 rounded" value={formData.cpf} onChange={(e) => setFormData({...formData, cpf: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Email *</label>
+                <input type="email" placeholder="seu@email.com" className="w-full p-3 border border-gray-300 rounded" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Telefone</label>
+                <input type="tel" placeholder="(11) 98765-4321" className="w-full p-3 border border-gray-300 rounded" value={formData.telefone} onChange={(e) => setFormData({...formData, telefone: e.target.value})} />
+              </div>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">CPF</label>
-            <input
-              type="text"
-              placeholder="000.000.000-00"
-              className="w-full p-2 border border-gray-300 rounded"
-              value={formData.cpf}
-              onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
-            />
+        )}
+
+        {/* Formação Acadêmica */}
+        {activeTab === "formacao" && (
+          <div className="space-y-6">
+            {renderSection("🎓 Graduação", (
+              <div className="space-y-4">
+                {formData.graduacoes.map((grad, idx) => (
+                  <div key={grad.id} className="p-4 border border-gray-200 rounded-lg space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <input type="text" placeholder="Curso" className="p-2 border border-gray-300 rounded" value={grad.curso} onChange={(e) => updateField("graduacoes", idx, "curso", e.target.value)} />
+                      <input type="text" placeholder="Instituição" className="p-2 border border-gray-300 rounded" value={grad.instituicao} onChange={(e) => updateField("graduacoes", idx, "instituicao", e.target.value)} />
+                      <input type="text" placeholder="Ano" className="p-2 border border-gray-300 rounded" value={grad.ano} onChange={(e) => updateField("graduacoes", idx, "ano", e.target.value)} />
+                    </div>
+                    {formData.graduacoes.length > 1 && <button onClick={() => removeField("graduacoes", idx)} className="text-red-600 text-sm font-bold">Remover</button>}
+                  </div>
+                ))}
+                <button onClick={() => addField("graduacoes")} className="px-4 py-2 bg-blue-100 text-blue-900 rounded font-semibold">+ Adicionar Graduação</button>
+              </div>
+            ))}
+
+            {renderSection("📖 Pós-Graduação", (
+              <div className="space-y-4">
+                {formData.posGraduacoes.map((pos, idx) => (
+                  <div key={pos.id} className="p-4 border border-gray-200 rounded-lg space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <input type="text" placeholder="Curso" className="p-2 border border-gray-300 rounded" value={pos.curso} onChange={(e) => updateField("posGraduacoes", idx, "curso", e.target.value)} />
+                      <input type="text" placeholder="Instituição" className="p-2 border border-gray-300 rounded" value={pos.instituicao} onChange={(e) => updateField("posGraduacoes", idx, "instituicao", e.target.value)} />
+                      <input type="text" placeholder="Ano" className="p-2 border border-gray-300 rounded" value={pos.ano} onChange={(e) => updateField("posGraduacoes", idx, "ano", e.target.value)} />
+                    </div>
+                    {formData.posGraduacoes.length > 1 && <button onClick={() => removeField("posGraduacoes", idx)} className="text-red-600 text-sm font-bold">Remover</button>}
+                  </div>
+                ))}
+                <button onClick={() => addField("posGraduacoes")} className="px-4 py-2 bg-blue-100 text-blue-900 rounded font-semibold">+ Adicionar Pós-Graduação</button>
+              </div>
+            ))}
+
+            {renderSection("💼 MBA", (
+              <div className="space-y-4">
+                {formData.mbas.map((mba, idx) => (
+                  <div key={mba.id} className="p-4 border border-gray-200 rounded-lg space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <input type="text" placeholder="Curso" className="p-2 border border-gray-300 rounded" value={mba.curso} onChange={(e) => updateField("mbas", idx, "curso", e.target.value)} />
+                      <input type="text" placeholder="Instituição" className="p-2 border border-gray-300 rounded" value={mba.instituicao} onChange={(e) => updateField("mbas", idx, "instituicao", e.target.value)} />
+                      <input type="text" placeholder="Ano" className="p-2 border border-gray-300 rounded" value={mba.ano} onChange={(e) => updateField("mbas", idx, "ano", e.target.value)} />
+                    </div>
+                    {formData.mbas.length > 1 && <button onClick={() => removeField("mbas", idx)} className="text-red-600 text-sm font-bold">Remover</button>}
+                  </div>
+                ))}
+                <button onClick={() => addField("mbas")} className="px-4 py-2 bg-blue-100 text-blue-900 rounded font-semibold">+ Adicionar MBA</button>
+              </div>
+            ))}
           </div>
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Email</label>
-            <input
-              type="email"
-              placeholder="seu@email.com"
-              className="w-full p-2 border border-gray-300 rounded"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            />
+        )}
+
+        {/* Cursos Extracurriculares */}
+        {activeTab === "cursos" && (
+          <div className="space-y-4">
+            {formData.cursos.map((curso, idx) => (
+              <div key={curso.id} className="p-4 border border-gray-200 rounded-lg space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input type="text" placeholder="Nome do Curso" className="p-2 border border-gray-300 rounded" value={curso.nome} onChange={(e) => updateField("cursos", idx, "nome", e.target.value)} />
+                  <input type="text" placeholder="Instituição" className="p-2 border border-gray-300 rounded" value={curso.instituicao} onChange={(e) => updateField("cursos", idx, "instituicao", e.target.value)} />
+                  <input type="text" placeholder="Ano" className="p-2 border border-gray-300 rounded" value={curso.ano} onChange={(e) => updateField("cursos", idx, "ano", e.target.value)} />
+                  <input type="text" placeholder="Carga Horária" className="p-2 border border-gray-300 rounded" value={curso.cargaHoraria} onChange={(e) => updateField("cursos", idx, "cargaHoraria", e.target.value)} />
+                </div>
+                {formData.cursos.length > 1 && <button onClick={() => removeField("cursos", idx)} className="text-red-600 text-sm font-bold">Remover</button>}
+              </div>
+            ))}
+            <button onClick={() => addField("cursos")} className="px-4 py-2 bg-blue-100 text-blue-900 rounded font-semibold">+ Adicionar Curso</button>
           </div>
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Anos de Experiência</label>
-            <input
-              type="number"
-              placeholder="5"
-              className="w-full p-2 border border-gray-300 rounded"
-              value={formData.experiencia}
-              onChange={(e) => setFormData({ ...formData, experiencia: e.target.value })}
-            />
+        )}
+
+        {/* Experiência Profissional */}
+        {activeTab === "experiencia" && (
+          <div className="space-y-4">
+            {formData.experiencias.map((exp, idx) => (
+              <div key={exp.id} className="p-4 border border-gray-200 rounded-lg space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <input type="text" placeholder="Empresa" className="p-2 border border-gray-300 rounded" value={exp.empresa} onChange={(e) => updateField("experiencias", idx, "empresa", e.target.value)} />
+                  <input type="text" placeholder="Cargo" className="p-2 border border-gray-300 rounded" value={exp.cargo} onChange={(e) => updateField("experiencias", idx, "cargo", e.target.value)} />
+                </div>
+                <input type="text" placeholder="Período (ex: 2020-2023)" className="w-full p-2 border border-gray-300 rounded" value={exp.periodo} onChange={(e) => updateField("experiencias", idx, "periodo", e.target.value)} />
+                <textarea placeholder="Descrição das atividades" className="w-full p-2 border border-gray-300 rounded h-20" value={exp.descricao} onChange={(e) => updateField("experiencias", idx, "descricao", e.target.value)} />
+                {formData.experiencias.length > 1 && <button onClick={() => removeField("experiencias", idx)} className="text-red-600 text-sm font-bold">Remover</button>}
+              </div>
+            ))}
+            <button onClick={() => addField("experiencias")} className="px-4 py-2 bg-blue-100 text-blue-900 rounded font-semibold">+ Adicionar Experiência</button>
           </div>
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Formação Acadêmica</label>
-            <textarea
-              placeholder="Descreva sua formação"
-              className="w-full p-2 border border-gray-300 rounded h-24"
-              value={formData.formacao}
-              onChange={(e) => setFormData({ ...formData, formacao: e.target.value })}
-            />
+        )}
+
+        {/* Projetos */}
+        {activeTab === "projetos" && (
+          <div className="space-y-4">
+            {formData.projetos.map((proj, idx) => (
+              <div key={proj.id} className="p-4 border border-gray-200 rounded-lg space-y-3">
+                <input type="text" placeholder="Nome do Projeto" className="w-full p-2 border border-gray-300 rounded" value={proj.nome} onChange={(e) => updateField("projetos", idx, "nome", e.target.value)} />
+                <textarea placeholder="Descrição" className="w-full p-2 border border-gray-300 rounded h-16" value={proj.descricao} onChange={(e) => updateField("projetos", idx, "descricao", e.target.value)} />
+                <input type="text" placeholder="Tecnologias utilizadas" className="w-full p-2 border border-gray-300 rounded" value={proj.tecnologias} onChange={(e) => updateField("projetos", idx, "tecnologias", e.target.value)} />
+                <textarea placeholder="Resultados alcançados" className="w-full p-2 border border-gray-300 rounded h-16" value={proj.resultado} onChange={(e) => updateField("projetos", idx, "resultado", e.target.value)} />
+                {formData.projetos.length > 1 && <button onClick={() => removeField("projetos", idx)} className="text-red-600 text-sm font-bold">Remover</button>}
+              </div>
+            ))}
+            <button onClick={() => addField("projetos")} className="px-4 py-2 bg-blue-100 text-blue-900 rounded font-semibold">+ Adicionar Projeto</button>
           </div>
-        </div>
+        )}
+
+        {/* Áreas de Destaque */}
+        {activeTab === "destaque" && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Competências Principais</label>
+              <textarea placeholder="Ex: Gestão de Projetos, Liderança, Análise Financeira" className="w-full p-3 border border-gray-300 rounded h-20" value={formData.competencias} onChange={(e) => setFormData({...formData, competencias: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Idiomas</label>
+              <textarea placeholder="Ex: Português (Nativo), Inglês (Fluente), Espanhol (Intermediário)" className="w-full p-3 border border-gray-300 rounded h-16" value={formData.idiomas} onChange={(e) => setFormData({...formData, idiomas: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Certificações Profissionais</label>
+              <textarea placeholder="Ex: PMP, ITIL, Six Sigma" className="w-full p-3 border border-gray-300 rounded h-16" value={formData.certificacoes} onChange={(e) => setFormData({...formData, certificacoes: e.target.value})} />
+            </div>
+          </div>
+        )}
+
+        {/* Declarações */}
+        {activeTab === "declaracoes" && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Autoavaliação de Conhecimento (1-10)</label>
+              <input type="range" min="1" max="10" className="w-full" value={formData.autoavaliacao} onChange={(e) => setFormData({...formData, autoavaliacao: e.target.value})} />
+              <p className="text-center text-lg font-bold text-blue-900 mt-2">{formData.autoavaliacao}/10</p>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Motivação para Certificação</label>
+              <textarea placeholder="Por que você deseja obter essa certificação?" className="w-full p-3 border border-gray-300 rounded h-24" value={formData.motivacao} onChange={(e) => setFormData({...formData, motivacao: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Objetivos Profissionais</label>
+              <textarea placeholder="Quais são seus objetivos profissionais?" className="w-full p-3 border border-gray-300 rounded h-24" value={formData.objetivos} onChange={(e) => setFormData({...formData, objetivos: e.target.value})} />
+            </div>
+          </div>
+        )}
       </Card>
+
       <NavButtons step={2} nextLink="/step-3" />
     </StepLayout>
   );
