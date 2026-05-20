@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
+import { CoursesPlatform as CoursesPlatformComponent } from "./CoursesPlatform";
 
 // Context para gerenciar o fluxo do usuário
 const useUserFlow = () => {
@@ -250,94 +251,20 @@ export function Step3() {
   );
 }
 
-// Plataforma de Cursos (Bifurcação)
+// Plataforma de Cursos (Bifurcação) - Redireciona para CoursesPlatform
 export function CoursesPage() {
-  const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
-
-  const courses = [
-    {
-      id: "1",
-      title: "Controladoria Estratégica",
-      duration: "40h",
-      level: "Intermediário",
-      price: "R$ 299",
-    },
-    {
-      id: "2",
-      title: "Orçamento Empresarial",
-      duration: "30h",
-      level: "Básico",
-      price: "R$ 199",
-    },
-    {
-      id: "3",
-      title: "Indicadores de Performance",
-      duration: "25h",
-      level: "Intermediário",
-      price: "R$ 249",
-    },
-    {
-      id: "4",
-      title: "Gestão de Riscos",
-      duration: "35h",
-      level: "Avançado",
-      price: "R$ 349",
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <Link href="/">
-            <a className="text-blue-900 hover:underline mb-4 inline-block">← Voltar</a>
-          </Link>
-          <h1 className="text-3xl font-bold text-blue-900 mb-2">Plataforma de Cursos</h1>
-          <p className="text-gray-600">Selecione os cursos para sua preparação</p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          {courses.map((course) => (
-            <Card
-              key={course.id}
-              className={`p-6 cursor-pointer transition-all border-2 ${
-                selectedCourses.includes(course.id)
-                  ? "border-blue-900 bg-blue-50"
-                  : "border-gray-200 hover:border-blue-900"
-              }`}
-              onClick={() =>
-                setSelectedCourses(
-                  selectedCourses.includes(course.id)
-                    ? selectedCourses.filter((id) => id !== course.id)
-                    : [...selectedCourses, course.id]
-                )
-              }
-            >
-              <h3 className="font-bold text-lg text-blue-900 mb-2">{course.title}</h3>
-              <div className="flex justify-between text-sm text-gray-600 mb-3">
-                <span>⏱️ {course.duration}</span>
-                <span>📊 {course.level}</span>
-              </div>
-              <p className="text-xl font-bold text-blue-900">{course.price}</p>
-            </Card>
-          ))}
-        </div>
-
-        <Card className="p-6 mb-8 bg-amber-50 border-2 border-amber-300">
-          <h3 className="font-bold text-lg text-amber-900 mb-2">💡 Aulas ON-LINE Disponíveis</h3>
-          <p className="text-amber-800 mb-4">
-            Contrate aulas personalizadas com nossos instrutores especializados para aprofundar seu conhecimento.
-          </p>
-          <Button className="bg-amber-600 hover:bg-amber-700">Contratar Aulas ON-LINE</Button>
-        </Card>
-
-        <div className="flex gap-4">
-          <Link href="/step-4">
-            <a>
-              <Button className="bg-blue-900 hover:bg-blue-800">Prosseguir para Prova →</Button>
-            </a>
-          </Link>
-        </div>
+      <div className="max-w-4xl mx-auto text-center py-20">
+        <h1 className="text-4xl font-bold text-blue-900 mb-4">Redirecionando...</h1>
+        <p className="text-gray-600 mb-8">Você será redirecionado para a plataforma de cursos em breve.</p>
+        <Link href="/courses-platform">
+          <a>
+            <Button className="bg-blue-900 hover:bg-blue-800 text-lg py-6 px-8">
+              Clique aqui se não for redirecionado automaticamente
+            </Button>
+          </a>
+        </Link>
       </div>
     </div>
   );
@@ -513,17 +440,10 @@ export function Step5() {
 
       {resultType === "failed" && (
         <div className="space-y-4 mb-8">
-          <Link href="/courses-recovery">
+          <Link href="/courses-platform?recovery=true">
             <a>
-              <Button className="w-full bg-blue-900 hover:bg-blue-800">
-                📚 Acessar Cursos de Recuperação
-              </Button>
-            </a>
-          </Link>
-          <Link href="/courses-recovery">
-            <a>
-              <Button variant="outline" className="w-full">
-                👨‍🏫 Contratar Aulas ON-LINE com Instrutor
+              <Button className="w-full bg-blue-900 hover:bg-blue-800 text-lg py-6">
+                📚 Acessar Plataforma de Cursos de Recuperação
               </Button>
             </a>
           </Link>
@@ -691,6 +611,8 @@ export function Step9() {
 }
 
 // Página de Cursos de Recuperação (para quem reprovou)
+export const CoursesPlatform = CoursesPlatformComponent;
+
 export function CoursesRecoveryPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-4">
