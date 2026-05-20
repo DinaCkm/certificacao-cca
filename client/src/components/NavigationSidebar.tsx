@@ -37,24 +37,24 @@ export function NavigationSidebar() {
         } overflow-y-auto shadow-lg`}
       >
         <div className="p-4 space-y-2">
-          <h3 className={`font-bold text-sm mb-4 ${isOpen ? "block" : "hidden"}`}>
-            JORNADA DE CERTIFICAÇÃO
+          <h3 className={`font-bold text-xs mb-3 leading-tight ${isOpen ? "block" : "hidden"}`}>
+            JORNADA DE<br />CERTIFICAÇÃO
           </h3>
 
           {steps.map((step) => (
             <Link key={step.id} href={step.path}>
               <a
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
                   isActive(step.path)
                     ? "bg-blue-600 shadow-lg scale-105"
                     : "hover:bg-blue-700"
                 }`}
               >
-                <span className="text-xl flex-shrink-0">{step.icon}</span>
+                <span className="text-lg flex-shrink-0">{step.icon}</span>
                 {isOpen && (
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold text-blue-100">Etapa {step.id}</p>
-                    <p className="text-sm font-semibold truncate">{step.title}</p>
+                    <p className="text-xs font-semibold truncate">{step.title}</p>
                   </div>
                 )}
               </a>
@@ -63,7 +63,7 @@ export function NavigationSidebar() {
         </div>
 
         {/* Botão de Voltar para Home */}
-        <div className="p-4 border-t border-blue-700 mt-4">
+        <div className="p-3 border-t border-blue-700 mt-2">
           <Link href="/">
             <a>
               <Button
