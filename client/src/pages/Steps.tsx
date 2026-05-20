@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Link, useLocation } from "wouter";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from "recharts";
 import { CoursesPlatform as CoursesPlatformComponent } from "./CoursesPlatform";
 import { RecoveryCheckout as RecoveryCheckoutComponent } from "./RecoveryCheckout";
 import { RetakeExamCheckout as RetakeExamCheckoutComponent } from "./RetakeExamCheckout";
@@ -541,6 +542,22 @@ export function Step4() {
 export function Step5() {
   const [resultType, setResultType] = useState<"approved" | "failed" | null>(null);
 
+  const approvedData = [
+    { area: "Controladoria", score: 85, meta: 70 },
+    { area: "Planejamento", score: 72, meta: 70 },
+    { area: "Indicadores", score: 80, meta: 70 },
+    { area: "Riscos", score: 68, meta: 70 },
+    { area: "Governança", score: 82, meta: 70 },
+  ];
+
+  const failedData = [
+    { area: "Controladoria", score: 55, meta: 70 },
+    { area: "Planejamento", score: 62, meta: 70 },
+    { area: "Indicadores", score: 70, meta: 70 },
+    { area: "Riscos", score: 45, meta: 70 },
+    { area: "Governança", score: 75, meta: 70 },
+  ];
+
   return (
     <StepLayout step={5} title="Resultado da Prova">
       {!resultType && (
@@ -568,127 +585,155 @@ export function Step5() {
       )}
 
       {resultType === "approved" && (
-        <Card className="p-6 mb-8 bg-green-50 border-2 border-green-300">
-          <div className="text-center">
-            <p className="text-5xl mb-4">🎉</p>
-            <p className="text-3xl font-bold text-green-800 mb-2">Parabéns! Excelente Desempenho!</p>
-            <p className="text-sm text-green-700 font-bold mb-4">RESULTADO GERAL</p>
-            <p className="text-5xl font-bold text-green-700 my-2">78%</p>
-            <p className="text-lg font-bold text-green-800">✓ APROVADO</p>
-            <p className="text-sm text-green-700 mt-4">Você demonstrou domínio técnico adequado nas áreas avaliadas</p>
-          </div>
-        </Card>
+        <>
+          <Card className="p-6 mb-8 bg-green-50 border-2 border-green-300">
+            <div className="text-center">
+              <p className="text-5xl mb-4">🎉</p>
+              <p className="text-3xl font-bold text-green-800 mb-2">Parabéns! Excelente Desempenho!</p>
+              <p className="text-sm text-green-700 font-bold mb-4">RESULTADO GERAL</p>
+              <p className="text-5xl font-bold text-green-700 my-2">78%</p>
+              <p className="text-lg font-bold text-green-800">✓ APROVADO</p>
+              <p className="text-sm text-green-700 mt-4">Você demonstrou domínio técnico adequado nas áreas avaliadas</p>
+            </div>
+          </Card>
+
+          <Card className="p-6 mb-8">
+            <h3 className="font-bold text-lg mb-6">📊 Desempenho Detalhado por Área</h3>
+            <div style={{ width: '100%', height: 350 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={approvedData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="area" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#f3f4f6', border: '1px solid #d1d5db' }}
+                    formatter={(value) => `${value}%`}
+                  />
+                  <Legend />
+                  <ReferenceLine 
+                    y={70} 
+                    stroke="#dc2626" 
+                    strokeDasharray="5 5" 
+                    label={{ value: 'Mínimo Aprovação (70%)', position: 'right', fill: '#dc2626' }} 
+                  />
+                  <Bar dataKey="score" fill="#0b3a6b" name="Seu Desempenho" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          <Card className="p-6 mb-8 bg-blue-50 border-2 border-blue-300">
+            <h3 className="font-bold text-lg text-blue-900 mb-4">💡 Pontos de Melhoria Identificados</h3>
+            <p className="text-sm text-gray-700 mb-4">Mesmo com excelente desempenho, identificamos áreas para aperfeiçoamento:</p>
+            <div className="space-y-3 mb-6">
+              <div className="p-4 bg-white rounded border-l-4 border-yellow-500">
+                <p className="font-semibold text-gray-900">⚠️ Planejamento e Orçamento</p>
+                <p className="text-sm text-gray-600 mt-1">Seu desempenho: 72% | Recomendado: 85%+</p>
+                <p className="text-xs text-gray-500 mt-2">Recomendação: Aprofunde em técnicas de orçamentação e análise de variações</p>
+              </div>
+              <div className="p-4 bg-white rounded border-l-4 border-yellow-500">
+                <p className="font-semibold text-gray-900">⚠️ Gestão de Riscos</p>
+                <p className="text-sm text-gray-600 mt-1">Seu desempenho: 68% | Recomendado: 85%+</p>
+                <p className="text-xs text-gray-500 mt-2">Recomendação: Estude frameworks de gestão de riscos e compliance</p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button className="flex-1 px-4 py-3 bg-blue-900 text-white rounded font-semibold hover:bg-blue-800">
+                📥 Download Relatório de Performance
+              </button>
+              <Link href="/courses-platform?improvement=true">
+                <a className="flex-1 px-4 py-3 bg-green-600 text-white rounded font-semibold hover:bg-green-700 text-center">
+                  🚀 Aperfeiçoe-se Conosco
+                </a>
+              </Link>
+            </div>
+          </Card>
+
+          <NavButtons step={5} nextLink="/step-6" />
+        </>
       )}
 
-      {resultType === "approved" && (
-        <Card className="p-6 mb-8 bg-blue-50 border-2 border-blue-300">
-          <h3 className="font-bold text-lg text-blue-900 mb-4">📊 Pontos de Melhoria Identificados</h3>
-          <p className="text-sm text-gray-700 mb-4">Mesmo com excelente desempenho, identificamos áreas para aperfeiçoamento:</p>
-          <div className="space-y-3 mb-6">
-            <div className="p-3 bg-white rounded border border-blue-200">
-              <p className="font-semibold text-gray-900">Planejamento e Orçamento</p>
-              <p className="text-sm text-gray-600">Seu desempenho: 72% | Recomendado: 85%+</p>
+      {resultType === "failed" && (
+        <>
+          <Card className="p-6 mb-8 bg-red-50 border-2 border-red-300">
+            <div className="text-center">
+              <p className="text-5xl mb-4">📊</p>
+              <p className="text-3xl font-bold text-red-800 mb-2">Resultado: REPROVADO</p>
+              <p className="text-sm text-red-700 font-bold mb-4">RESULTADO GERAL</p>
+              <p className="text-5xl font-bold text-red-700 my-2">62%</p>
+              <p className="text-lg font-bold text-red-800">✗ NÃO APROVADO</p>
+              <p className="text-sm text-red-700 mt-4">Você não atingiu a pontuação mínima de 70%</p>
             </div>
-            <div className="p-3 bg-white rounded border border-blue-200">
-              <p className="font-semibold text-gray-900">Gestão de Riscos</p>
-              <p className="text-sm text-gray-600">Seu desempenho: 68% | Recomendado: 85%+</p>
+          </Card>
+
+          <Card className="p-6 mb-8">
+            <h3 className="font-bold text-lg mb-6">📊 Desempenho Detalhado por Área</h3>
+            <div style={{ width: '100%', height: 350 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={failedData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="area" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#f3f4f6', border: '1px solid #d1d5db' }}
+                    formatter={(value) => `${value}%`}
+                  />
+                  <Legend />
+                  <ReferenceLine 
+                    y={70} 
+                    stroke="#dc2626" 
+                    strokeDasharray="5 5" 
+                    label={{ value: 'Mínimo Aprovação (70%)', position: 'right', fill: '#dc2626' }} 
+                  />
+                  <Bar dataKey="score" fill="#dc2626" name="Seu Desempenho" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
-          </div>
-          <div className="flex gap-3">
-            <button className="flex-1 px-4 py-3 bg-blue-900 text-white rounded font-semibold hover:bg-blue-800">
-              📥 Download Relatório de Performance
-            </button>
-            <Link href="/courses-platform?improvement=true">
-              <a className="flex-1 px-4 py-3 bg-green-600 text-white rounded font-semibold hover:bg-green-700 text-center">
-                🚀 Aperfeiçoe-se Conosco
+          </Card>
+
+          <Card className="p-6 mb-8 bg-red-50 border-2 border-red-300">
+            <h3 className="font-bold text-lg text-red-900 mb-4">🎯 Áreas Críticas para Melhoria</h3>
+            <p className="text-sm text-gray-700 mb-4">Identifique os pontos que precisam de reforço:</p>
+            <div className="space-y-3 mb-6">
+              <div className="p-4 bg-white rounded border-l-4 border-red-500">
+                <p className="font-semibold text-gray-900">🔴 Controladoria e Gestão</p>
+                <p className="text-sm text-gray-600 mt-1">Seu desempenho: 55% | Necessário: 70%+</p>
+                <p className="text-xs text-gray-500 mt-2">Recomendação: Estude fundamentos de controladoria, relatórios financeiros e análise de gestão</p>
+              </div>
+              <div className="p-4 bg-white rounded border-l-4 border-red-500">
+                <p className="font-semibold text-gray-900">🔴 Planejamento e Orçamento</p>
+                <p className="text-sm text-gray-600 mt-1">Seu desempenho: 62% | Necessário: 70%+</p>
+                <p className="text-xs text-gray-500 mt-2">Recomendação: Aprofunde em orçamentação, planejamento estratégico e análise de variações</p>
+              </div>
+              <div className="p-4 bg-white rounded border-l-4 border-red-500">
+                <p className="font-semibold text-gray-900">🔴 Gestão de Riscos</p>
+                <p className="text-sm text-gray-600 mt-1">Seu desempenho: 45% | Necessário: 70%+</p>
+                <p className="text-xs text-gray-500 mt-2">Recomendação: Estude frameworks de gestão de riscos, compliance e controles internos</p>
+              </div>
+            </div>
+            <div className="bg-yellow-50 p-4 rounded border border-yellow-200 mb-6">
+              <p className="font-semibold text-yellow-900 mb-2">💡 Próximos Passos:</p>
+              <ol className="text-sm text-yellow-800 space-y-1 list-decimal list-inside">
+                <li>Acesse nossa plataforma de cursos de recuperação</li>
+                <li>Estude os cursos focados nas suas áreas fracas</li>
+                <li>Pratique com exercícios e simulados</li>
+                <li>Agende sua re-prova quando se sentir preparado</li>
+              </ol>
+            </div>
+            <Link href="/courses-platform?recovery=true">
+              <a className="block w-full px-4 py-3 bg-red-600 text-white rounded font-semibold hover:bg-red-700 text-center">
+                🚀 Acessar Cursos de Recuperação
               </a>
             </Link>
-          </div>
-        </Card>
+          </Card>
+
+          <NavButtons step={5} />
+        </>
       )}
-
-      {resultType === "approved" && (
-        <Card className="p-6 mb-8">
-          <h3 className="font-bold text-lg mb-4">Desempenho por Área</h3>
-          <div className="space-y-4">
-            {[
-              { area: "Controladoria e Gestão", score: 85 },
-              { area: "Planejamento e Orçamento", score: 72 },
-              { area: "Indicadores e Performance", score: 80 },
-              { area: "Gestão de Riscos", score: 68 },
-              { area: "Governança e Compliance", score: 82 },
-            ].map((item, i) => (
-              <div key={i}>
-                <div className="flex justify-between mb-2">
-                  <span className="font-semibold">{item.area}</span>
-                  <span className="font-bold text-blue-900">{item.score}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded h-2">
-                  <div className="bg-blue-900 h-2 rounded" style={{ width: `${item.score}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
-
-      {resultType === "failed" && (
-        <Card className="p-6 mb-8 bg-red-50 border-2 border-red-300">
-          <h3 className="font-bold text-lg text-red-900 mb-4">Desempenho por Área</h3>
-          <div className="space-y-4">
-            {[
-              { area: "Controladoria e Gestão", score: 55, gap: true },
-              { area: "Planejamento e Orçamento", score: 62, gap: true },
-              { area: "Indicadores e Performance", score: 70 },
-              { area: "Gestão de Riscos", score: 45, gap: true },
-              { area: "Governança e Compliance", score: 75 },
-            ].map((item, i) => (
-              <div key={i}>
-                <div className="flex justify-between mb-2">
-                  <span className="font-semibold">
-                    {item.area} {item.gap && "⚠️"}
-                  </span>
-                  <span className="font-bold text-red-900">{item.score}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded h-2">
-                  <div
-                    className={item.gap ? "bg-red-600 h-2 rounded" : "bg-green-600 h-2 rounded"}
-                    style={{ width: `${item.score}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 p-4 bg-yellow-50 rounded border border-yellow-200">
-            <p className="font-bold text-yellow-900 mb-2">📚 Cursos Recomendados para seus Gaps:</p>
-            <ul className="space-y-2">
-              <li className="text-sm text-yellow-800">✓ Controladoria e Gestão (Gap: 15%)</li>
-              <li className="text-sm text-yellow-800">✓ Planejamento e Orçamento (Gap: 8%)</li>
-              <li className="text-sm text-yellow-800">✓ Gestão de Riscos (Gap: 25%)</li>
-            </ul>
-          </div>
-        </Card>
-      )}
-
-      {resultType === "failed" && (
-        <div className="space-y-4 mb-8">
-          <Link href="/recovery-checkout">
-            <a>
-              <Button className="w-full bg-blue-900 hover:bg-blue-800 text-lg py-6">
-                📚 Ver Opções de Recuperação
-              </Button>
-            </a>
-          </Link>
-        </div>
-      )}
-
-      {resultType === "approved" && <NavButtons step={5} nextLink="/step-6" />}
     </StepLayout>
   );
 }
 
-// Step 6 - Upload Documental
 export function Step6() {
   const [documents, setDocuments] = React.useState<{id: string; title: string; description: string; icon: string; required: boolean; uploaded: boolean}[]>([
     {
