@@ -1,0 +1,35 @@
+{
+  "build_command": "pnpm run build",
+  "capabilities": [],
+  "dev_command": "pnpm run dev",
+  "env_vars": {},
+  "experiments": null,
+  "git_remote": {
+    "repo_url": "s3://vida-prod-gitrepo/webdev-git/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM",
+    "access_key_id": "ASIAZV3A2ECZIYWZTQGH",
+    "secret_access_key": "idxlCIj9ED3AVDu1+F9N3SELvO/EP9nn3k4boUsj",
+    "session_token": "IQoJb3JpZ2luX2VjEC4aCXVzLWVhc3QtMSJGMEQCIGOrfB45zVS/15MM1JOhSCiY3S0+DynGAw89jLX5NUhpAiAY41uGwUT+pOM9RwbgV5bT3gjJjhOl3S4wn+5hq3e+7ir/Awj2//////////8BEAQaDDY2NTM4NjA5ODg2NiIM6SyEFpd3B+SfapqpKtMDaYTGniyM0kcxeFWFcyOACCH+Ow95Q5p0sAi37bRh+Su/RJDqp6D54j+8oauHS5Nvh0X4T6YKLbm+LoHuTQX037vvfUg+ZPFFE11l7jROXBFxmzybCZa2YEXXXYG4tvOqPDdLIDye2qs5ZArxqBBlxzszNpgjY6pY1+RUOKlbcLkYDyo7fFEOC8xWt9asDFrwEWaQEvhBFekzRmX546oJw60PWP1zUpaMI+5q411w4XIM7m9JPBMVmQ6dMcVKzgWc3ZunkW8WymkUXxc7qWEZ65KzxGYCGeimEbZ29Gvz/Pl6sIbvIY1OzqW8EmaCPPp0p/XPAxOUSH/iKv+EMj7LAlW7kcEL1/DpH9NOREeBqdo5e74wnIsrvXLqDqPtlbMRMZ0YFBA5ti9B9i3F7LgMqsR5rw6xILKz2cUJU1zaCPhPCO3AMjj33yTsun3VDnRgIFc4dYNN1g/1RGuho4VkQgsgkATK63ISqSN+ajLW+QrpNjZ0hoPWioL/41Z/9myNag3e2JqP5AtX4vc0LIDYICAxO1jHhipwNKMaoYG2+q0BHpJdmJfxKRzEsGrAqNNgvsfXlxUyjkBcHZILTsOqbFe0wPRZAyUY3ZztnorN8eQkbP8w7sS40AY6ngGS4+JEaI9wuYJQ2ziyVXQY5un3UV4uSsf+byaeTWnOqR06QpHLU98P4KBY5vYTMCDJuCSet/WoxRAU292dj0JMZJijST3HHC8eJhvJbvZqoICiabdZN74X/iRhpWeokUqmw89u7yMZX+FrHN8jxD111Ff5Cm8CEEUrlaheymvYH3rBwcF9lhR7JR0XjN1kYVIKS9evSPSxupa7uDnHKg==",
+    "expiration": "2026-05-21T09:06:54.000Z"
+  },
+  "name": "certificacao-cca",
+  "path": "/home/ubuntu/certificacao-cca",
+  "port": 3000,
+  "secrets": {
+    "BUILT_IN_FORGE_API_KEY": "3BXseAEefdjktGJTMSh5a8",
+    "BUILT_IN_FORGE_API_URL": "https://forge.manus.ai",
+    "JWT_SECRET": "LdzCjFdPE8qHJNkixdrTUC",
+    "OAUTH_SERVER_URL": "https://api.manus.im",
+    "OWNER_NAME": "Dina@makiyama",
+    "OWNER_OPEN_ID": "g8KFFKXL8fZGwqbhHC3npQ",
+    "VITE_ANALYTICS_ENDPOINT": "https://manus-analytics.com",
+    "VITE_ANALYTICS_WEBSITE_ID": "1db382e4-8fa6-46ad-aabc-5d8d7dd4cdb2",
+    "VITE_APP_ID": "X4DQXhUgAnY9KtzPPBNLwM",
+    "VITE_APP_LOGO": "",
+    "VITE_APP_TITLE": "Plataforma de Certificação CCA",
+    "VITE_FRONTEND_FORGE_API_KEY": "7d9Sv7rnhGfKsFQAzthMea",
+    "VITE_FRONTEND_FORGE_API_URL": "https://forge.manus.ai",
+    "VITE_OAUTH_PORTAL_URL": "https://manus.im"
+  },
+  "template_id": "web-static",
+  "test_command": "pnpm test"
+}
