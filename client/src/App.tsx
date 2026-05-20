@@ -5,12 +5,21 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
-
+import { Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9 } from "./pages/Steps";
 
 function Router() {
   return (
     <Switch>
       <Route path={"/"} component={Home} />
+      <Route path={"/step-1"} component={Step1} />
+      <Route path={"/step-2"} component={Step2} />
+      <Route path={"/step-3"} component={Step3} />
+      <Route path={"/step-4"} component={Step4} />
+      <Route path={"/step-5"} component={Step5} />
+      <Route path={"/step-6"} component={Step6} />
+      <Route path={"/step-7"} component={Step7} />
+      <Route path={"/step-8"} component={Step8} />
+      <Route path={"/step-9"} component={Step9} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

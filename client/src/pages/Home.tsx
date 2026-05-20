@@ -1,245 +1,57 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, Award, Zap, Users, ArrowRight } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-secondary">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white border-b border-border shadow-sm">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 font-bold text-lg text-primary">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary to-blue-700 rounded-lg flex items-center justify-center text-white font-bold">
-              A
-            </div>
-            <span>ANEFAC CCA</span>
-          </div>
-          <nav className="hidden md:flex items-center gap-8">
-            <a href="#" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-              Início
-            </a>
-            <a href="#" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-              Sobre
-            </a>
-            <a href="#" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-              FAQ
-            </a>
-          </nav>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              Entrar
-            </Button>
-            <Button size="sm" className="bg-primary hover:bg-primary/90">
-              Começar
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 md:py-32">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <div className="inline-block px-4 py-2 bg-primary/10 rounded-full">
-                  <span className="text-sm font-semibold text-primary">
-                    Certificação Profissional ANEFAC
-                  </span>
-                </div>
-                <h1 className="text-4xl md:text-5xl font-bold text-primary leading-tight">
-                  Certifique sua expertise em Controladoria
-                </h1>
-                <p className="text-lg text-muted-foreground max-w-lg">
-                  A certificação CCA da ANEFAC é reconhecida no mercado como o padrão de excelência em controladoria. Inicie sua jornada de certificação profissional hoje.
-                </p>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 gap-2">
-                  Começar Agora
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-                <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                  Saiba Mais
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-3 gap-6 pt-8 border-t border-border">
-                <div>
-                  <p className="text-2xl font-bold text-primary">5000+</p>
-                  <p className="text-sm text-muted-foreground">Certificados Emitidos</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-primary">95%</p>
-                  <p className="text-sm text-muted-foreground">Taxa de Aprovação</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-primary">50+</p>
-                  <p className="text-sm text-muted-foreground">Anos de Tradição</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="relative h-96 md:h-full min-h-96 rounded-2xl overflow-hidden shadow-2xl">
-              <img
-                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/hero-certification-G3u2HhT2ho6rtNV3FWiiWt.webp"
-                alt="Professional certification"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-12 text-center">
+          <h1 className="text-4xl font-bold text-blue-900 mb-2">ANEFAC CCA</h1>
+          <p className="text-xl text-gray-600">Protótipo - Sistema de Certificação</p>
         </div>
 
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full -mr-48 -mt-48 blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-700/5 rounded-full -ml-48 -mb-48 blur-3xl" />
-      </section>
-
-      {/* Features Section */}
-      <section className="py-20 md:py-32 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
-              Por que escolher a certificação CCA?
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Desenvolvida para profissionais que buscam validar e expandir suas competências em controladoria.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card className="p-6 hover:shadow-lg transition-shadow">
-              <Award className="w-12 h-12 text-primary mb-4" />
-              <h3 className="font-bold text-lg text-primary mb-2">Reconhecimento</h3>
-              <p className="text-sm text-muted-foreground">
-                Certificado reconhecido pelo mercado e validado pela comunidade ANEFAC.
-              </p>
-            </Card>
-
-            <Card className="p-6 hover:shadow-lg transition-shadow">
-              <Zap className="w-12 h-12 text-primary mb-4" />
-              <h3 className="font-bold text-lg text-primary mb-2">Prova Segura</h3>
-              <p className="text-sm text-muted-foreground">
-                Avaliação rigorosa com monitoramento contínuo e integridade garantida.
-              </p>
-            </Card>
-
-            <Card className="p-6 hover:shadow-lg transition-shadow">
-              <Users className="w-12 h-12 text-primary mb-4" />
-              <h3 className="font-bold text-lg text-primary mb-2">Comunidade</h3>
-              <p className="text-sm text-muted-foreground">
-                Acesso a rede de profissionais certificados e oportunidades de networking.
-              </p>
-            </Card>
-
-            <Card className="p-6 hover:shadow-lg transition-shadow">
-              <CheckCircle2 className="w-12 h-12 text-primary mb-4" />
-              <h3 className="font-bold text-lg text-primary mb-2">Desenvolvimento</h3>
-              <p className="text-sm text-muted-foreground">
-                Trilhas personalizadas de aprendizagem para aprimorar suas competências.
-              </p>
-            </Card>
-          </div>
+        {/* Navigation Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {[
+            { step: 1, title: "Escolha da Jornada", desc: "Selecione o tipo de certificação" },
+            { step: 2, title: "Cadastro Minucioso", desc: "Preencha seus dados profissionais" },
+            { step: 3, title: "Compra", desc: "Finalize o pagamento" },
+            { step: 4, title: "Prova/Preparatório", desc: "Realize a avaliação" },
+            { step: 5, title: "Resultado", desc: "Veja seu desempenho" },
+            { step: 6, title: "Upload Documental", desc: "Envie seus documentos" },
+            { step: 7, title: "Entrevista Técnica", desc: "Validação com a comissão" },
+            { step: 8, title: "Decisão Final", desc: "Resultado da comissão" },
+            { step: 9, title: "Certificado", desc: "Receba seu diploma" },
+          ].map((item) => (
+            <Link key={item.step} href={`/step-${item.step}`}>
+              <a>
+                <Card className="p-6 hover:shadow-lg transition-all cursor-pointer border-2 border-blue-900/20 hover:border-blue-900">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-blue-900 text-white rounded-full flex items-center justify-center font-bold text-lg flex-shrink-0">
+                      {item.step}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg text-blue-900">{item.title}</h3>
+                      <p className="text-sm text-gray-600">{item.desc}</p>
+                    </div>
+                  </div>
+                </Card>
+              </a>
+            </Link>
+          ))}
         </div>
-      </section>
 
-      {/* Journey Section */}
-      <section className="py-20 md:py-32 bg-secondary">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
-              Sua Jornada de Certificação
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              9 etapas cuidadosamente estruturadas para garantir uma experiência completa e profissional.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 lg:grid-cols-9 gap-4">
-            {[
-              { number: 1, title: "Escolha", desc: "Selecione sua jornada" },
-              { number: 2, title: "Cadastro", desc: "Preencha seus dados" },
-              { number: 3, title: "Compra", desc: "Finalize pagamento" },
-              { number: 4, title: "Prova", desc: "Realize avaliação" },
-              { number: 5, title: "Resultado", desc: "Veja desempenho" },
-              { number: 6, title: "Documentos", desc: "Envie evidências" },
-              { number: 7, title: "Entrevista", desc: "Validação técnica" },
-              { number: 8, title: "Decisão", desc: "Resultado final" },
-              { number: 9, title: "Certificado", desc: "Receba diploma" },
-            ].map((step) => (
-              <Card key={step.number} className="p-4 text-center hover:shadow-lg transition-shadow">
-                <div className="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-bold text-lg mx-auto mb-3">
-                  {step.number}
-                </div>
-                <h3 className="font-bold text-sm text-primary mb-1">{step.title}</h3>
-                <p className="text-xs text-muted-foreground">{step.desc}</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 md:py-32 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="bg-gradient-to-r from-primary to-blue-700 rounded-2xl p-12 md:p-16 text-center text-white">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Pronto para começar sua jornada?
-            </h2>
-            <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto">
-              Junte-se a milhares de profissionais que já conquistaram sua certificação CCA.
-            </p>
-            <Button
-              size="lg"
-              className="bg-white text-primary hover:bg-secondary font-bold"
-            >
-              Iniciar Certificação
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-primary text-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h4 className="font-bold mb-4">ANEFAC</h4>
-              <p className="text-sm opacity-80">
-                Associação Nacional de Executivos de Finanças, Administração e Contabilidade.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Certificação</h4>
-              <ul className="space-y-2 text-sm opacity-80">
-                <li><a href="#" className="hover:opacity-100">Sobre CCA</a></li>
-                <li><a href="#" className="hover:opacity-100">Critérios</a></li>
-                <li><a href="#" className="hover:opacity-100">FAQ</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Suporte</h4>
-              <ul className="space-y-2 text-sm opacity-80">
-                <li><a href="#" className="hover:opacity-100">Contato</a></li>
-                <li><a href="#" className="hover:opacity-100">Ajuda</a></li>
-                <li><a href="#" className="hover:opacity-100">Termos</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4">Redes Sociais</h4>
-              <ul className="space-y-2 text-sm opacity-80">
-                <li><a href="#" className="hover:opacity-100">LinkedIn</a></li>
-                <li><a href="#" className="hover:opacity-100">Instagram</a></li>
-                <li><a href="#" className="hover:opacity-100">Facebook</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-white/20 pt-8 text-center text-sm opacity-80">
-            <p>&copy; 2024 ANEFAC. Todos os direitos reservados.</p>
-          </div>
-        </div>
-      </footer>
+        {/* Info Box */}
+        <Card className="p-6 bg-blue-50 border-2 border-blue-200">
+          <h3 className="font-bold text-blue-900 mb-2">Sobre o Protótipo</h3>
+          <p className="text-gray-700">
+            Este é um protótipo navegável que demonstra o fluxo completo do sistema de certificação CCA. 
+            Clique em qualquer etapa acima para explorar a jornada do usuário.
+          </p>
+        </Card>
+      </div>
     </div>
   );
 }
