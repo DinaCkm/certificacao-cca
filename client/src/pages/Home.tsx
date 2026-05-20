@@ -43,6 +43,22 @@ export default function Home() {
           ))}
         </div>
 
+        {/* Test Links */}
+        <div className="mb-8 p-4 bg-amber-50 border-2 border-amber-300 rounded">
+          <p className="text-sm text-amber-900 font-semibold mb-3">Links de Teste Rápido:</p>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/courses-platform?recovery=true">
+              <a className="text-blue-600 hover:underline text-sm">Cursos de Recuperação</a>
+            </Link>
+            <Link href="/retake-exam-checkout">
+              <a className="text-blue-600 hover:underline text-sm">Checkout Re-Prova</a>
+            </Link>
+            <Link href="/recovery-checkout">
+              <a className="text-blue-600 hover:underline text-sm">Checkout Recuperação</a>
+            </Link>
+          </div>
+        </div>
+
         {/* Info Box */}
         <Card className="p-6 bg-blue-50 border-2 border-blue-200">
           <h3 className="font-bold text-blue-900 mb-2">Sobre o Protótipo</h3>

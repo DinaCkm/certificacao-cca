@@ -3,6 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Link, useLocation } from "wouter";
 import { useState } from "react";
 import { CoursesPlatform as CoursesPlatformComponent } from "./CoursesPlatform";
+import { RecoveryCheckout as RecoveryCheckoutComponent } from "./RecoveryCheckout";
+import { RetakeExamCheckout as RetakeExamCheckoutComponent } from "./RetakeExamCheckout";
 
 // Context para gerenciar o fluxo do usuário
 const useUserFlow = () => {
@@ -440,10 +442,10 @@ export function Step5() {
 
       {resultType === "failed" && (
         <div className="space-y-4 mb-8">
-          <Link href="/courses-platform?recovery=true">
+          <Link href="/recovery-checkout">
             <a>
               <Button className="w-full bg-blue-900 hover:bg-blue-800 text-lg py-6">
-                📚 Acessar Plataforma de Cursos de Recuperação
+                📚 Ver Opções de Recuperação
               </Button>
             </a>
           </Link>
@@ -612,6 +614,8 @@ export function Step9() {
 
 // Página de Cursos de Recuperação (para quem reprovou)
 export const CoursesPlatform = CoursesPlatformComponent;
+export const RecoveryCheckout = RecoveryCheckoutComponent;
+export const RetakeExamCheckout = RetakeExamCheckoutComponent;
 
 export function CoursesRecoveryPage() {
   return (

@@ -211,9 +211,9 @@ export function CoursesPlatform() {
               </Link>
               <h1 className="text-2xl font-bold">{isRecovery ? "📚 Cursos de Recuperação" : "🎓 Plataforma de Cursos ANEFAC"}</h1>
             </div>
-            <Link href="/step-4">
+            <Link href={isRecovery ? "/retake-exam-checkout" : "/step-4"}>
               <a>
-                <Button className="bg-blue-600 hover:bg-blue-700">{isRecovery ? "Voltar para Prova" : "Ir para Prova"} →</Button>
+                <Button className="bg-blue-600 hover:bg-blue-700">{isRecovery ? "Fazer Prova Novamente" : "Ir para Prova"} →</Button>
               </a>
             </Link>
           </div>
