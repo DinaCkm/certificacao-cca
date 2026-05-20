@@ -32,9 +32,7 @@ export function NavigationSidebar() {
     <>
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-blue-900 to-blue-800 text-white transition-all duration-300 z-40 pt-20 ${
-          isOpen ? "w-64" : "w-20"
-        } overflow-y-auto shadow-lg`}
+        className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-blue-900 to-blue-800 text-white transition-all duration-300 z-40 pt-20 ${isOpen ? "w-56 md:w-64" : "w-16 md:w-20"} overflow-y-auto shadow-lg`}
       >
         <div className="p-4 space-y-2">
           <h3 className={`font-bold text-xs mb-3 leading-tight ${isOpen ? "block" : "hidden"}`}>
@@ -93,7 +91,7 @@ export function NavigationSidebar() {
       </button>
 
       {/* Spacer para o conteúdo principal */}
-      <div className={`transition-all duration-300 ${isOpen ? "ml-64" : "ml-20"}`} />
+      <div className={`transition-all duration-300 ${isOpen ? "ml-56 md:ml-64" : "ml-16 md:ml-20"}`} />
     </>
   );
 }

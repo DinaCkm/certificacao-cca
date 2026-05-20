@@ -20,19 +20,19 @@ const useUserFlow = () => {
 };
 
 const StepLayout = ({ step, title, children }: { step: number; title: string; children: React.ReactNode }) => (
-  <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-4">
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-8">
+  <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-3">
+    <div className="max-w-5xl mx-auto">
+      <div className="mb-6">
         <Link href="/">
-          <a className="text-blue-900 hover:underline mb-4 inline-block">← Voltar</a>
+          <a className="text-blue-900 hover:underline mb-2 inline-block text-sm">← Voltar</a>
         </Link>
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-12 h-12 bg-blue-900 text-white rounded-full flex items-center justify-center font-bold">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-blue-900 text-white rounded-full flex items-center justify-center font-bold text-sm">
             {step}
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-blue-900">{title}</h1>
-            <p className="text-gray-600">Etapa {step} de 9</p>
+            <h1 className="text-2xl font-bold text-blue-900">{title}</h1>
+            <p className="text-xs text-gray-600">Etapa {step} de 9</p>
           </div>
         </div>
       </div>
@@ -42,7 +42,7 @@ const StepLayout = ({ step, title, children }: { step: number; title: string; ch
 );
 
 const NavButtons = ({ step, nextLink }: { step: number; nextLink?: string }) => (
-  <div className="flex gap-4 mt-8">
+  <div className="flex gap-3 mt-6">
     {step > 1 && (
       <Link href={`/step-${step - 1}`}>
         <a>
@@ -85,7 +85,7 @@ export function Step1() {
 
   return (
     <StepLayout step={1} title="Escolha da Jornada">
-      <div className="grid md:grid-cols-3 gap-6 mb-8">
+      <div className="grid md:grid-cols-3 gap-4 mb-6">
         {[
           {
             id: "direct",
@@ -115,7 +115,7 @@ export function Step1() {
         ].map((option) => (
           <Card
             key={option.id}
-            className={`p-6 cursor-pointer transition-all border-2 ${
+            className={`p-4 cursor-pointer transition-all border-2 ${
               selected === option.id
                 ? "border-blue-900 bg-blue-50"
                 : "border-gray-200 hover:border-blue-900"
@@ -123,19 +123,19 @@ export function Step1() {
             onClick={() => handleSelect(option.id)}
           >
             {option.highlight && (
-              <div className="bg-blue-900 text-white px-3 py-1 rounded text-xs font-bold mb-3 inline-block">
+              <div className="bg-blue-900 text-white px-2 py-1 rounded text-xs font-bold mb-2 inline-block">
                 Mais Popular
               </div>
             )}
-            <h3 className="font-bold text-lg text-blue-900 mb-2">{option.title}</h3>
-            <p className="text-2xl font-bold text-blue-900 mb-2">{option.price}</p>
-            <p className="text-sm text-gray-600 mb-4">{option.desc}</p>
-            <ul className="space-y-2 mb-4">
+            <h3 className="font-bold text-sm text-blue-900 mb-1">{option.title}</h3>
+            <p className="text-lg font-bold text-blue-900 mb-1">{option.price}</p>
+            <p className="text-xs text-gray-600 mb-3">{option.desc}</p>
+            <ul className="space-y-1 mb-3">
               {option.features.map((f, i) => (
-                <li key={i} className="text-sm text-gray-700">✓ {f}</li>
+                <li key={i} className="text-xs text-gray-700">✓ {f}</li>
               ))}
             </ul>
-            <div className="pt-4 border-t">
+            <div className="pt-3 border-t">
               <p className="text-xs text-gray-600 font-semibold">Seu caminho:</p>
               <p className="text-xs text-blue-900">{option.path}</p>
             </div>

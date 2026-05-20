@@ -13,9 +13,14 @@ export function GlobalHeader() {
     <header className="bg-gradient-to-r from-blue-900 to-blue-800 text-white py-3 px-4 shadow-md">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <Link href="/">
-          <a className="flex items-center gap-3 hover:opacity-90 transition">
-            <img src="/manus-storage/anefac-logo_c90af10a.jpg" alt="ANEFAC" className="h-10" />
-            <span className="font-semibold text-sm">CCA</span>
+          <a className="flex items-center gap-2 hover:opacity-90 transition">
+            <div className="flex items-center gap-1">
+              <span className="text-2xl">🏢</span>
+              <div className="flex flex-col">
+                <span className="font-bold text-sm leading-tight text-white">ANEFAC</span>
+                <span className="font-semibold text-xs leading-tight text-white">CCA</span>
+              </div>
+            </div>
           </a>
         </Link>
 
