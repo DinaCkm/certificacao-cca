@@ -11,6 +11,7 @@ import Home from "./pages/Home";
 import { ExamSecurityCheck } from "./pages/ExamSecurityCheck";
 import { CertificationTypeSelection } from "./pages/CertificationTypeSelection";
 import { CertificationLevelSelection } from "./pages/CertificationLevelSelection";
+import { RequirementsValidation } from "./pages/RequirementsValidation";
 import { Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9, CoursesPage, CoursesRecoveryPage, CoursesPlatform, RecoveryCheckout, RetakeExamCheckout } from "./pages/Steps";
 
 function Router() {
@@ -18,6 +19,7 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/certification-type"} component={CertificationTypeSelection} />
+      <Route path={"/requirements-validation"} component={RequirementsValidation} />
       <Route path={"/certification-level"} component={CertificationLevelSelection} />
       <Route path={"/step-1"} component={Step1} />
       <Route path={"/step-2"} component={Step2} />

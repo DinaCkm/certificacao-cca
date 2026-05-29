@@ -76,10 +76,10 @@ export function CertificationTypeSelection() {
         {/* Navigation */}
         <div className="flex gap-3 justify-center">
           {selected && (
-            <Link href={`/certification-level?type=${selected}`}>
+            <Link href={`/requirements-validation?type=${selected}`}>
               <a>
                 <Button className="bg-blue-900 hover:bg-blue-800">
-                  Próximo: Escolher Nível →
+                  Próximo: Validar Requisitos →
                 </Button>
               </a>
             </Link>
