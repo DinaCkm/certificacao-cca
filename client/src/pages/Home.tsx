@@ -45,12 +45,10 @@ export default function Home() {
 
         {/* CTA Button */}
         <div className="mb-6 text-center">
-          <Link href="/certification-type">
-            <a>
-              <Button className="bg-blue-900 hover:bg-blue-800 text-white px-8 py-2 text-sm">
-                Iniciar Certificação →
-              </Button>
-            </a>
+          <Link href="/select-certification-type">
+            <Button className="bg-blue-900 hover:bg-blue-800 text-white px-8 py-2 text-sm">
+              Iniciar Certificação →
+            </Button>
           </Link>
         </div>
 
@@ -58,7 +56,7 @@ export default function Home() {
         <div className="mb-6 p-3 bg-amber-50 border-2 border-amber-300 rounded">
           <p className="text-xs text-amber-900 font-semibold mb-2">Links de Teste Rápido:</p>
           <div className="flex flex-wrap gap-2">
-            <Link href="/certification-type">
+            <Link href="/select-certification-type">
               <a className="text-blue-600 hover:underline text-sm">Iniciar do Zero</a>
             </Link>
             <Link href="/courses-platform?recovery=true">
