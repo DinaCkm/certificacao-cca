@@ -43,10 +43,24 @@ export default function Home() {
           ))}
         </div>
 
+        {/* CTA Button */}
+        <div className="mb-6 text-center">
+          <Link href="/certification-type">
+            <a>
+              <Button className="bg-blue-900 hover:bg-blue-800 text-white px-8 py-2 text-sm">
+                Iniciar Certificação →
+              </Button>
+            </a>
+          </Link>
+        </div>
+
         {/* Test Links */}
         <div className="mb-6 p-3 bg-amber-50 border-2 border-amber-300 rounded">
           <p className="text-xs text-amber-900 font-semibold mb-2">Links de Teste Rápido:</p>
           <div className="flex flex-wrap gap-2">
+            <Link href="/certification-type">
+              <a className="text-blue-600 hover:underline text-sm">Iniciar do Zero</a>
+            </Link>
             <Link href="/courses-platform?recovery=true">
               <a className="text-blue-600 hover:underline text-sm">Cursos de Recuperação</a>
             </Link>
@@ -63,8 +77,8 @@ export default function Home() {
         <Card className="p-4 bg-blue-50 border-2 border-blue-200">
           <h3 className="font-bold text-sm text-blue-900 mb-1">Sobre o Protótipo</h3>
           <p className="text-sm text-gray-700">
-            Este é um protótipo navegável que demonstra o fluxo completo do sistema de certificação CCA. 
-            Clique em qualquer etapa acima para explorar a jornada do usuário.
+            Este é um protótipo navegável que demonstra o fluxo completo do sistema de certificação ANEFAC. 
+            Clique em "Iniciar Certificação" acima ou em qualquer etapa para explorar a jornada do usuário.
           </p>
         </Card>
       </div>
