@@ -45,17 +45,23 @@ const NavButtons = ({ step, nextLink }: { step: number; nextLink?: string }) => 
   <div className="flex gap-3 mt-6">
     {step > 1 && (
       <Link href={`/step-${step - 1}`}>
-        <Button variant="outline">← Anterior</Button>
+        <a>
+          <Button variant="outline">← Anterior</Button>
+        </a>
       </Link>
     )}
     {nextLink && (
       <Link href={nextLink}>
-        <Button className="bg-blue-900 hover:bg-blue-800">Próximo →</Button>
+        <a>
+          <Button className="bg-blue-900 hover:bg-blue-800">Próximo →</Button>
+        </a>
       </Link>
     )}
     {step === 9 && (
       <Link href="/">
-        <Button className="bg-green-600 hover:bg-green-700">Voltar ao Início</Button>
+        <a>
+          <Button className="bg-green-600 hover:bg-green-700">Voltar ao Início</Button>
+        </a>
       </Link>
     )}
   </div>
@@ -891,8 +897,8 @@ export function Step6() {
         </Card>
 
         <div className="flex justify-between gap-4">
-          <Link href="/step-5"><Button variant="outline" className="px-8">← Anterior</Button></Link>
-          <Link href={allRequiredUploaded ? "/step-7" : "#"}><Button className={`px-8 ${allRequiredUploaded ? "bg-blue-900 hover:bg-blue-800" : "bg-gray-400 cursor-not-allowed"}`} disabled={!allRequiredUploaded}>Próximo →</Button></Link>
+          <Link href="/step-5"><a><Button variant="outline" className="px-8">← Anterior</Button></a></Link>
+          <Link href={allRequiredUploaded ? "/step-7" : "#"}><a><Button className={`px-8 ${allRequiredUploaded ? "bg-blue-900 hover:bg-blue-800" : "bg-gray-400 cursor-not-allowed"}`} disabled={!allRequiredUploaded}>Próximo →</Button></a></Link>
         </div>
       </div>
     </div>

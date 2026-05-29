@@ -26,17 +26,19 @@ export default function Home() {
             { step: 9, title: "Certificado", desc: "Receba seu diploma" },
           ].map((item) => (
             <Link key={item.step} href={`/step-${item.step}`}>
-              <Card className="p-4 hover:shadow-md transition-all cursor-pointer border-2 border-blue-900/20 hover:border-blue-900">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-blue-900 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">
-                    {item.step}
+              <a>
+                <Card className="p-4 hover:shadow-md transition-all cursor-pointer border-2 border-blue-900/20 hover:border-blue-900">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-blue-900 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">
+                      {item.step}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-sm text-blue-900">{item.title}</h3>
+                      <p className="text-xs text-gray-600">{item.desc}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-sm text-blue-900">{item.title}</h3>
-                    <p className="text-xs text-gray-600">{item.desc}</p>
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              </a>
             </Link>
           ))}
         </div>
@@ -44,9 +46,11 @@ export default function Home() {
         {/* CTA Button */}
         <div className="mb-6 text-center">
           <Link href="/certification-type">
-            <Button className="bg-blue-900 hover:bg-blue-800 text-white px-8 py-2 text-sm">
-              Iniciar Certificação →
-            </Button>
+            <a>
+              <Button className="bg-blue-900 hover:bg-blue-800 text-white px-8 py-2 text-sm">
+                Iniciar Certificação →
+              </Button>
+            </a>
           </Link>
         </div>
 
