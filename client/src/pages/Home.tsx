@@ -8,8 +8,56 @@ export default function Home() {
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-blue-900 mb-1">ANEFAC CCA</h1>
-          <p className="text-sm text-gray-600">Protótipo - Sistema de Certificação</p>
+          <h1 className="text-3xl font-bold text-blue-900 mb-1">ANEFAC</h1>
+          <p className="text-sm text-gray-600">Protótipo - Sistema de Certificação Multi-Certificações</p>
+        </div>
+
+        {/* Certifications Overview */}
+        <div className="mb-8 grid md:grid-cols-3 gap-4">
+          <Card className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300">
+            <h3 className="font-bold text-blue-900 mb-2">🎓 CAC</h3>
+            <p className="text-xs text-gray-700 mb-2">
+              <strong>Certificação Controller ANEFAC</strong>
+            </p>
+            <p className="text-xs text-gray-600 mb-3">
+              Voltada para profissionais de controladoria que buscam comprovar educação continuada e capacitação em 8 áreas: contabilidade, economia, finanças, tributos, administração, governança, tecnologia e capital humano.
+            </p>
+            <p className="text-xs font-semibold text-blue-900">Requisitos:</p>
+            <ul className="text-xs text-gray-700 list-disc list-inside">
+              <li>CAC: 2+ anos de experiência em controladoria</li>
+              <li>CAC Plus: Executivos com consolidação em grandes empresas</li>
+            </ul>
+          </Card>
+
+          <Card className="p-4 bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-300">
+            <h3 className="font-bold text-green-900 mb-2">📊 CCA</h3>
+            <p className="text-xs text-gray-700 mb-2">
+              <strong>Certificação Controller ANEFAC</strong>
+            </p>
+            <p className="text-xs text-gray-600 mb-3">
+              Direcionada a profissionais experientes em gestão que buscam validação de mercado e consolidação na função de Controller.
+            </p>
+            <p className="text-xs font-semibold text-green-900">Requisitos:</p>
+            <ul className="text-xs text-gray-700 list-disc list-inside">
+              <li>CCA: Graduação em Administração, Contabilidade ou Economia + experiência</li>
+              <li>CCA Plus: Consolidação de mercado e senioridade executiva</li>
+            </ul>
+          </Card>
+
+          <Card className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-300">
+            <h3 className="font-bold text-purple-900 mb-2">👥 Líderes</h3>
+            <p className="text-xs text-gray-700 mb-2">
+              <strong>Certificação em Desenvolvimento de Liderança</strong>
+            </p>
+            <p className="text-xs text-gray-600 mb-3">
+              Programa de desenvolvimento para profissionais que buscam validar e aprimorar suas competências em liderança e gestão de pessoas.
+            </p>
+            <p className="text-xs font-semibold text-purple-900">Requisitos:</p>
+            <ul className="text-xs text-gray-700 list-disc list-inside">
+              <li>Líderes: Profissionais em desenvolvimento de liderança</li>
+              <li>Líderes Executivos: Executivos com experiência consolidada</li>
+            </ul>
+          </Card>
         </div>
 
         {/* Navigation Grid */}
@@ -77,7 +125,7 @@ export default function Home() {
         <Card className="p-4 bg-blue-50 border-2 border-blue-200">
           <h3 className="font-bold text-sm text-blue-900 mb-1">Sobre o Protótipo</h3>
           <p className="text-sm text-gray-700">
-            Este é um protótipo navegável que demonstra o fluxo completo do sistema de certificação ANEFAC. 
+            Este é um protótipo navegável que demonstra o fluxo completo do sistema de certificação ANEFAC com suporte a múltiplas certificações. 
             Clique em "Iniciar Certificação" acima ou em qualquer etapa para explorar a jornada do usuário.
           </p>
         </Card>

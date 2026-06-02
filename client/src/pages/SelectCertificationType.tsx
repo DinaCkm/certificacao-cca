@@ -9,21 +9,27 @@ export function SelectCertificationType() {
 
   const certifications = [
     {
-      id: "cca",
-      title: "Certificação CCA",
-      description: "Certificação de Consultor de Conformidade Ambiental",
-      icon: "🌿",
-    },
-    {
-      id: "xxx",
-      title: "Certificação XXX",
-      description: "Certificação Especializada em Gestão",
+      id: "cac",
+      title: "CAC - Certificação Controller ANEFAC",
+      description: "Voltada para profissionais de controladoria que buscam comprovar sua educação continuada e alto nível de capacitação.",
+      requirements: "CAC: 2+ anos de experiência em controladoria | CAC Plus: Executivos com consolidação em grandes empresas",
+      areas: "Avalia 8 áreas: contabilidade, economia, finanças, tributos, administração, governança, tecnologia e capital humano",
       icon: "📊",
     },
     {
-      id: "leadership",
-      title: "Certificação de Liderança",
-      description: "Certificação em Desenvolvimento de Liderança",
+      id: "cca",
+      title: "CCA - Certificação Controller ANEFAC",
+      description: "Direcionada a profissionais experientes em gestão que buscam validação de mercado e consolidação na função de Controller.",
+      requirements: "CCA: Graduação + validação de experiência | CCA Plus: Profissionais com consolidação de mercado",
+      areas: "Foco em gestão e validação de experiência profissional",
+      icon: "📈",
+    },
+    {
+      id: "liders",
+      title: "Certificação de Líderes",
+      description: "Programa de desenvolvimento para profissionais que buscam validar e aprimorar suas competências em liderança e gestão de pessoas.",
+      requirements: "Líderes: Profissionais em desenvolvimento | Líderes Executivos: Executivos com experiência consolidada",
+      areas: "Desenvolvimento de liderança e gestão de pessoas",
       icon: "👥",
     },
   ];
@@ -61,7 +67,13 @@ export function SelectCertificationType() {
               <h3 className="text-lg font-bold text-blue-900 mb-2">
                 {cert.title}
               </h3>
-              <p className="text-sm text-gray-600">{cert.description}</p>
+              <p className="text-sm text-gray-600 mb-3">{cert.description}</p>
+              <div className="border-t pt-3">
+                <p className="text-xs font-semibold text-blue-900 mb-1">Requisitos:</p>
+                <p className="text-xs text-gray-600 mb-2">{cert.requirements}</p>
+                <p className="text-xs font-semibold text-blue-900 mb-1">Áreas:</p>
+                <p className="text-xs text-gray-600">{cert.areas}</p>
+              </div>
             </Card>
           ))}
         </div>
