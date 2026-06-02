@@ -9,7 +9,7 @@ export function CertificationDirectPreparationCheck() {
 
   const handleYesPreparation = () => {
     // Usuário fez os cursos preparatórios - vai direto para pagamento
-    window.location.href = "/payment-checkout?package=CertificacaoDireta";
+    window.location.href = "/payment?package=CertificacaoDireta";
   };
 
   const handleNoPreparation = () => {
@@ -19,7 +19,7 @@ export function CertificationDirectPreparationCheck() {
 
   const handleConfirmDirectCertification = () => {
     // Usuário confirma que quer ir direto - vai para pagamento
-    window.location.href = "/payment-checkout?package=CertificacaoDireta";
+    window.location.href = "/payment?package=CertificacaoDireta";
   };
 
   const handleCancelDirectCertification = () => {
@@ -95,7 +95,7 @@ export function CertificationDirectPreparationCheck() {
               <div className="bg-orange-50 p-4 rounded border-l-4 border-orange-600 mb-6">
                 <p className="text-sm text-orange-900">
                   <strong>Atenção:</strong> Fazer a certificação sem preparação adequada pode resultar em 
-                  reprovação. Você terá apenas uma oportunidade para fazer a prova.
+                  reprovação.
                 </p>
               </div>
 
