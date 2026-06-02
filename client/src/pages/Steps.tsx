@@ -831,6 +831,16 @@ export function Step8() {
 
 // Step 9 - Certificado
 export function Step9() {
+  // Generate a unique certificate code
+  const generateCertificateCode = () => {
+    const timestamp = new Date().getTime();
+    const random = Math.random().toString(36).substring(2, 15);
+    return `CCA-${timestamp}-${random}`.toUpperCase();
+  };
+
+  const certificateCode = generateCertificateCode();
+  const verificationLink = `https://egov.br/verify/${certificateCode}`;
+
   return (
     <StepLayout step={9} title="Certificado">
       <div className="max-w-2xl">
@@ -839,11 +849,61 @@ export function Step9() {
             <div className="text-6xl mb-4">🎓</div>
             <h2 className="text-3xl font-bold text-blue-900 mb-2">CERTIFICADO DE CONCLUSÃO</h2>
             <p className="text-lg text-gray-700 mb-6">Certificação de Crédito e Análise (CCA)</p>
-            <div className="border-t-2 border-blue-900 pt-4">
+            <div className="border-t-2 border-blue-900 pt-4 mb-6">
               <p className="text-gray-600">Certificado emitido em: {new Date().toLocaleDateString("pt-BR")}</p>
+            </div>
+            
+            {/* Authentication Section */}
+            <div className="bg-white p-6 rounded-lg border-2 border-gray-300 mt-6">
+              <h3 className="text-lg font-bold text-blue-900 mb-4">Autenticação Digital</h3>
+              
+              {/* Certificate Code */}
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">Código de Autenticação:</p>
+                <p className="font-mono text-sm bg-gray-100 p-3 rounded border-l-4 border-blue-900 break-all">
+                  {certificateCode}
+                </p>
+              </div>
+              
+              {/* Verification Link */}
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">Link de Verificação eGov:</p>
+                <p className="text-sm text-blue-600 break-all hover:underline cursor-pointer">
+                  {verificationLink}
+                </p>
+              </div>
+              
+              {/* QR Code Placeholder */}
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">Código QR:</p>
+                <div className="flex justify-center">
+                  <div className="w-32 h-32 bg-gray-200 border-2 border-gray-400 rounded flex items-center justify-center">
+                    <div className="text-center">
+                      <p className="text-2xl">📱</p>
+                      <p className="text-xs text-gray-600 mt-2">QR Code</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </Card>
+        {/* Download and Share Options */}
+        <Card className="p-6 mb-6 bg-gray-50">
+          <h3 className="text-lg font-bold text-blue-900 mb-4">Opções do Certificado</h3>
+          <div className="space-y-3">
+            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+              📥 Baixar Certificado (PDF)
+            </Button>
+            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+              🔗 Compartilhar Certificado
+            </Button>
+            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+              ✓ Verificar Autenticidade
+            </Button>
+          </div>
+        </Card>
+        
         <div className="flex gap-3 mt-6">
           <Button 
             variant="outline"
