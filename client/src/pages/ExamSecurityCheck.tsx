@@ -6,10 +6,82 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 export function ExamSecurityCheck() {
   const [examStarted, setExamStarted] = useState(false);
+  const [showWarning, setShowWarning] = useState(true);
+  const [agreedToWarning, setAgreedToWarning] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-4">
       <div className="max-w-2xl mx-auto">
+        {/* Modal de Aviso - Única Oportunidade */}
+        {showWarning && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className="bg-white max-w-md w-full">
+              <div className="p-6">
+                <div className="text-center mb-4">
+                  <div className="text-5xl mb-4">⚠️</div>
+                  <h2 className="text-2xl font-bold text-red-900 mb-2">Aviso Importante</h2>
+                </div>
+                
+                <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4 mb-6 space-y-3">
+                  <div className="flex gap-3">
+                    <span className="text-red-900 font-bold text-lg">⚡</span>
+                    <div>
+                      <p className="font-bold text-red-900">Uma Única Oportunidade</p>
+                      <p className="text-sm text-red-800">Você terá apenas UMA chance para fazer esta prova.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <span className="text-red-900 font-bold text-lg">🚫</span>
+                    <div>
+                      <p className="font-bold text-red-900">Sem Pausa ou Retorno</p>
+                      <p className="text-sm text-red-800">Ao clicar em INICIAR, você não poderá parar, sair ou retornar depois.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <span className="text-red-900 font-bold text-lg">💳</span>
+                    <div>
+                      <p className="font-bold text-red-900">Nova Compra para Tentar Novamente</p>
+                      <p className="text-sm text-red-800">Para fazer uma nova avaliação, você precisará voltar à área inicial da plataforma e fazer uma nova compra.</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mb-6 p-4 bg-gray-50 border border-gray-300 rounded-lg">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={agreedToWarning}
+                      onChange={(e) => setAgreedToWarning(e.target.checked)}
+                      className="mt-1"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Entendo que tenho apenas uma oportunidade e que não poderei parar ou retornar depois. Estou pronto(a) para iniciar.
+                    </span>
+                  </label>
+                </div>
+                
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => window.history.back()}
+                  >
+                    ← Voltar
+                  </Button>
+                  <Button
+                    className="w-full bg-red-600 hover:bg-red-700 text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!agreedToWarning}
+                    onClick={() => setShowWarning(false)}
+                  >
+                    Prosseguir →
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
         {!examStarted ? (
           <>
             {/* Header */}
@@ -81,7 +153,7 @@ export function ExamSecurityCheck() {
                 className="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold"
                 onClick={() => setExamStarted(true)}
               >
-                ✓ Iniciar Prova
+                ▶️ Iniciar Prova
               </Button>
             </div>
           </>
