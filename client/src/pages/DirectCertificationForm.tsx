@@ -58,8 +58,8 @@ export function DirectCertificationForm() {
     setTimeout(() => {
       setIsProcessing(false);
       toast.success("Ficha preenchida com sucesso!");
-      // Redirecionar para página de aguardar 15 dias
-      window.location.href = "/direct-certification-waiting";
+      // Redirecionar para upload de documentos
+      window.location.href = "/step-6?type=direct";
     }, 1500);
   };
 
