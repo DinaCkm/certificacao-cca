@@ -669,7 +669,7 @@ export function Step7() {
 
   const handleScheduleInterview = () => {
     if (!selectedDate || !selectedTime) {
-      toast.error("Por favor, selecione uma data e horário");
+      // toast.error("Por favor, selecione uma data e horário");
       return;
     }
     setShowConfirmation(true);
