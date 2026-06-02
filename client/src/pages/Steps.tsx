@@ -615,18 +615,42 @@ export function Step6() {
 
 // Step 7 - Entrevista Técnica
 export function Step7() {
+  const [uploadDate] = useState(() => new Date());
+
+  const calculateInterviewDate = () => {
+    const date = new Date(uploadDate);
+    date.setDate(date.getDate() + 15);
+    return date;
+  };
+
+  const interviewDate = calculateInterviewDate();
+  const formattedDate = interviewDate.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   return (
     <StepLayout step={7} title="Entrevista Técnica">
       <div className="max-w-2xl">
-        <Card className="p-6 mb-6">
-          <h2 className="text-lg font-semibold text-blue-900 mb-4">Próxima Etapa: Entrevista Técnica</h2>
+        <Card className="p-6 mb-6 border-2 border-blue-300 bg-blue-50">
+          <h2 className="text-lg font-semibold text-blue-900 mb-4">Agendamento de Entrevista</h2>
           <p className="text-gray-700 mb-4">
-            Você será contatado em breve para agendar sua entrevista técnica com a comissão de certificação.
+            Sua entrevista técnica poderá ser agendada a partir de <strong>{formattedDate}</strong>.
           </p>
-          <p className="text-gray-700">
+          <p className="text-gray-700 mb-4">
+            Isso ocorre 15 dias após o envio de todos os seus documentos, conforme as normas de certificação.
+          </p>
+        </Card>
+
+        <Card className="p-6 mb-6">
+          <h2 className="text-lg font-semibold text-blue-900 mb-4">Sobre a Entrevista Técnica</h2>
+          <p className="text-gray-700 mb-4">
             A entrevista durará aproximadamente 30 minutos e abordará tópicos relacionados à sua experiência profissional.
           </p>
         </Card>
+
         <NavButtons step={7} nextLink="/step-8" />
       </div>
     </StepLayout>

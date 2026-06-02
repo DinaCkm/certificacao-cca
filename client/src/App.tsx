@@ -21,6 +21,7 @@ import { PaymentCheckout } from "./pages/PaymentCheckout";
 import { WelcomeCourses } from "./pages/WelcomeCourses";
 import { CoursesPlatform } from "./pages/CoursesPlatform";
 import { ExamResults } from "./pages/ExamResults";
+import { DocumentalAnalysisCheckout } from "./pages/DocumentalAnalysisCheckout";
 
 function Router() {
   return (
@@ -41,6 +42,7 @@ function Router() {
       <Route path={"/courses-learning"} component={CoursesPlatform} />
       <Route path={"/exam-security-check"} component={ExamSecurityCheck} />
       <Route path={"/exam-results"} component={ExamResults} />
+      <Route path={"/documental-analysis-checkout"} component={DocumentalAnalysisCheckout} />
       <Route path={"/step-5"} component={Step5} />
       <Route path={"/step-6"} component={Step6} />
       <Route path={"/step-7"} component={Step7} />

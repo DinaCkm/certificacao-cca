@@ -83,7 +83,7 @@ export function ExamResults() {
 
                   {/* Action Button */}
                   <Button
-                    onClick={() => window.location.href = "/step-6"}
+                    onClick={() => window.location.href = "/documental-analysis-checkout"}
                     className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 text-lg"
                   >
                     Prosseguir para Análise Documental →
