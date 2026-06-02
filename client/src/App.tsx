@@ -34,6 +34,9 @@ import { DirectCertificationInterviewScheduling } from "./pages/DirectCertificat
 import { DirectCertificationInterviewRoom } from "./pages/DirectCertificationInterviewRoom";
 import { DirectCertificationResult } from "./pages/DirectCertificationResult";
 import { DirectRecordingPlayback } from "./pages/DirectRecordingPlayback";
+import { InterviewScheduling } from "./pages/InterviewScheduling";
+import { InterviewRoom } from "./pages/InterviewRoom";
+import { InterviewResult } from "./pages/InterviewResult";
 
 function Router() {
   return (
@@ -72,6 +75,9 @@ function Router() {
       <Route path={"/direct-interview-room"} component={DirectCertificationInterviewRoom} />
       <Route path={"/direct-certification-result"} component={DirectCertificationResult} />
       <Route path={"/direct-recording-playback"} component={DirectRecordingPlayback} />
+      <Route path={"/interview-scheduling"} component={InterviewScheduling} />
+      <Route path={"/interview-room"} component={InterviewRoom} />
+      <Route path={"/interview-result"} component={InterviewResult} />
 
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

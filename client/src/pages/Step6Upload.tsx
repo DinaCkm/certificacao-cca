@@ -248,7 +248,7 @@ export function Step6Upload() {
               </Button>
             </a>
           </Link>
-          <Link href={allRequiredUploaded ? (isDirect ? "/direct-certification-result" : "/step-7") : "#"}>
+          <Link href={allRequiredUploaded ? "/interview-scheduling" : "#"}>
             <a>
               <Button
                 className={`px-8 ${allRequiredUploaded ? "bg-blue-900 hover:bg-blue-800" : "bg-gray-400 cursor-not-allowed"}`}
