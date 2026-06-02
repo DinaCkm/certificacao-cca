@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Link, useSearch } from "wouter";
+import { Link, useSearch, useRouter } from "wouter";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from "recharts";
 import { CoursesPlatform as CoursesPlatformComponent } from "./CoursesPlatform";
 import { RecoveryCheckout as RecoveryCheckoutComponent } from "./RecoveryCheckout";
@@ -10,6 +10,7 @@ import { useUserData } from "@/contexts/UserDataContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 // Context para gerenciar o fluxo do usuário
 const useUserFlow = () => {
@@ -271,68 +272,71 @@ export function Step3() {
     },
   ];
 
-  if (selectedPackage) {
-    const pkg = packages.find(p => p.id === selectedPackage);
-    if (pkg) {
-      return (
-        <StepLayout step={3} title="Escolha o Pacote de Certificação">
-          <Card className="p-6 mb-6 border-2 border-green-600 bg-green-50">
-            <h2 className="text-lg font-semibold text-green-900 mb-4">✓ Pacote Selecionado</h2>
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-xl font-bold text-green-900">{pkg.title}</h3>
-                <p className="text-2xl font-bold text-green-600 mt-2">{pkg.price}</p>
-              </div>
-              <Button 
-                variant="outline" 
-                onClick={() => setSelectedPackage(null)}
-                className="text-blue-900 border-blue-900"
-              >
-                Mudar Pacote
-              </Button>
-            </div>
-          </Card>
-          <div className="flex gap-3 mt-6">
-            <Link href={`/step-${3 - 1}`}>
-              <a>
-                <Button variant="outline">← Anterior</Button>
-              </a>
-            </Link>
-            <Link href={pkg.nextStep}>
-              <a>
-                <Button className="bg-blue-900 hover:bg-blue-800">Próximo →</Button>
-              </a>
-            </Link>
-          </div>
-        </StepLayout>
-      );
+  const router = useRouter();
+  const selectedPkg = packages.find(p => p.id === selectedPackage);
+
+  const handleConfirm = () => {
+    if (selectedPkg) {
+      window.location.href = selectedPkg.nextStep;
     }
-  }
+  };
 
   return (
-    <StepLayout step={3} title="Escolha o Pacote de Certificação">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        {packages.map((pkg) => (
-          <Card key={pkg.id} className={`p-4 cursor-pointer border-2 transition-all ${pkg.popular ? 'border-blue-900 bg-blue-50' : 'border-gray-200 hover:border-blue-900'}`}>
-            {pkg.popular && <p className="text-xs font-bold text-blue-900 mb-2">MAIS POPULAR</p>}
-            <h3 className="font-bold text-blue-900 mb-2">{pkg.title}</h3>
-            <p className="text-2xl font-bold text-green-600 mb-3">{pkg.price}</p>
-            <ul className="text-xs space-y-1 mb-4">
-              {pkg.features.map((f, i) => (
-                <li key={i} className="text-gray-700">✓ {f}</li>
-              ))}
-            </ul>
+    <>
+      <StepLayout step={3} title="Escolha o Pacote de Certificacao">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {packages.map((pkg) => (
+            <Card key={pkg.id} className={`p-4 cursor-pointer border-2 transition-all ${pkg.popular ? 'border-blue-900 bg-blue-50' : 'border-gray-200 hover:border-blue-900'}`}>
+              {pkg.popular && <p className="text-xs font-bold text-blue-900 mb-2">MAIS POPULAR</p>}
+              <h3 className="font-bold text-blue-900 mb-2">{pkg.title}</h3>
+              <p className="text-2xl font-bold text-green-600 mb-3">{pkg.price}</p>
+              <ul className="text-xs space-y-1 mb-4">
+                {pkg.features.map((f, i) => (
+                  <li key={i} className="text-gray-700">✓ {f}</li>
+                ))}
+              </ul>
+              <Button 
+                className="w-full bg-blue-900 hover:bg-blue-800 text-white text-xs"
+                onClick={() => setSelectedPackage(pkg.id)}
+              >
+                Selecionar
+              </Button>
+            </Card>
+          ))}
+        </div>
+        <NavButtons step={3} nextLink={undefined} />
+      </StepLayout>
+
+      {/* Modal de Confirmacao */}
+      <Dialog open={!!selectedPackage} onOpenChange={(open) => !open && setSelectedPackage(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Pacote Selecionado</DialogTitle>
+          </DialogHeader>
+          {selectedPkg && (
+            <div className="py-4">
+              <h3 className="text-lg font-bold text-blue-900 mb-2">{selectedPkg.title}</h3>
+              <p className="text-2xl font-bold text-green-600 mb-4">{selectedPkg.price}</p>
+              <p className="text-sm text-gray-600 mb-4">Você está prestes a selecionar este pacote. Deseja continuar?</p>
+            </div>
+          )}
+          <DialogFooter>
             <Button 
-              className="w-full bg-blue-900 hover:bg-blue-800 text-white text-xs"
-              onClick={() => setSelectedPackage(pkg.id)}
+              variant="outline"
+              onClick={() => setSelectedPackage(null)}
             >
-              Selecionar
+              Cancelar
             </Button>
-          </Card>
-        ))}
-      </div>
-      <NavButtons step={3} nextLink={undefined} />
-    </StepLayout>
+            <Button 
+              className="bg-green-600 hover:bg-green-700 text-white"
+              onClick={handleConfirm}
+            >
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
