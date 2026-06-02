@@ -22,6 +22,7 @@ import { WelcomeCourses } from "./pages/WelcomeCourses";
 import { CoursesPlatform } from "./pages/CoursesPlatform";
 import { ExamResults } from "./pages/ExamResults";
 import { DocumentalAnalysisCheckout } from "./pages/DocumentalAnalysisCheckout";
+import { LattesCurriculumForm } from "./pages/LattesCurriculumForm";
 
 function Router() {
   return (
@@ -48,6 +49,7 @@ function Router() {
       <Route path={"/step-7"} component={Step7} />
       <Route path={"/step-8"} component={Step8} />
       <Route path={"/step-9"} component={Step9} />
+      <Route path={"/lattes-curriculum-form"} component={LattesCurriculumForm} />
 
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
