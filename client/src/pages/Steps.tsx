@@ -282,8 +282,7 @@ export function Step3() {
   };
 
   return (
-    <>
-      <StepLayout step={3} title="Escolha o Pacote de Certificacao">
+    <StepLayout step={3} title="Escolha o Pacote de Certificacao">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {packages.map((pkg) => (
             <Card key={pkg.id} className={`p-4 cursor-pointer border-2 transition-all ${pkg.popular ? 'border-blue-900 bg-blue-50' : 'border-gray-200 hover:border-blue-900'}`}>
@@ -305,38 +304,37 @@ export function Step3() {
           ))}
         </div>
         <NavButtons step={3} nextLink={undefined} />
-      </StepLayout>
 
-      {/* Modal de Confirmacao */}
-      <Dialog open={!!selectedPackage} onOpenChange={(open) => !open && setSelectedPackage(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Pacote Selecionado</DialogTitle>
-          </DialogHeader>
-          {selectedPkg && (
-            <div className="py-4">
-              <h3 className="text-lg font-bold text-blue-900 mb-2">{selectedPkg.title}</h3>
-              <p className="text-2xl font-bold text-green-600 mb-4">{selectedPkg.price}</p>
-              <p className="text-sm text-gray-600 mb-4">Você está prestes a selecionar este pacote. Deseja continuar?</p>
-            </div>
-          )}
-          <DialogFooter>
-            <Button 
-              variant="outline"
-              onClick={() => setSelectedPackage(null)}
-            >
-              Cancelar
-            </Button>
-            <Button 
-              className="bg-green-600 hover:bg-green-700 text-white"
-              onClick={handleConfirm}
-            >
-              Confirmar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+        {/* Modal de Confirmacao */}
+        <Dialog open={!!selectedPackage} onOpenChange={(open) => !open && setSelectedPackage(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Pacote Selecionado</DialogTitle>
+            </DialogHeader>
+            {selectedPkg && (
+              <div className="py-4">
+                <h3 className="text-lg font-bold text-blue-900 mb-2">{selectedPkg.title}</h3>
+                <p className="text-2xl font-bold text-green-600 mb-4">{selectedPkg.price}</p>
+                <p className="text-sm text-gray-600 mb-4">Você está prestes a selecionar este pacote. Deseja continuar?</p>
+              </div>
+            )}
+            <DialogFooter>
+              <Button 
+                variant="outline"
+                onClick={() => setSelectedPackage(null)}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                className="bg-green-600 hover:bg-green-700 text-white"
+                onClick={handleConfirm}
+              >
+                Confirmar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </StepLayout>
   );
 }
 

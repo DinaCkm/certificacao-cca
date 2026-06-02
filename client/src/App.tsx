@@ -18,6 +18,7 @@ import { SelectCertificationLevel } from "./pages/SelectCertificationLevel";
 import { ViewFlowchart } from "./pages/ViewFlowchart";
 import { Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9 } from "./pages/Steps";
 import { PaymentCheckout } from "./pages/PaymentCheckout";
+import { WelcomeCourses } from "./pages/WelcomeCourses";
 
 function Router() {
   return (
@@ -34,6 +35,7 @@ function Router() {
       <Route path={"/step-3"} component={Step3} />
       <Route path={"/step-4"} component={Step4} />
       <Route path={"/payment"} component={PaymentCheckout} />
+      <Route path={"/welcome-courses"} component={WelcomeCourses} />
       <Route path={"/exam-security-check"} component={ExamSecurityCheck} />
       <Route path={"/step-5"} component={Step5} />
       <Route path={"/step-6"} component={Step6} />

@@ -17,11 +17,13 @@ export function PaymentCheckout() {
     // Simular processamento de pagamento
     setTimeout(() => {
       setIsProcessing(false);
-      // Redirecionar para o próximo step
+      // Redirecionar para Bem-vindo às Aulas
       if (level === "2") {
+        // Nível 2 pula os cursos e vai direto para upload documental
         window.location.href = "/step-6?level=2";
       } else {
-        window.location.href = "/step-5?level=1";
+        // Nível 1 vai para página de Bem-vindo às Aulas
+        window.location.href = `/welcome-courses?package=${packageName}&name=Aluno`;
       }
     }, 2000);
   };
