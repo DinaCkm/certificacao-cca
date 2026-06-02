@@ -64,9 +64,9 @@ export function SelectCertificationType() {
         {/* Action Button */}
         <div className="flex justify-center gap-4">
           {selected ? (
-            <Link href={`/select-level?type=${selected}`}>
+            <Link href={`/view-flowchart?type=${selected}`}>
               <Button className="bg-blue-900 hover:bg-blue-800 px-8">
-                Próximo: Escolher Nível →
+                Próximo: Visualizar Fluxograma →
               </Button>
             </Link>
           ) : (
