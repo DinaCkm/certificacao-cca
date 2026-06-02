@@ -46,9 +46,11 @@ export default function Home() {
         {/* CTA Button */}
         <div className="mb-6 text-center">
           <Link href="/select-certification-type">
-            <Button className="bg-blue-900 hover:bg-blue-800 text-white px-8 py-2 text-sm">
-              Iniciar Certificação →
-            </Button>
+            <a>
+              <Button className="bg-blue-900 hover:bg-blue-800 text-white px-8 py-2 text-sm">
+                Iniciar Certificação →
+              </Button>
+            </a>
           </Link>
         </div>
 

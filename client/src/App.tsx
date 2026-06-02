@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { GlobalHeader } from "./components/GlobalHeader";
@@ -19,7 +19,8 @@ import { Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9, CoursesP
 function Router() {
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
+      <Route path={"/"} component={SelectCertificationType} />
+      <Route path={"/home"} component={Home} />
       <Route path={"/select-certification-type"} component={SelectCertificationType} />
       <Route path={"/select-level"} component={SelectCertificationLevel} />
       <Route path={"/certification-type"} component={CertificationTypeSelection} />
@@ -53,6 +54,9 @@ function Router() {
 // - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
 
 function App() {
+  const [location] = useLocation();
+  const isInitialPage = location === "/";
+
   return (
     <ErrorBoundary>
       <ThemeProvider
@@ -61,14 +65,14 @@ function App() {
       >
         <TooltipProvider>
           <Toaster />
-          <GlobalHeader />
-          <div className="flex">
-            <NavigationSidebar />
-            <div className="flex-1 min-h-screen">
+          {!isInitialPage && <GlobalHeader />}
+          <div className={isInitialPage ? "" : "flex"}>
+            {!isInitialPage && <NavigationSidebar />}
+            <div className={isInitialPage ? "w-full" : "flex-1 min-h-screen"}>
               <Router />
             </div>
           </div>
-          <GlobalFooter />
+          {!isInitialPage && <GlobalFooter />}
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
