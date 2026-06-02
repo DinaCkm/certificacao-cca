@@ -107,8 +107,8 @@ function App() {
           <TooltipProvider>
             <Toaster />
             {!isInitialPage && <GlobalHeader />}
-            <div className={isInitialPage && location === "/" ? "" : "flex"}>
-              {!(isInitialPage && location === "/") && <NavigationSidebar />}
+            <div className={isInitialPage ? "" : "flex"}>
+              {!isInitialPage && <NavigationSidebar />}
               <div className={isInitialPage && location === "/" ? "w-full" : "flex-1 min-h-screen"}>
                 <Router />
               </div>
