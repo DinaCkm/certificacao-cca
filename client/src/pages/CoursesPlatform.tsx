@@ -206,16 +206,26 @@ export function CoursesPlatform() {
 
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Link href="/">
-                <a className="text-blue-400 hover:text-blue-300">← Voltar</a>
-              </Link>
+              <button
+                onClick={() => window.history.back()}
+                className="text-blue-400 hover:text-blue-300 cursor-pointer"
+              >
+                ← Voltar
+              </button>
               <h1 className="text-2xl font-bold">{isRecovery ? "📚 Cursos de Recuperação" : "🎓 Plataforma de Cursos ANEFAC"}</h1>
             </div>
-            <Link href={isRecovery ? "/retake-exam-checkout" : "/step-4"}>
-              <a>
-                <Button className="bg-blue-600 hover:bg-blue-700">{isRecovery ? "Fazer Prova Novamente" : "Ir para Prova"} →</Button>
-              </a>
-            </Link>
+            <Button 
+              onClick={() => {
+                if (isRecovery) {
+                  window.location.href = "/retake-exam-checkout";
+                } else {
+                  window.location.href = "/step-4";
+                }
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isRecovery ? "Fazer Prova Novamente" : "AGENDAR A PROVA"} →
+            </Button>
           </div>
 
           {/* Search Bar */}
