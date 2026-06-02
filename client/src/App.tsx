@@ -15,7 +15,7 @@ import { CertificationLevelSelection } from "./pages/CertificationLevelSelection
 import { RequirementsValidation } from "./pages/RequirementsValidation";
 import { SelectCertificationType } from "./pages/SelectCertificationType";
 import { SelectCertificationLevel } from "./pages/SelectCertificationLevel";
-import { ViewFlowchart } from "./pages/ViewFlowchart";
+
 import { Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9 } from "./pages/Steps";
 import { PaymentCheckout } from "./pages/PaymentCheckout";
 import { WelcomeCourses } from "./pages/WelcomeCourses";
@@ -45,7 +45,7 @@ function Router() {
       <Route path={"/"} component={SelectCertificationType} />
       <Route path={"/home"} component={Home} />
       <Route path={"/select-certification-type"} component={SelectCertificationType} />
-      <Route path={"/view-flowchart"} component={ViewFlowchart} />
+
       <Route path={"/select-level"} component={SelectCertificationLevel} />
       <Route path={"/select-purchase-type"} component={SelectPurchaseType} />
       <Route path={"/certification-type"} component={CertificationTypeSelection} />

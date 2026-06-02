@@ -7,7 +7,7 @@ import { BackToHomeButton } from "@/components/BackToHomeButton";
 export function SelectCertificationLevel() {
   const [location] = useLocation();
   const params = new URLSearchParams(location.split("?")[1]);
-  const certType = params.get("type") || "cca";
+  const certType = params.get("cert") || "cca";
   const [selected, setSelected] = useState<string | null>(null);
 
   const levels = [
