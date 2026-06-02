@@ -33,9 +33,12 @@ export function PaymentCheckout() {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-12">
-          <Link href="/step-4">
-            <a className="text-blue-900 hover:underline mb-4 inline-block">← Voltar</a>
-          </Link>
+          <button
+            onClick={() => window.history.back()}
+            className="text-blue-900 hover:underline mb-4 inline-block cursor-pointer"
+          >
+            ← Voltar
+          </button>
 
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-blue-900 mb-2">💳 Finalizar Compra</h1>
@@ -130,13 +133,13 @@ export function PaymentCheckout() {
 
         {/* Back Button */}
         <div className="mt-8 text-center">
-          <Link href="/step-4">
-            <a>
-              <Button variant="outline" className="px-8">
-                ← Voltar
-              </Button>
-            </a>
-          </Link>
+          <Button 
+            variant="outline" 
+            className="px-8"
+            onClick={() => window.history.back()}
+          >
+            ← Voltar
+          </Button>
         </div>
       </div>
     </div>

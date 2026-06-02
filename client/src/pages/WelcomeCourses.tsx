@@ -66,6 +66,13 @@ export function WelcomeCourses() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
       <div className="max-w-4xl mx-auto">
+        {/* Back Button */}
+        <button
+          onClick={() => window.history.back()}
+          className="text-blue-900 hover:underline mb-6 inline-block text-sm cursor-pointer"
+        >
+          ← Voltar
+        </button>
         {/* Header */}
         <div className="text-center mb-12">
           <Trophy className="w-16 h-16 text-blue-600 mx-auto mb-4" />

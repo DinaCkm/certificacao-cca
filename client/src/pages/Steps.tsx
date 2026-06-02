@@ -27,9 +27,12 @@ const StepLayout = ({ step, title, children }: { step: number; title: string; ch
   <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-3">
     <div className="max-w-5xl mx-auto">
       <div className="mb-6">
-        <Link href="/">
-          <a className="text-blue-900 hover:underline mb-2 inline-block text-sm">← Voltar</a>
-        </Link>
+        <button
+          onClick={() => window.history.back()}
+          className="text-blue-900 hover:underline mb-2 inline-block text-sm cursor-pointer"
+        >
+          ← Voltar
+        </button>
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 bg-blue-900 text-white rounded-full flex items-center justify-center font-bold text-sm">
             {step}
@@ -48,11 +51,12 @@ const StepLayout = ({ step, title, children }: { step: number; title: string; ch
 const NavButtons = ({ step, nextLink, onNext }: { step: number; nextLink?: string; onNext?: () => void }) => (
   <div className="flex gap-3 mt-6">
     {step > 1 && (
-      <Link href={`/step-${step - 1}`}>
-        <a>
-          <Button variant="outline">← Anterior</Button>
-        </a>
-      </Link>
+      <Button 
+        variant="outline"
+        onClick={() => window.history.back()}
+      >
+        ← Anterior
+      </Button>
     )}
     {nextLink && (
       <Link href={nextLink}>
@@ -75,24 +79,18 @@ const NavButtons = ({ step, nextLink, onNext }: { step: number; nextLink?: strin
 export function Step1() {
   return (
     <StepLayout step={1} title="Bem-vindo à Certificação">
-      <Card className="p-6 mb-6 bg-blue-50 border-blue-200">
-        <h2 className="text-lg font-semibold text-blue-900 mb-3">Sua Jornada de Certificação</h2>
-        <p className="text-sm text-gray-700 mb-4">
-          Você está iniciando o processo de certificação profissional. As próximas etapas incluem:
-        </p>
-        <ul className="space-y-2 text-sm text-gray-700">
-          <li>✓ <strong>Cadastro Básico:</strong> Informações pessoais e profissionais</li>
-          <li>✓ <strong>Pagamento:</strong> Escolha do pacote de certificação</li>
-          <li>✓ <strong>Prova/Preparatório:</strong> Avaliação de conhecimento</li>
-          <li>✓ <strong>Resultado:</strong> Visualização do desempenho</li>
-          <li>✓ <strong>Documentação:</strong> Envio de documentos e cadastro completo</li>
-          <li>✓ <strong>Entrevista Técnica:</strong> Validação com a comissão</li>
-          <li>✓ <strong>Decisão Final:</strong> Resultado da certificação</li>
-          <li>✓ <strong>Certificado:</strong> Recebimento do diploma</li>
-        </ul>
-      </Card>
-
-      <NavButtons step={1} nextLink="/step-2" />
+      <div className="max-w-2xl">
+        <Card className="p-6 mb-6">
+          <h2 className="text-lg font-semibold text-blue-900 mb-4">Sobre a Certificação CCA</h2>
+          <p className="text-gray-700 mb-4">
+            A Certificação de Crédito e Análise (CCA) é uma certificação profissional reconhecida que valida suas competências em análise de crédito e conformidade.
+          </p>
+          <p className="text-gray-700">
+            Este processo de certificação inclui cursos preparatórios, prova de conhecimento, análise documental e entrevista técnica.
+          </p>
+        </Card>
+        <NavButtons step={1} nextLink="/step-2" />
+      </div>
     </StepLayout>
   );
 }
@@ -105,103 +103,91 @@ export function Step2() {
     email: "",
     phone: "",
   });
+  const search = useSearch();
+  const params = new URLSearchParams(search);
+  const level = params.get("level");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleNext = () => {
     if (formData.name && formData.cpf && formData.email && formData.phone) {
-      localStorage.setItem("userBasicData", JSON.stringify(formData));
+      // Salvar dados em localStorage
+      localStorage.setItem("userProfileData", JSON.stringify(formData));
+      if (level === "2") {
+        window.location.href = "/step-3?level=2";
+      } else {
+        window.location.href = "/step-3?level=1";
+      }
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-3">
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-6">
-          <Link href="/select-level">
-            <a className="text-blue-900 hover:underline mb-2 inline-block text-sm">← Voltar</a>
-          </Link>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-blue-900 text-white rounded-full flex items-center justify-center font-bold text-sm">
-              1
-            </div>
+    <StepLayout step={2} title="Perfil Profissional">
+      <div className="max-w-2xl">
+        <Card className="p-6 mb-6">
+          <div className="space-y-4">
             <div>
-              <h1 className="text-2xl font-bold text-blue-900">Cadastro Básico</h1>
-              <p className="text-xs text-gray-600">Etapa 1 de 8</p>
-            </div>
-          </div>
-        </div>
-      <Card className="p-6 mb-6">
-        <form className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="name" className="text-sm font-medium">Nome Completo *</Label>
+              <Label htmlFor="name">Nome Completo *</Label>
               <Input
                 id="name"
                 name="name"
-                placeholder="Seu nome completo"
                 value={formData.name}
                 onChange={handleChange}
-                className="mt-1"
+                placeholder="Digite seu nome completo"
               />
             </div>
             <div>
-              <Label htmlFor="cpf" className="text-sm font-medium">CPF *</Label>
+              <Label htmlFor="cpf">CPF *</Label>
               <Input
                 id="cpf"
                 name="cpf"
-                placeholder="000.000.000-00"
                 value={formData.cpf}
                 onChange={handleChange}
-                className="mt-1"
+                placeholder="000.000.000-00"
               />
             </div>
             <div>
-              <Label htmlFor="email" className="text-sm font-medium">Email *</Label>
+              <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
                 name="email"
                 type="email"
-                placeholder="seu.email@example.com"
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1"
+                placeholder="seu@email.com"
               />
             </div>
             <div>
-              <Label htmlFor="phone" className="text-sm font-medium">Telefone *</Label>
+              <Label htmlFor="phone">Telefone *</Label>
               <Input
                 id="phone"
                 name="phone"
-                placeholder="(11) 99999-9999"
                 value={formData.phone}
                 onChange={handleChange}
-                className="mt-1"
+                placeholder="(11) 99999-9999"
               />
             </div>
           </div>
-        </form>
-      </Card>
-
-      <div className="flex gap-3 mt-6">
-        <Link href="/select-level">
-          <a>
-            <Button variant="outline">← Anterior</Button>
-          </a>
-        </Link>
-        <Link href="/step-3">
-          <a>
-            <Button className="bg-blue-900 hover:bg-blue-800" onClick={handleNext}>
-              Próximo →
-            </Button>
-          </a>
-        </Link>
+        </Card>
+        <div className="flex gap-3 mt-6">
+          <Button 
+            variant="outline"
+            onClick={() => window.history.back()}
+          >
+            ← Anterior
+          </Button>
+          <Button 
+            className="bg-blue-900 hover:bg-blue-800"
+            onClick={handleNext}
+          >
+            Próximo →
+          </Button>
+        </div>
       </div>
-      </div>
-    </div>
+    </StepLayout>
   );
 }
 
@@ -253,7 +239,7 @@ export function Step3() {
       title: "Certificação Direta",
       price: "R$ 499",
       features: ["Acesso à prova", "Resultado imediato", "Entrevista técnica"],
-      nextStep: "/step-5", // Pula Step-4 (Cursos) e vai direto para Step-5 (Resultado)
+      nextStep: "/payment?package=Certificação Direta&price=499&level=1", // Vai para pagamento
     },
     {
       id: "prep",
@@ -268,7 +254,7 @@ export function Step3() {
       title: "Pacote Completo",
       price: "R$ 1.299",
       features: ["Tudo incluído", "Suporte total", "Aulas ON-LINE"],
-      nextStep: "/step-5", // Vai direto para Step-5 (Resultado)
+      nextStep: "/payment?package=Pacote Completo&price=1299&level=1", // Vai para pagamento
     },
   ];
 
@@ -342,168 +328,297 @@ export function Step3() {
 export function Step4() {
   const search = useSearch();
   const params = new URLSearchParams(search);
-  const level = params.get('level') || '1';
+  const packageName = params.get("package") || "Preparatório";
 
   const courses = [
     {
       id: 1,
       title: "Fundamentos de Controladoria",
-      category: "Controladoria",
-      duration: "12h",
-      level: "Básico",
       description: "Conceitos essenciais de controladoria e gestão financeira.",
-      image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/curso-controladoria-PuwWN4hU9HYqcW3Ee3nM4M.webp",
+      category: "Controladoria",
+      level: "Intermediário",
+      duration: "12h",
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/course-controladoria-BJNtryQnGGbzJxxjrdzVdX.webp",
     },
     {
       id: 2,
       title: "Análise de Demonstrações Financeiras",
-      category: "Análise",
-      duration: "15h",
-      level: "Intermediário",
       description: "Técnicas avançadas de análise de balanços e relatórios.",
-      image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/curso-analise-financeira-fAy3suMnoBsu7aCBwJm6QF.webp",
+      category: "Análise",
+      level: "Avançado",
+      duration: "15h",
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/course-analise-financeira-BJNtryQnGGbzJxxjrdzVdX.webp",
     },
     {
       id: 3,
       title: "Gestão de Riscos Financeiros",
-      category: "Finanças",
-      duration: "10h",
-      level: "Intermediário",
       description: "Identificação e mitigação de riscos em operações financeiras.",
-      image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/curso-gestao-riscos-c6BKq5ETyAMJeJJNEUdX33.webp",
+      category: "Finanças",
+      level: "Avançado",
+      duration: "10h",
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/course-gestao-riscos-BJNtryQnGGbzJxxjrdzVdX.webp",
     },
     {
       id: 4,
       title: "Compliance e Conformidade",
-      category: "Compliance",
-      duration: "8h",
-      level: "Básico",
       description: "Normas e procedimentos de conformidade regulatória.",
-      image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/curso-compliance-ffpYTrpTHkVGq4xTsSpLYS.webp",
+      category: "Compliance",
+      level: "Intermediário",
+      duration: "8h",
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/course-compliance-BJNtryQnGGbzJxxjrdzVdX.webp",
     },
     {
       id: 5,
       title: "Contabilidade Avançada",
-      category: "Contabilidade",
-      duration: "14h",
-      level: "Avançado",
       description: "Técnicas avançadas de contabilidade e consolidação.",
-      image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/curso-contabilidade-Wuan2CFFsmnGDzhPLtNYjM.webp",
+      category: "Contabilidade",
+      level: "Avançado",
+      duration: "14h",
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/course-contabilidade-BJNtryQnGGbzJxxjrdzVdX.webp",
     },
     {
       id: 6,
       title: "Auditoria Interna",
-      category: "Auditoria",
-      duration: "11h",
-      level: "Intermediário",
       description: "Processos e metodologias de auditoria interna.",
-      image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/curso-auditoria-9qBJx7v5RKh3P2nzvpCeP2.webp",
+      category: "Auditoria",
+      level: "Intermediário",
+      duration: "11h",
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/course-auditoria-BJNtryQnGGbzJxxjrdzVdX.webp",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-3">
-    <div className="max-w-5xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <Link href="/step-3">
-          <a className="text-blue-900 hover:underline text-sm">← Voltar</a>
-        </Link>
-        <a href={`/payment?package=Preparatório&price=799&level=${level}`}>
-          <Button className="bg-green-600 hover:bg-green-700 text-white font-bold">COMPRAR AGORA</Button>
-        </a>
-      </div>
-      <div className="mb-12">
-        <h1 className="text-4xl font-bold text-blue-900 mb-4">PREPARE-SE PARA A CERTIFICAÇÃO</h1>
-        <p className="text-lg text-gray-700 mb-2">Veja abaixo os cursos que você terá acesso no seu preparatório</p>
-        <p className="text-lg font-semibold text-blue-900">COM O PACOTE PREPARATÓRIO</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {courses.map((course) => (
-          <Card key={course.id} className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all bg-blue-900">
-            <div className="h-40 overflow-hidden">
-              <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
+    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-4">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <button
+            onClick={() => window.history.back()}
+            className="text-blue-900 hover:underline mb-4 inline-block text-sm cursor-pointer"
+          >
+            ← Voltar
+          </button>
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-blue-900 mb-2">PREPARE-SE PARA A CERTIFICAÇÃO</h1>
+              <p className="text-gray-600">
+                Veja abaixo os cursos que você terá acesso no seu preparatório COM O PACOTE PREPARATÓRIO
+              </p>
             </div>
-            <div className="p-6">
-              <h3 className="font-bold text-white text-lg mb-3">{course.title}</h3>
-              <p className="text-sm text-gray-200 mb-4">{course.description}</p>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <span className="text-xs bg-yellow-500 text-blue-900 px-3 py-1 rounded-full font-semibold">{course.category}</span>
-                <span className="text-xs bg-green-400 text-blue-900 px-3 py-1 rounded-full font-semibold">{course.level}</span>
+            <Link href="/payment?package=Preparatório&price=799&level=1">
+              <a>
+                <Button className="bg-green-600 hover:bg-green-700 text-white px-6">
+                  COMPRAR AGORA
+                </Button>
+              </a>
+            </Link>
+          </div>
+        </div>
+
+        {/* Courses Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {courses.map((course) => (
+            <Card key={course.id} className="bg-blue-900 text-white overflow-hidden hover:shadow-lg transition-shadow">
+              <div className="h-40 overflow-hidden">
+                <img
+                  src={course.image}
+                  alt={course.title}
+                  className="w-full h-full object-cover"
+                />
               </div>
-              <p className="text-sm text-gray-300 font-semibold">⏱️ {course.duration}</p>
+              <div className="p-4">
+                <div className="flex gap-2 mb-3">
+                  <span className="bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded">
+                    {course.category}
+                  </span>
+                  <span className="bg-green-400 text-green-900 text-xs font-bold px-2 py-1 rounded">
+                    {course.level}
+                  </span>
+                </div>
+                <h3 className="font-bold text-lg mb-2">{course.title}</h3>
+                <p className="text-sm text-gray-200 mb-3">{course.description}</p>
+                <div className="text-xs text-gray-300">⏱ {course.duration}</div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Package Info */}
+        <Card className="bg-blue-50 p-6 mb-8">
+          <h2 className="text-lg font-bold text-blue-900 mb-4">Seu Pacote: {packageName}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <p className="text-sm text-gray-600">Cursos Disponíveis</p>
+              <p className="text-2xl font-bold text-blue-900">6</p>
             </div>
-          </Card>
-        ))}
-      </div>
+            <div>
+              <p className="text-sm text-gray-600">Horas Totais</p>
+              <p className="text-2xl font-bold text-blue-900">70h</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Preço</p>
+              <p className="text-2xl font-bold text-green-600">R$ 799</p>
+            </div>
+          </div>
+        </Card>
 
-      <div className="bg-blue-50 border-2 border-blue-900 rounded-lg p-8 text-center">
-        <h2 className="text-2xl font-bold text-blue-900 mb-4">Pacote Preparatório</h2>
-        <p className="text-gray-700 mb-6">Acesso a todos os 6 cursos + simulados + mentoria personalizada</p>
-        <p className="text-4xl font-bold text-green-600 mb-6">R$ 799</p>
-        <a href={`/payment?package=Preparatório&price=799&level=${level}`}>
-          <Button className="bg-green-600 hover:bg-green-700 text-white text-lg px-8 py-3 rounded-lg font-bold">
-            COMPRAR AGORA
-          </Button>
-        </a>
+        {/* CTA */}
+        <div className="text-center">
+          <Link href="/payment?package=Preparatório&price=799&level=1">
+            <a>
+              <Button className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg">
+                COMPRAR AGORA
+              </Button>
+            </a>
+          </Link>
+        </div>
       </div>
-
-    </div>
     </div>
   );
 }
 
-// Step 5 - Resultado
+// Step 5 - Resultado da Prova
 export function Step5() {
-  const data = [
-    { name: "Conhecimento", value: 85 },
-    { name: "Prática", value: 78 },
-    { name: "Ética", value: 92 },
-    { name: "Legislação", value: 88 },
+  const [proofResult, setProofResult] = useState<"approved" | "failed" | null>(null);
+  const search = useSearch();
+  const params = new URLSearchParams(search);
+  const level = params.get("level");
+
+  useEffect(() => {
+    // Simular resultado da prova
+    const randomResult = Math.random() > 0.5 ? "approved" : "failed";
+    setProofResult(randomResult);
+  }, []);
+
+  const performanceData = [
+    { name: "Controladoria", score: 85 },
+    { name: "Análise", score: 78 },
+    { name: "Finanças", score: 92 },
+    { name: "Compliance", score: 88 },
+    { name: "Contabilidade", score: 81 },
   ];
+
+  if (proofResult === "approved") {
+    return (
+      <StepLayout step={5} title="Resultado da Prova">
+        <div className="max-w-2xl">
+          <Card className="p-6 mb-6 bg-green-50 border-green-200">
+            <div className="text-center mb-6">
+              <div className="text-6xl mb-4">✓</div>
+              <h2 className="text-2xl font-bold text-green-700 mb-2">PARABÉNS! VOCÊ FOI APROVADO!</h2>
+              <p className="text-gray-700">Sua nota foi 85/100</p>
+            </div>
+          </Card>
+
+          <Card className="p-6 mb-6">
+            <h3 className="font-bold text-blue-900 mb-4">Desempenho por Área</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={performanceData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="score" fill="#1e3a5f" />
+                <ReferenceLine y={70} stroke="#ff9800" label="Mínimo" />
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+
+          <NavButtons step={5} nextLink="/step-6" />
+        </div>
+      </StepLayout>
+    );
+  }
+
+  if (proofResult === "failed") {
+    return (
+      <StepLayout step={5} title="Resultado da Prova">
+        <div className="max-w-2xl">
+          <Card className="p-6 mb-6 bg-red-50 border-red-200">
+            <div className="text-center mb-6">
+              <div className="text-6xl mb-4">✗</div>
+              <h2 className="text-2xl font-bold text-red-700 mb-2">NÃO FOI DESTA VEZ</h2>
+              <p className="text-gray-700">Sua nota foi 62/100 (mínimo: 70)</p>
+            </div>
+          </Card>
+
+          <Card className="p-6 mb-6">
+            <h3 className="font-bold text-blue-900 mb-4">Análise de Desempenho</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={performanceData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="score" fill="#ff6b6b" />
+                <ReferenceLine y={70} stroke="#ff9800" label="Mínimo" />
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+
+          <Card className="p-6 mb-6 bg-yellow-50">
+            <h3 className="font-bold text-yellow-900 mb-3">Áreas com Baixo Desempenho:</h3>
+            <ul className="space-y-2 text-sm text-yellow-900">
+              <li>• Análise de Demonstrações Financeiras (78/100)</li>
+              <li>• Contabilidade Avançada (81/100)</li>
+            </ul>
+            <p className="text-sm text-yellow-800 mt-4">
+              Recomendamos revisar estes tópicos antes de tentar novamente.
+            </p>
+          </Card>
+
+          <div className="flex gap-3 mt-6">
+            <Button 
+              variant="outline"
+              onClick={() => window.history.back()}
+            >
+              ← Anterior
+            </Button>
+            <Link href="/recovery-checkout">
+              <a>
+                <Button className="bg-orange-600 hover:bg-orange-700">
+                  Comprar Nova Tentativa →
+                </Button>
+              </a>
+            </Link>
+          </div>
+        </div>
+      </StepLayout>
+    );
+  }
 
   return (
     <StepLayout step={5} title="Resultado da Prova">
-      <Card className="p-6 mb-6">
-        <div className="bg-green-50 border-l-4 border-green-600 p-4 mb-6">
-          <p className="text-green-800 font-semibold">✓ Parabéns! Você foi aprovado!</p>
-          <p className="text-sm text-green-700">Pontuação: 86/100</p>
-        </div>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="value" fill="#0f766e" />
-            <ReferenceLine y={70} stroke="#f59e0b" label="Mínimo" />
-          </BarChart>
-        </ResponsiveContainer>
-      </Card>
-      <NavButtons step={5} nextLink="/step-6" />
+      <div className="max-w-2xl">
+        <Card className="p-6">
+          <p className="text-gray-600">Carregando resultado...</p>
+        </Card>
+      </div>
     </StepLayout>
   );
 }
 
 // Step 6 - Upload Documental
 export function Step6() {
-  return (
-    <StepLayout step={6} title="Upload Documental">
-      <Step6UploadComponent />
-      <NavButtons step={6} nextLink="/step-7" />
-    </StepLayout>
-  );
+  return <Step6UploadComponent />;
 }
 
 // Step 7 - Entrevista Técnica
 export function Step7() {
   return (
     <StepLayout step={7} title="Entrevista Técnica">
-      <Card className="p-6 mb-6">
-        <p className="text-gray-700 mb-4">Agende sua entrevista técnica com a comissão.</p>
-        <Button className="bg-blue-900 hover:bg-blue-800">Agendar Entrevista</Button>
-      </Card>
-      <NavButtons step={7} nextLink="/step-8" />
+      <div className="max-w-2xl">
+        <Card className="p-6 mb-6">
+          <h2 className="text-lg font-semibold text-blue-900 mb-4">Próxima Etapa: Entrevista Técnica</h2>
+          <p className="text-gray-700 mb-4">
+            Você será contatado em breve para agendar sua entrevista técnica com a comissão de certificação.
+          </p>
+          <p className="text-gray-700">
+            A entrevista durará aproximadamente 30 minutos e abordará tópicos relacionados à sua experiência profissional.
+          </p>
+        </Card>
+        <NavButtons step={7} nextLink="/step-8" />
+      </div>
     </StepLayout>
   );
 }
@@ -512,11 +627,16 @@ export function Step7() {
 export function Step8() {
   return (
     <StepLayout step={8} title="Decisão Final">
-      <Card className="p-6 mb-6 bg-green-50 border-green-200">
-        <p className="text-green-800 font-semibold mb-2">✓ Certificado Aprovado!</p>
-        <p className="text-sm text-gray-700">Sua certificação foi aprovada pela comissão. Prossiga para receber seu certificado.</p>
-      </Card>
-      <NavButtons step={8} nextLink="/step-9" />
+      <div className="max-w-2xl">
+        <Card className="p-6 mb-6 bg-green-50">
+          <div className="text-center">
+            <div className="text-5xl mb-4">✓</div>
+            <h2 className="text-2xl font-bold text-green-700 mb-2">APROVADO!</h2>
+            <p className="text-gray-700">Parabéns! Você foi aprovado na certificação.</p>
+          </div>
+        </Card>
+        <NavButtons step={8} nextLink="/step-9" />
+      </div>
     </StepLayout>
   );
 }
@@ -525,16 +645,33 @@ export function Step8() {
 export function Step9() {
   return (
     <StepLayout step={9} title="Certificado">
-      <Card className="p-6 mb-6 bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-900">
-        <div className="text-center">
-          <p className="text-3xl mb-4">🏆</p>
-          <h2 className="text-2xl font-bold text-blue-900 mb-2">Parabéns!</h2>
-          <p className="text-gray-700 mb-4">Você é agora um profissional certificado pela ANEFAC.</p>
-          <p className="text-sm text-gray-600 mb-6">Seu certificado foi enviado para seu email.</p>
-          <Button className="bg-green-600 hover:bg-green-700">Baixar Certificado</Button>
+      <div className="max-w-2xl">
+        <Card className="p-8 mb-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-900">
+          <div className="text-center">
+            <div className="text-6xl mb-4">🎓</div>
+            <h2 className="text-3xl font-bold text-blue-900 mb-2">CERTIFICADO DE CONCLUSÃO</h2>
+            <p className="text-lg text-gray-700 mb-6">Certificação de Crédito e Análise (CCA)</p>
+            <div className="border-t-2 border-blue-900 pt-4">
+              <p className="text-gray-600">Certificado emitido em: {new Date().toLocaleDateString("pt-BR")}</p>
+            </div>
+          </div>
+        </Card>
+        <div className="flex gap-3 mt-6">
+          <Button 
+            variant="outline"
+            onClick={() => window.history.back()}
+          >
+            ← Anterior
+          </Button>
+          <Link href="/">
+            <a>
+              <Button className="bg-green-600 hover:bg-green-700">
+                Voltar ao Início
+              </Button>
+            </a>
+          </Link>
         </div>
-      </Card>
-      <NavButtons step={9} />
+      </div>
     </StepLayout>
   );
 }

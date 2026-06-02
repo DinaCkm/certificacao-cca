@@ -7,11 +7,13 @@ export function ViewFlowchart() {
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/select-certification-type">
-            <Button variant="outline" className="mb-4">
-              ← Voltar
-            </Button>
-          </Link>
+          <Button 
+            variant="outline" 
+            className="mb-4"
+            onClick={() => window.history.back()}
+          >
+            ← Voltar
+          </Button>
           <h1 className="text-3xl font-bold text-blue-900 mb-2">
             Jornada de Certificação
           </h1>
