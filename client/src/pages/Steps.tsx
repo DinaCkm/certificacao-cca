@@ -346,6 +346,7 @@ export function Step4() {
       duration: "12h",
       level: "Básico",
       description: "Conceitos essenciais de controladoria e gestão financeira.",
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/curso-controladoria-PuwWN4hU9HYqcW3Ee3nM4M.webp",
     },
     {
       id: 2,
@@ -354,6 +355,7 @@ export function Step4() {
       duration: "15h",
       level: "Intermediário",
       description: "Técnicas avançadas de análise de balanços e relatórios.",
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/curso-analise-financeira-fAy3suMnoBsu7aCBwJm6QF.webp",
     },
     {
       id: 3,
@@ -362,6 +364,7 @@ export function Step4() {
       duration: "10h",
       level: "Intermediário",
       description: "Identificação e mitigação de riscos em operações financeiras.",
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/curso-gestao-riscos-c6BKq5ETyAMJeJJNEUdX33.webp",
     },
     {
       id: 4,
@@ -370,6 +373,7 @@ export function Step4() {
       duration: "8h",
       level: "Básico",
       description: "Normas e procedimentos de conformidade regulatória.",
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/curso-compliance-ffpYTrpTHkVGq4xTsSpLYS.webp",
     },
     {
       id: 5,
@@ -378,6 +382,7 @@ export function Step4() {
       duration: "14h",
       level: "Avançado",
       description: "Técnicas avançadas de contabilidade e consolidação.",
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/curso-contabilidade-Wuan2CFFsmnGDzhPLtNYjM.webp",
     },
     {
       id: 6,
@@ -386,6 +391,7 @@ export function Step4() {
       duration: "11h",
       level: "Intermediário",
       description: "Processos e metodologias de auditoria interna.",
+      image: "https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/curso-auditoria-9qBJx7v5RKh3P2nzvpCeP2.webp",
     },
   ];
 
@@ -399,16 +405,19 @@ export function Step4() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {courses.map((course) => (
-          <Card key={course.id} className="p-6 border-2 border-gray-200 hover:border-blue-900 transition-all">
-            <div className="flex justify-between items-start mb-3">
-              <h3 className="font-bold text-blue-900 text-lg flex-1">{course.title}</h3>
+          <Card key={course.id} className="overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all bg-blue-900">
+            <div className="h-40 overflow-hidden">
+              <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
             </div>
-            <p className="text-sm text-gray-600 mb-4">{course.description}</p>
-            <div className="flex flex-wrap gap-2 mb-4">
-              <span className="text-xs bg-blue-100 text-blue-900 px-3 py-1 rounded-full font-semibold">{course.category}</span>
-              <span className="text-xs bg-green-100 text-green-900 px-3 py-1 rounded-full">{course.level}</span>
+            <div className="p-6">
+              <h3 className="font-bold text-white text-lg mb-3">{course.title}</h3>
+              <p className="text-sm text-gray-200 mb-4">{course.description}</p>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <span className="text-xs bg-yellow-500 text-blue-900 px-3 py-1 rounded-full font-semibold">{course.category}</span>
+                <span className="text-xs bg-green-400 text-blue-900 px-3 py-1 rounded-full font-semibold">{course.level}</span>
+              </div>
+              <p className="text-sm text-gray-300 font-semibold">⏱️ {course.duration}</p>
             </div>
-            <p className="text-sm text-gray-700 font-semibold">⏱️ {course.duration}</p>
           </Card>
         ))}
       </div>
