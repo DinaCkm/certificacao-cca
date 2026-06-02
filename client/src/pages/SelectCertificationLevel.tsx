@@ -106,9 +106,9 @@ export function SelectCertificationLevel() {
             </Button>
           </Link>
           {selected === "level1" ? (
-            <Link href={`/certification-direct-preparation-check?type=${certType}`}>
+            <Link href={`/select-purchase-type?type=${certType}&level=level1`}>
               <Button className="bg-blue-900 hover:bg-blue-800 px-8">
-                Próximo: Verificação de Preparação →
+                Próximo: Escolha o Tipo de Compra →
               </Button>
             </Link>
           ) : selected === "level2" ? (

@@ -37,6 +37,7 @@ import { DirectRecordingPlayback } from "./pages/DirectRecordingPlayback";
 import { InterviewScheduling } from "./pages/InterviewScheduling";
 import { InterviewRoom } from "./pages/InterviewRoom";
 import { InterviewResult } from "./pages/InterviewResult";
+import { SelectPurchaseType } from "./pages/SelectPurchaseType";
 
 function Router() {
   return (
@@ -46,6 +47,7 @@ function Router() {
       <Route path={"/select-certification-type"} component={SelectCertificationType} />
       <Route path={"/view-flowchart"} component={ViewFlowchart} />
       <Route path={"/select-level"} component={SelectCertificationLevel} />
+      <Route path={"/select-purchase-type"} component={SelectPurchaseType} />
       <Route path={"/certification-type"} component={CertificationTypeSelection} />
       <Route path={"/requirements-validation"} component={RequirementsValidation} />
       <Route path={"/certification-level"} component={CertificationLevelSelection} />
