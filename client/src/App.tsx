@@ -23,6 +23,10 @@ import { CoursesPlatform } from "./pages/CoursesPlatform";
 import { ExamResults } from "./pages/ExamResults";
 import { DocumentalAnalysisCheckout } from "./pages/DocumentalAnalysisCheckout";
 import { LattesCurriculumForm } from "./pages/LattesCurriculumForm";
+import { Level2Information } from "./pages/Level2Information";
+import { Level2LattesValidation } from "./pages/Level2LattesValidation";
+import { Level2TermsAndWarning } from "./pages/Level2TermsAndWarning";
+import { Level2Checkout } from "./pages/Level2Checkout";
 
 function Router() {
   return (
@@ -50,6 +54,10 @@ function Router() {
       <Route path={"/step-8"} component={Step8} />
       <Route path={"/step-9"} component={Step9} />
       <Route path={"/lattes-curriculum-form"} component={LattesCurriculumForm} />
+      <Route path={"/level2-information"} component={Level2Information} />
+      <Route path={"/level2-lattes-validation"} component={Level2LattesValidation} />
+      <Route path={"/level2-terms-warning"} component={Level2TermsAndWarning} />
+      <Route path={"/level2-checkout"} component={Level2Checkout} />
 
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
