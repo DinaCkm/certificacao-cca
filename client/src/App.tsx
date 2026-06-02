@@ -15,6 +15,7 @@ import { CertificationLevelSelection } from "./pages/CertificationLevelSelection
 import { RequirementsValidation } from "./pages/RequirementsValidation";
 import { SelectCertificationType } from "./pages/SelectCertificationType";
 import { SelectCertificationLevel } from "./pages/SelectCertificationLevel";
+import { MiniCadastro } from "./pages/MiniCadastro";
 import { Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9 } from "./pages/Steps";
 
 function Router() {
@@ -24,6 +25,7 @@ function Router() {
       <Route path={"/home"} component={Home} />
       <Route path={"/select-certification-type"} component={SelectCertificationType} />
       <Route path={"/select-level"} component={SelectCertificationLevel} />
+      <Route path={"/mini-cadastro"} component={MiniCadastro} />
       <Route path={"/certification-type"} component={CertificationTypeSelection} />
       <Route path={"/requirements-validation"} component={RequirementsValidation} />
       <Route path={"/certification-level"} component={CertificationLevelSelection} />

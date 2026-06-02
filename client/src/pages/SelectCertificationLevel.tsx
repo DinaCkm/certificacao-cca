@@ -104,16 +104,21 @@ export function SelectCertificationLevel() {
 
         {/* Action Button */}
         <div className="flex justify-center gap-4">
+          <Link href="/mini-cadastro">
+            <Button variant="outline" className="px-8">
+              ← Voltar
+            </Button>
+          </Link>
           {selected === "level1" ? (
             <Link href={`/step-2?type=${certType}&level=1`}>
               <Button className="bg-blue-900 hover:bg-blue-800 px-8">
-                Continuar para Cadastro →
+                Próximo: Cadastro Completo →
               </Button>
             </Link>
           ) : selected === "level2" ? (
             <Link href={`/step-3?type=${certType}&level=2`}>
               <Button className="bg-blue-900 hover:bg-blue-800 px-8">
-                Continuar para Pagamento →
+                Próximo: Pagamento →
               </Button>
             </Link>
           ) : (
