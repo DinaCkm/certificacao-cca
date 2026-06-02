@@ -1,33 +1,19 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Download, Eye } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { BackToHomeButton } from "@/components/BackToHomeButton";
 
 export function InterviewResult() {
   const [interviewData, setInterviewData] = useState<any>(null);
-  const [recordedVideo, setRecordedVideo] = useState<string | null>(null);
 
   useEffect(() => {
     const data = sessionStorage.getItem("interviewData");
-    const video = sessionStorage.getItem("recordedVideo");
     
     if (data) {
       setInterviewData(JSON.parse(data));
     }
-    if (video) {
-      setRecordedVideo(video);
-    }
   }, []);
-
-  const downloadRecording = () => {
-    if (recordedVideo) {
-      const link = document.createElement("a");
-      link.href = recordedVideo;
-      link.download = `entrevista-${new Date().toISOString()}.webm`;
-      link.click();
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-4">
@@ -84,45 +70,12 @@ export function InterviewResult() {
           </Card>
         )}
 
-        {/* Recording Section */}
-        {recordedVideo && (
-          <Card className="p-8 mb-8 border-2 border-blue-300 bg-blue-50">
-            <h2 className="text-2xl font-bold text-blue-900 mb-6">🎥 Sua Gravação</h2>
-            
-            <div className="bg-white p-6 rounded-lg border-2 border-blue-200 mb-6">
-              <video
-                src={recordedVideo}
-                controls
-                className="w-full rounded-lg bg-black"
-                style={{ maxHeight: "400px" }}
-              />
-            </div>
-
-            <div className="flex gap-4">
-              <Button
-                onClick={downloadRecording}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Baixar Gravação
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="flex-1 py-3"
-                onClick={() => {
-                  const link = document.createElement("a");
-                  link.href = recordedVideo;
-                  link.target = "_blank";
-                  link.click();
-                }}
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                Assistir em Tela Cheia
-              </Button>
-            </div>
-          </Card>
-        )}
+        {/* Note about Recording - Only visible to student */}
+        <Card className="p-6 mb-8 border-2 border-blue-300 bg-blue-50">
+          <p className="text-blue-900 font-semibold text-center">
+            ℹ️ Sua entrevista foi gravada e será analisada pela banca avaliadora.
+          </p>
+        </Card>
 
         {/* Next Steps */}
         <Card className="p-8 border-2 border-gray-300 mb-8">
