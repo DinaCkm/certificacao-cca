@@ -224,10 +224,10 @@ export function ExamSecurityCheck() {
             </Card>
 
             {/* Botões de Ação */}
-            <div className="flex gap-4">
+            <div className="flex gap-4 mt-6">
               <Button
                 variant="outline"
-                className="w-full"
+                className="flex-1"
                 onClick={() => setExamStarted(false)}
               >
                 ← Cancelar
@@ -240,7 +240,7 @@ export function ExamSecurityCheck() {
                     window.location.href = "/exam-results";
                   }
                 }}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2"
               >
                 ✓ Finalizar Prova
               </Button>
