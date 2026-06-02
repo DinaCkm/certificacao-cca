@@ -14,37 +14,37 @@ export function Level2LattesValidation() {
   const [currentStep, setCurrentStep] = useState(1);
   const [validationResult, setValidationResult] = useState<"approved" | "rejected" | null>(null);
 
-  // Validation Form Data
-  const [experience, setExperience] = useState<string>("");
-  const [formation, setFormation] = useState<string>("");
-  const [leadershipYears, setLeadershipYears] = useState<string>("");
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  // Validation Form Data - Pre-filled with default values
+  const [experience, setExperience] = useState<string>("10+");
+  const [formation, setFormation] = useState<string>("mba");
+  const [leadershipYears, setLeadershipYears] = useState<string>("5");
+  const [termsAccepted, setTermsAccepted] = useState(true);
 
-  // Lattes Form Data
+  // Lattes Form Data - Pre-filled with example values
   const [lattesData, setLattesData] = useState({
-    fullName: "",
-    email: "",
-    cpf: "",
-    phone: "",
-    birthDate: "",
-    currentPosition: "",
-    institution: "",
-    course: "",
-    graduationYear: "",
-    mbaInstitution: "",
-    mbaCourse: "",
-    mbaYear: "",
-    company1: "",
-    position1: "",
-    startDate1: "",
-    endDate1: "",
-    company2: "",
-    position2: "",
-    startDate2: "",
-    endDate2: "",
-    company3: "",
-    position3: "",
-    startDate3: "",
+    fullName: "João Silva Santos",
+    email: "joao.silva@email.com",
+    cpf: "123.456.789-00",
+    phone: "(11) 98765-4321",
+    birthDate: "1985-05-15",
+    currentPosition: "Diretor de Conformidade",
+    institution: "Universidade de São Paulo",
+    course: "Administração",
+    graduationYear: "2007",
+    mbaInstitution: "FGV - Fundação Getulio Vargas",
+    mbaCourse: "MBA em Gestão Empresarial",
+    mbaYear: "2012",
+    company1: "Empresa A Ltda",
+    position1: "Analista de Conformidade",
+    startDate1: "2008-01",
+    endDate1: "2015-12",
+    company2: "Empresa B S.A.",
+    position2: "Gerente de Auditoria Interna",
+    startDate2: "2016-01",
+    endDate2: "2021-12",
+    company3: "Empresa C Consultoria",
+    position3: "Diretor de Conformidade",
+    startDate3: "2022-01",
     endDate3: "",
   });
 
@@ -361,24 +361,26 @@ export function Level2LattesValidation() {
                   />
                   <Input
                     type="number"
-                    placeholder="Ano de Conclusão"
+                    placeholder="Ano de Conclusão (Ex: 2007)"
                     value={lattesData.graduationYear}
                     onChange={(e) => handleLattesInputChange("graduationYear", e.target.value)}
+                    min="1950"
+                    max={new Date().getFullYear()}
                   />
                 </div>
               </div>
 
-              {/* MBA */}
+              {/* MBA/Pós-Graduação */}
               <div className="border-b pb-6">
-                <h3 className="font-bold text-lg text-gray-900 mb-4">📚 MBA / Pós-Graduação</h3>
+                <h3 className="font-bold text-lg text-gray-900 mb-4">🎯 MBA / Pós-Graduação</h3>
                 <div className="space-y-3">
                   <Input
-                    placeholder="Instituição"
+                    placeholder="Instituição (Ex: FGV, INSPER)"
                     value={lattesData.mbaInstitution}
                     onChange={(e) => handleLattesInputChange("mbaInstitution", e.target.value)}
                   />
                   <Input
-                    placeholder="Programa (Ex: MBA em Gestão, Mestrado em TI)"
+                    placeholder="Curso (Ex: MBA em Gestão)"
                     value={lattesData.mbaCourse}
                     onChange={(e) => handleLattesInputChange("mbaCourse", e.target.value)}
                   />
@@ -387,43 +389,107 @@ export function Level2LattesValidation() {
                     placeholder="Ano de Conclusão"
                     value={lattesData.mbaYear}
                     onChange={(e) => handleLattesInputChange("mbaYear", e.target.value)}
+                    min="1950"
+                    max={new Date().getFullYear()}
                   />
                 </div>
               </div>
 
               {/* Professional Experience */}
-              <div>
+              <div className="border-b pb-6">
                 <h3 className="font-bold text-lg text-gray-900 mb-4">💼 Experiência Profissional</h3>
-                <div className="space-y-6">
-                  {[1, 2, 3].map((num) => (
-                    <div key={num} className="border-l-4 border-blue-600 pl-4 pb-4">
-                      <p className="font-semibold text-gray-900 mb-3">Empresa {num}</p>
-                      <div className="space-y-3">
-                        <Input
-                          placeholder="Nome da Empresa"
-                          value={lattesData[`company${num}` as keyof typeof lattesData]}
-                          onChange={(e) => handleLattesInputChange(`company${num}`, e.target.value)}
-                        />
-                        <Input
-                          placeholder="Cargo/Posição"
-                          value={lattesData[`position${num}` as keyof typeof lattesData]}
-                          onChange={(e) => handleLattesInputChange(`position${num}`, e.target.value)}
-                        />
-                        <div className="grid grid-cols-2 gap-3">
-                          <Input
-                            type="date"
-                            value={lattesData[`startDate${num}` as keyof typeof lattesData]}
-                            onChange={(e) => handleLattesInputChange(`startDate${num}`, e.target.value)}
-                          />
-                          <Input
-                            type="date"
-                            value={lattesData[`endDate${num}` as keyof typeof lattesData]}
-                            onChange={(e) => handleLattesInputChange(`endDate${num}`, e.target.value)}
-                          />
-                        </div>
-                      </div>
+                
+                {/* Experience 1 */}
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <p className="font-semibold text-gray-900 mb-3">Experiência 1 *</p>
+                  <div className="space-y-3">
+                    <Input
+                      placeholder="Empresa"
+                      value={lattesData.company1}
+                      onChange={(e) => handleLattesInputChange("company1", e.target.value)}
+                    />
+                    <Input
+                      placeholder="Cargo/Posição"
+                      value={lattesData.position1}
+                      onChange={(e) => handleLattesInputChange("position1", e.target.value)}
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        type="month"
+                        placeholder="Data Início"
+                        value={lattesData.startDate1}
+                        onChange={(e) => handleLattesInputChange("startDate1", e.target.value)}
+                      />
+                      <Input
+                        type="month"
+                        placeholder="Data Fim"
+                        value={lattesData.endDate1}
+                        onChange={(e) => handleLattesInputChange("endDate1", e.target.value)}
+                      />
                     </div>
-                  ))}
+                  </div>
+                </div>
+
+                {/* Experience 2 */}
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <p className="font-semibold text-gray-900 mb-3">Experiência 2</p>
+                  <div className="space-y-3">
+                    <Input
+                      placeholder="Empresa"
+                      value={lattesData.company2}
+                      onChange={(e) => handleLattesInputChange("company2", e.target.value)}
+                    />
+                    <Input
+                      placeholder="Cargo/Posição"
+                      value={lattesData.position2}
+                      onChange={(e) => handleLattesInputChange("position2", e.target.value)}
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        type="month"
+                        placeholder="Data Início"
+                        value={lattesData.startDate2}
+                        onChange={(e) => handleLattesInputChange("startDate2", e.target.value)}
+                      />
+                      <Input
+                        type="month"
+                        placeholder="Data Fim"
+                        value={lattesData.endDate2}
+                        onChange={(e) => handleLattesInputChange("endDate2", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Experience 3 */}
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="font-semibold text-gray-900 mb-3">Experiência 3</p>
+                  <div className="space-y-3">
+                    <Input
+                      placeholder="Empresa"
+                      value={lattesData.company3}
+                      onChange={(e) => handleLattesInputChange("company3", e.target.value)}
+                    />
+                    <Input
+                      placeholder="Cargo/Posição"
+                      value={lattesData.position3}
+                      onChange={(e) => handleLattesInputChange("position3", e.target.value)}
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        type="month"
+                        placeholder="Data Início"
+                        value={lattesData.startDate3}
+                        onChange={(e) => handleLattesInputChange("startDate3", e.target.value)}
+                      />
+                      <Input
+                        type="month"
+                        placeholder="Data Fim (deixe em branco se atual)"
+                        value={lattesData.endDate3}
+                        onChange={(e) => handleLattesInputChange("endDate3", e.target.value)}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -435,26 +501,26 @@ export function Level2LattesValidation() {
                 variant="outline"
                 className="flex-1 font-bold py-3"
               >
-                ← Anterior
+                ← Voltar
               </Button>
               <Button
                 onClick={handleSubmit}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 text-lg"
               >
-                ✓ Enviar Currículo
+                ✓ Prosseguir para Termos
               </Button>
             </div>
           </Card>
         )}
 
-        {/* Show Step 2 Button */}
-        {currentStep === 1 && validationResult === "approved" && (
-          <div className="flex justify-center mt-8">
+        {/* Validation Success - Show button to proceed */}
+        {validationResult === "approved" && currentStep === 1 && (
+          <div className="mt-8">
             <Button
               onClick={() => setCurrentStep(2)}
-              className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-lg font-semibold"
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 text-lg"
             >
-              Próximo: Preencher Currículo →
+              Prosseguir para Preenchimento de Currículo →
             </Button>
           </div>
         )}
