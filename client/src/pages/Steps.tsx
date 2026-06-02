@@ -206,6 +206,7 @@ export function Step2() {
 
 // Step 3 - Compra/Pagamento
 export function Step3() {
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const search = useSearch();
   const params = new URLSearchParams(search);
   const level = params.get('level');
@@ -245,30 +246,73 @@ export function Step3() {
   }
 
   // Nível 1: 3 pacotes de certificação
+  const packages = [
+    {
+      id: "direct",
+      title: "Certificação Direta",
+      price: "R$ 499",
+      features: ["Acesso à prova", "Resultado imediato", "Entrevista técnica"],
+      nextStep: "/step-5", // Pula Step-4 (Cursos) e vai direto para Step-5 (Resultado)
+    },
+    {
+      id: "prep",
+      title: "Preparatório",
+      price: "R$ 799",
+      features: ["Cursos completos", "Simulados", "Mentoria"],
+      popular: true,
+      nextStep: "/step-4", // Vai para Step-4 (Cursos)
+    },
+    {
+      id: "complete",
+      title: "Pacote Completo",
+      price: "R$ 1.299",
+      features: ["Tudo incluído", "Suporte total", "Aulas ON-LINE"],
+      nextStep: "/step-4", // Vai para Step-4 (Cursos)
+    },
+  ];
+
+  if (selectedPackage) {
+    const pkg = packages.find(p => p.id === selectedPackage);
+    if (pkg) {
+      return (
+        <StepLayout step={3} title="Escolha o Pacote de Certificação">
+          <Card className="p-6 mb-6 border-2 border-green-600 bg-green-50">
+            <h2 className="text-lg font-semibold text-green-900 mb-4">✓ Pacote Selecionado</h2>
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-xl font-bold text-green-900">{pkg.title}</h3>
+                <p className="text-2xl font-bold text-green-600 mt-2">{pkg.price}</p>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={() => setSelectedPackage(null)}
+                className="text-blue-900 border-blue-900"
+              >
+                Mudar Pacote
+              </Button>
+            </div>
+          </Card>
+          <div className="flex gap-3 mt-6">
+            <Link href={`/step-${3 - 1}`}>
+              <a>
+                <Button variant="outline">← Anterior</Button>
+              </a>
+            </Link>
+            <Link href={pkg.nextStep}>
+              <a>
+                <Button className="bg-blue-900 hover:bg-blue-800">Próximo →</Button>
+              </a>
+            </Link>
+          </div>
+        </StepLayout>
+      );
+    }
+  }
+
   return (
     <StepLayout step={3} title="Escolha o Pacote de Certificação">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        {[
-          {
-            id: "direct",
-            title: "Certificação Direta",
-            price: "R$ 499",
-            features: ["Acesso à prova", "Resultado imediato", "Entrevista técnica"],
-          },
-          {
-            id: "prep",
-            title: "Preparatório",
-            price: "R$ 799",
-            features: ["Cursos completos", "Simulados", "Mentoria"],
-            popular: true,
-          },
-          {
-            id: "complete",
-            title: "Pacote Completo",
-            price: "R$ 1.299",
-            features: ["Tudo incluído", "Suporte total", "Aulas ON-LINE"],
-          },
-        ].map((pkg) => (
+        {packages.map((pkg) => (
           <Card key={pkg.id} className={`p-4 cursor-pointer border-2 transition-all ${pkg.popular ? 'border-blue-900 bg-blue-50' : 'border-gray-200 hover:border-blue-900'}`}>
             {pkg.popular && <p className="text-xs font-bold text-blue-900 mb-2">MAIS POPULAR</p>}
             <h3 className="font-bold text-blue-900 mb-2">{pkg.title}</h3>
@@ -278,13 +322,16 @@ export function Step3() {
                 <li key={i} className="text-gray-700">✓ {f}</li>
               ))}
             </ul>
-            <Button className="w-full bg-blue-900 hover:bg-blue-800 text-white text-xs">
+            <Button 
+              className="w-full bg-blue-900 hover:bg-blue-800 text-white text-xs"
+              onClick={() => setSelectedPackage(pkg.id)}
+            >
               Selecionar
             </Button>
           </Card>
         ))}
       </div>
-      <NavButtons step={3} nextLink="/step-4" />
+      <NavButtons step={3} nextLink={undefined} />
     </StepLayout>
   );
 }
