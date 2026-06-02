@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Link } from "wouter";
 import { useState, useEffect } from "react";
 import { Search, Filter, Play } from "lucide-react";
+import { BackToHomeButton } from "@/components/BackToHomeButton";
 
 const COURSES = [
   {
@@ -206,12 +207,14 @@ export function CoursesPlatform() {
 
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <button
+              <Button
+                variant="outline"
                 onClick={() => window.history.back()}
-                className="text-blue-400 hover:text-blue-300 cursor-pointer"
+                className="text-blue-400 hover:text-blue-300"
               >
                 ← Voltar
-              </button>
+              </Button>
+              <BackToHomeButton />
               <h1 className="text-2xl font-bold">{isRecovery ? "📚 Cursos de Recuperação" : "🎓 Plataforma de Cursos ANEFAC"}</h1>
             </div>
             <Button 

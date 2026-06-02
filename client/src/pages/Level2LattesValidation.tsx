@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { BackToHomeButton } from "@/components/BackToHomeButton";
 
 export function Level2LattesValidation() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -112,12 +113,15 @@ export function Level2LattesValidation() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <button
-            onClick={() => window.history.back()}
-            className="text-blue-600 hover:text-blue-800 font-semibold mb-4 flex items-center gap-2"
-          >
-            ← Voltar
-          </button>
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant="outline"
+              onClick={() => window.history.back()}
+            >
+              ← Voltar
+            </Button>
+            <BackToHomeButton />
+          </div>
           <h1 className="text-3xl font-bold text-blue-900 mb-2">Validação de Elegibilidade + Currículo</h1>
           <p className="text-gray-600">Confirme seus requisitos e preencha seu currículo profissional</p>
         </div>

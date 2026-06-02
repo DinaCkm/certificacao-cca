@@ -2,6 +2,7 @@ import { useSearchParams } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { CheckCircle2, BookOpen, Clock, Trophy } from 'lucide-react';
+import { BackToHomeButton } from '@/components/BackToHomeButton';
 
 const courses = [
   {
@@ -67,12 +68,15 @@ export function WelcomeCourses() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Back Button */}
-        <button
-          onClick={() => window.history.back()}
-          className="text-blue-900 hover:underline mb-6 inline-block text-sm cursor-pointer"
-        >
-          ← Voltar
-        </button>
+        <div className="flex gap-2 mb-6">
+          <Button
+            variant="outline"
+            onClick={() => window.history.back()}
+          >
+            ← Voltar
+          </Button>
+          <BackToHomeButton />
+        </div>
         {/* Header */}
         <div className="text-center mb-12">
           <Trophy className="w-16 h-16 text-blue-600 mx-auto mb-4" />

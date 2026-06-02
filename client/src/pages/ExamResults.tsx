@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { BackToHomeButton } from "@/components/BackToHomeButton";
 
 export function ExamResults() {
   const [selectedResult, setSelectedResult] = useState<"approved" | "rejected" | null>(null);
@@ -46,6 +47,17 @@ export function ExamResults() {
     <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
+        <div className="mb-4">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => window.history.back()}
+            >
+              ← Voltar
+            </Button>
+            <BackToHomeButton />
+          </div>
+        </div>
         <div className="mb-12 text-center">
           <div className="text-5xl mb-4">📊</div>
           <h1 className="text-3xl font-bold text-blue-900 mb-2">Resultado da Prova</h1>

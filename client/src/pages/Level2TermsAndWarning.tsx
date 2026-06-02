@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { AlertTriangle, CheckCircle2, Info } from "lucide-react";
+import { BackToHomeButton } from "@/components/BackToHomeButton";
 import {
   Tooltip,
   TooltipContent,
@@ -29,12 +30,15 @@ export function Level2TermsAndWarning() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <button
-            onClick={() => window.history.back()}
-            className="text-blue-600 hover:text-blue-800 font-semibold mb-4 flex items-center gap-2"
-          >
-            ← Voltar
-          </button>
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant="outline"
+              onClick={() => window.history.back()}
+            >
+              ← Voltar
+            </Button>
+            <BackToHomeButton />
+          </div>
           <h1 className="text-3xl font-bold text-blue-900 mb-2">Termos e Avisos Importantes</h1>
           <p className="text-gray-600">Leia atentamente antes de prosseguir com o pagamento</p>
         </div>

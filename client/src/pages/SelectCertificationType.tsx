@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { BackToHomeButton } from "@/components/BackToHomeButton";
 
 export function SelectCertificationType() {
   const [selected, setSelected] = useState<string | null>(null);
@@ -30,6 +31,10 @@ export function SelectCertificationType() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-4">
       <div className="max-w-4xl mx-auto">
+        {/* Back Button */}
+        <div className="mb-6">
+          <BackToHomeButton />
+        </div>
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-3xl font-bold text-blue-900 mb-2">

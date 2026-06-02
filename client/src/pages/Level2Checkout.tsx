@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CreditCard, Lock, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { BackToHomeButton } from "@/components/BackToHomeButton";
 
 export function Level2Checkout() {
   const [paymentStep, setPaymentStep] = useState<"review" | "payment" | "confirmation">("review");
@@ -65,12 +66,15 @@ export function Level2Checkout() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <button
-            onClick={() => window.history.back()}
-            className="text-blue-600 hover:text-blue-800 font-semibold mb-4 flex items-center gap-2"
-          >
-            ← Voltar
-          </button>
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant="outline"
+              onClick={() => window.history.back()}
+            >
+              ← Voltar
+            </Button>
+            <BackToHomeButton />
+          </div>
           <h1 className="text-3xl font-bold text-blue-900 mb-2">Pagamento - Nível 2</h1>
           <p className="text-gray-600">Complete o pagamento para prosseguir com sua certificação</p>
         </div>

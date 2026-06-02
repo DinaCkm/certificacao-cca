@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
+import { BackToHomeButton } from "@/components/BackToHomeButton";
 
 export function SelectCertificationLevel() {
   const [location] = useLocation();
@@ -33,13 +34,15 @@ export function SelectCertificationLevel() {
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <Button 
-            variant="outline" 
-            className="mb-4"
-            onClick={() => window.history.back()}
-          >
-            ← Voltar
-          </Button>
+          <div className="flex gap-2 mb-4">
+            <Button 
+              variant="outline"
+              onClick={() => window.history.back()}
+            >
+              ← Voltar
+            </Button>
+            <BackToHomeButton />
+          </div>
           <h1 className="text-3xl font-bold text-blue-900 mb-2">
             Escolha o Nível de Certificação
           </h1>
@@ -103,9 +106,9 @@ export function SelectCertificationLevel() {
             </Button>
           </Link>
           {selected === "level1" ? (
-            <Link href={`/step-2?type=${certType}&level=1`}>
+            <Link href={`/certification-direct-preparation-check?type=${certType}`}>
               <Button className="bg-blue-900 hover:bg-blue-800 px-8">
-                Próximo: Cadastro Básico →
+                Próximo: Verificação de Preparação →
               </Button>
             </Link>
           ) : selected === "level2" ? (

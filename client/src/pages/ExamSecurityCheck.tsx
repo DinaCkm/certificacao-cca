@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { BackToHomeButton } from "@/components/BackToHomeButton";
 
 export function ExamSecurityCheck() {
   const [examStarted, setExamStarted] = useState(false);
@@ -85,6 +86,17 @@ export function ExamSecurityCheck() {
         {!examStarted ? (
           <>
             {/* Header */}
+            <div className="mb-4">
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => window.history.back()}
+                >
+                  ← Voltar
+                </Button>
+                <BackToHomeButton />
+              </div>
+            </div>
             <div className="mb-8 text-center">
               <div className="text-5xl mb-4">🔒</div>
               <h1 className="text-3xl font-bold text-blue-900 mb-2">Área de Segurança da Prova</h1>

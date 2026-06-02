@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { BackToHomeButton } from "@/components/BackToHomeButton";
 
 export function ViewFlowchart() {
   return (
@@ -7,13 +8,15 @@ export function ViewFlowchart() {
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <Button 
-            variant="outline" 
-            className="mb-4"
-            onClick={() => window.history.back()}
-          >
-            ← Voltar
-          </Button>
+          <div className="flex gap-2 mb-4">
+            <Button 
+              variant="outline"
+              onClick={() => window.history.back()}
+            >
+              ← Voltar
+            </Button>
+            <BackToHomeButton />
+          </div>
           <h1 className="text-3xl font-bold text-blue-900 mb-2">
             Jornada de Certificação
           </h1>

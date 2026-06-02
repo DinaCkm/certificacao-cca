@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Trash2, Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { BackToHomeButton } from "@/components/BackToHomeButton";
 
 interface EducationRecord {
   id: string;
@@ -306,12 +307,15 @@ export function LattesCurriculumForm() {
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <button
-            onClick={() => window.history.back()}
-            className="text-blue-600 hover:text-blue-800 font-semibold mb-4 flex items-center gap-2"
-          >
-            ← Voltar
-          </button>
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant="outline"
+              onClick={() => window.history.back()}
+            >
+              ← Voltar
+            </Button>
+            <BackToHomeButton />
+          </div>
           <h1 className="text-4xl font-bold text-blue-900 mb-2">Currículo Lattes</h1>
           <p className="text-gray-600">Preencha seu currículo acadêmico e profissional completo</p>
         </div>

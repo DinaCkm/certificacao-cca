@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Link, useSearch } from "wouter";
 import { useState } from "react";
 import { Check, AlertCircle } from "lucide-react";
+import { BackToHomeButton } from "@/components/BackToHomeButton";
 
 export function PaymentCheckout() {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -33,12 +34,15 @@ export function PaymentCheckout() {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-12">
-          <button
-            onClick={() => window.history.back()}
-            className="text-blue-900 hover:underline mb-4 inline-block cursor-pointer"
-          >
-            ← Voltar
-          </button>
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant="outline"
+              onClick={() => window.history.back()}
+            >
+              ← Voltar
+            </Button>
+            <BackToHomeButton />
+          </div>
 
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-blue-900 mb-2">💳 Finalizar Compra</h1>

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { BackToHomeButton } from "@/components/BackToHomeButton";
 
 export function DocumentalAnalysisCheckout() {
   const [cardNumber, setCardNumber] = useState("");
@@ -35,12 +36,15 @@ export function DocumentalAnalysisCheckout() {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <button
-            onClick={() => window.history.back()}
-            className="text-blue-600 hover:text-blue-800 font-semibold mb-4 flex items-center gap-2"
-          >
-            ← Voltar
-          </button>
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant="outline"
+              onClick={() => window.history.back()}
+            >
+              ← Voltar
+            </Button>
+            <BackToHomeButton />
+          </div>
           <h1 className="text-3xl font-bold text-blue-900 mb-2">Análise Documental + Entrevista</h1>
           <p className="text-gray-600">Finalize sua compra para prosseguir com o processo de certificação</p>
         </div>

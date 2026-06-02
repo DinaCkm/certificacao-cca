@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Clock, Users, Award, FileText, Video } from "lucide-react";
+import { BackToHomeButton } from "@/components/BackToHomeButton";
 
 export function Level2Information() {
   const handleNext = () => {
@@ -109,12 +110,15 @@ export function Level2Information() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-12">
-          <button
-            onClick={() => window.history.back()}
-            className="text-blue-600 hover:text-blue-800 font-semibold mb-4 flex items-center gap-2"
-          >
-            ← Voltar
-          </button>
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant="outline"
+              onClick={() => window.history.back()}
+            >
+              ← Voltar
+            </Button>
+            <BackToHomeButton />
+          </div>
           <h1 className="text-4xl font-bold text-blue-900 mb-4">Nível 2 - Profissional Experiente</h1>
           <p className="text-xl text-gray-600">
             Certificação para profissionais com experiência comprovada e formação avançada

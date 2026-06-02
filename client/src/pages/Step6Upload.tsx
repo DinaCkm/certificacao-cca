@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Link, useSearch } from "wouter";
 import { useState } from "react";
 import { Upload, CheckCircle2, AlertCircle } from "lucide-react";
+import { BackToHomeButton } from "@/components/BackToHomeButton";
 
 interface DocumentUpload {
   id: string;
@@ -74,9 +75,15 @@ export function Step6Upload() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <Link href={previousStep}>
-            <a className="text-blue-900 hover:underline mb-4 inline-block">← Voltar</a>
-          </Link>
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant="outline"
+              onClick={() => window.history.back()}
+            >
+              ← Voltar
+            </Button>
+            <BackToHomeButton />
+          </div>
           <div className="flex items-center gap-4 mb-6">
             <div className="w-12 h-12 bg-blue-900 text-white rounded-full flex items-center justify-center font-bold text-xl">
               6
