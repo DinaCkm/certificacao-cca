@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 export function ExamResults() {
   const [selectedResult, setSelectedResult] = useState<"approved" | "rejected" | null>(null);
@@ -25,6 +26,21 @@ export function ExamResults() {
     status: "REPROVADO",
     statusColor: "red",
   };
+
+  // Dados de performance por grupos de conhecimento
+  const knowledgeGroupsApproved = [
+    { name: "Conformidade Regulatória", acertos: 15, total: 18, percentual: 83 },
+    { name: "Análise Financeira", acertos: 12, total: 15, percentual: 80 },
+    { name: "Gestão de Risco", acertos: 10, total: 12, percentual: 83 },
+    { name: "Contabilidade Avançada", acertos: 10, total: 15, percentual: 67 },
+  ];
+
+  const knowledgeGroupsRejected = [
+    { name: "Conformidade Regulatória", acertos: 8, total: 18, percentual: 44 },
+    { name: "Análise Financeira", acertos: 6, total: 15, percentual: 40 },
+    { name: "Gestão de Risco", acertos: 5, total: 12, percentual: 42 },
+    { name: "Contabilidade Avançada", acertos: 6, total: 15, percentual: 40 },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-4">
@@ -81,6 +97,43 @@ export function ExamResults() {
                     </div>
                   </div>
 
+                  {/* Performance por Grupos de Conhecimento - Heatmap */}
+                  <div className="bg-white rounded-lg p-6 border border-green-200">
+                    <h3 className="font-bold text-green-900 mb-4">🔥 Performance por Grupos de Conhecimento</h3>
+                    <div className="space-y-3">
+                      {knowledgeGroupsApproved.map((group, idx) => {
+                        const getHeatmapColor = (percentual: number) => {
+                          if (percentual >= 80) return "bg-green-600 text-white";
+                          if (percentual >= 70) return "bg-green-500 text-white";
+                          if (percentual >= 60) return "bg-yellow-500 text-white";
+                          if (percentual >= 50) return "bg-orange-500 text-white";
+                          return "bg-red-600 text-white";
+                        };
+
+                        return (
+                          <div key={idx} className="flex items-center gap-3">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-gray-700 truncate">{group.name}</p>
+                              <p className="text-xs text-gray-600">{group.acertos}/{group.total} questões</p>
+                            </div>
+                            <div className={`px-4 py-2 rounded-lg font-bold text-center min-w-16 ${getHeatmapColor(group.percentual)}`}>
+                              {group.percentual}%
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <p className="text-xs font-semibold text-gray-700 mb-2">Legenda:</p>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-green-600 rounded"></div><span>Excelente (80%+)</span></div>
+                        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-green-500 rounded"></div><span>Bom (70-79%)</span></div>
+                        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-yellow-500 rounded"></div><span>Regular (60-69%)</span></div>
+                        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-orange-500 rounded"></div><span>Fraco (50-59%)</span></div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Action Button */}
                   <Button
                     onClick={() => window.location.href = "/documental-analysis-checkout"}
@@ -132,6 +185,43 @@ export function ExamResults() {
                             {rejectedPerformance.status}
                           </span>
                         </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Performance por Grupos de Conhecimento - Heatmap */}
+                  <div className="bg-white rounded-lg p-6 border border-red-200">
+                    <h3 className="font-bold text-red-900 mb-4">🔥 Performance por Grupos de Conhecimento</h3>
+                    <div className="space-y-3">
+                      {knowledgeGroupsRejected.map((group, idx) => {
+                        const getHeatmapColor = (percentual: number) => {
+                          if (percentual >= 80) return "bg-green-600 text-white";
+                          if (percentual >= 70) return "bg-green-500 text-white";
+                          if (percentual >= 60) return "bg-yellow-500 text-white";
+                          if (percentual >= 50) return "bg-orange-500 text-white";
+                          return "bg-red-600 text-white";
+                        };
+
+                        return (
+                          <div key={idx} className="flex items-center gap-3">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-gray-700 truncate">{group.name}</p>
+                              <p className="text-xs text-gray-600">{group.acertos}/{group.total} questões</p>
+                            </div>
+                            <div className={`px-4 py-2 rounded-lg font-bold text-center min-w-16 ${getHeatmapColor(group.percentual)}`}>
+                              {group.percentual}%
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <p className="text-xs font-semibold text-gray-700 mb-2">Legenda:</p>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-green-600 rounded"></div><span>Excelente (80%+)</span></div>
+                        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-green-500 rounded"></div><span>Bom (70-79%)</span></div>
+                        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-yellow-500 rounded"></div><span>Regular (60-69%)</span></div>
+                        <div className="flex items-center gap-2"><div className="w-4 h-4 bg-orange-500 rounded"></div><span>Fraco (50-59%)</span></div>
                       </div>
                     </div>
                   </div>
