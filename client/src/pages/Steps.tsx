@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 // Context para gerenciar o fluxo do usuário
 const useUserFlow = () => {
@@ -113,14 +114,16 @@ export function Step2() {
   };
 
   const handleNext = () => {
-    if (formData.name && formData.cpf && formData.email && formData.phone) {
-      // Salvar dados em localStorage
-      localStorage.setItem("userProfileData", JSON.stringify(formData));
-      if (level === "2") {
-        window.location.href = "/step-3?level=2";
-      } else {
-        window.location.href = "/step-3?level=1";
-      }
+    if (!formData.name || !formData.cpf || !formData.email || !formData.phone) {
+      toast.error("Por favor, preencha todos os campos obrigatórios");
+      return;
+    }
+    // Salvar dados em localStorage
+    localStorage.setItem("userProfileData", JSON.stringify(formData));
+    if (level === "2") {
+      window.location.href = "/step-3?level=2";
+    } else {
+      window.location.href = "/step-3?level=1";
     }
   };
 
