@@ -4,6 +4,7 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { UserDataProvider } from "./contexts/UserDataContext";
 import { GlobalHeader } from "./components/GlobalHeader";
 import { GlobalFooter } from "./components/GlobalFooter";
 import { NavigationSidebar } from "./components/NavigationSidebar";
@@ -14,7 +15,7 @@ import { CertificationLevelSelection } from "./pages/CertificationLevelSelection
 import { RequirementsValidation } from "./pages/RequirementsValidation";
 import { SelectCertificationType } from "./pages/SelectCertificationType";
 import { SelectCertificationLevel } from "./pages/SelectCertificationLevel";
-import { Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9, CoursesPage, CoursesRecoveryPage, CoursesPlatform, RecoveryCheckout, RetakeExamCheckout } from "./pages/Steps";
+import { Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9 } from "./pages/Steps";
 
 function Router() {
   return (
@@ -36,11 +37,7 @@ function Router() {
       <Route path={"/step-7"} component={Step7} />
       <Route path={"/step-8"} component={Step8} />
       <Route path={"/step-9"} component={Step9} />
-      <Route path={"/courses"} component={CoursesPage} />
-      <Route path={"/courses-recovery"} component={CoursesRecoveryPage} />
-      <Route path={"/courses-platform"} component={CoursesPlatform} />
-      <Route path={"/recovery-checkout"} component={RecoveryCheckout} />
-      <Route path={"/retake-exam-checkout"} component={RetakeExamCheckout} />
+
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
@@ -59,22 +56,24 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
-        <TooltipProvider>
-          <Toaster />
-          {!isInitialPage && <GlobalHeader />}
-          <div className={isInitialPage && location === "/" ? "" : "flex"}>
-            {!(isInitialPage && location === "/") && <NavigationSidebar />}
-            <div className={isInitialPage && location === "/" ? "w-full" : "flex-1 min-h-screen"}>
-              <Router />
+      <UserDataProvider>
+        <ThemeProvider
+          defaultTheme="light"
+          // switchable
+        >
+          <TooltipProvider>
+            <Toaster />
+            {!isInitialPage && <GlobalHeader />}
+            <div className={isInitialPage && location === "/" ? "" : "flex"}>
+              {!(isInitialPage && location === "/") && <NavigationSidebar />}
+              <div className={isInitialPage && location === "/" ? "w-full" : "flex-1 min-h-screen"}>
+                <Router />
+              </div>
             </div>
-          </div>
-          {!isInitialPage && <GlobalFooter />}
-        </TooltipProvider>
-      </ThemeProvider>
+            {!isInitialPage && <GlobalFooter />}
+          </TooltipProvider>
+        </ThemeProvider>
+      </UserDataProvider>
     </ErrorBoundary>
   );
 }
