@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Link, useLocation } from "wouter";
+import { Link, useSearch } from "wouter";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from "recharts";
 import { CoursesPlatform as CoursesPlatformComponent } from "./CoursesPlatform";
 import { RecoveryCheckout as RecoveryCheckoutComponent } from "./RecoveryCheckout";
@@ -177,14 +177,14 @@ export function Step2() {
 
 // Step 3 - Compra/Pagamento
 export function Step3() {
-  const [location] = useLocation();
-  const params = new URLSearchParams(location.split('?')[1]);
+  const search = useSearch();
+  const params = new URLSearchParams(search);
   const level = params.get('level');
 
   if (level === '2') {
-    // Nível 2: Apenas análise documental + agendamento de entrevista
+    // Nível 2: Pula Steps 4-5 (Prova/Preparatório e Resultado) e vai direto para Step-6 (Upload Documental)
     return (
-      <StepLayout step={3} title="Análise Documental e Entrevista">
+      <StepLayout step={3} title="Pagamento - Análise Documental">
         <Card className="p-6 mb-6">
           <h2 className="text-lg font-semibold text-blue-900 mb-4">Pacote de Análise e Entrevista</h2>
           <div className="border-2 border-blue-900 rounded-lg p-4">
@@ -210,7 +210,7 @@ export function Step3() {
             </Button>
           </div>
         </Card>
-        <NavButtons step={3} nextLink="/step-7" />
+        <NavButtons step={3} nextLink="/step-6" />
       </StepLayout>
     );
   }
@@ -260,14 +260,14 @@ export function Step3() {
   );
 }
 
-// Step 4 - Prova/Preparatório
+// Step 4 - Plataforma de Cursos (Preparatório)
 export function Step4() {
   return (
-    <StepLayout step={4} title="Prova/Preparatório">
-      <Card className="p-6 mb-6">
-        <p className="text-gray-700 mb-4">Acesse a plataforma de cursos e realize a prova de certificação.</p>
-        <Button className="bg-blue-900 hover:bg-blue-800">Acessar Plataforma</Button>
-      </Card>
+    <StepLayout step={4} title="Plataforma de Cursos">
+      <div className="mb-6">
+        <p className="text-gray-700 mb-4">Acesse os cursos online para se preparar para a prova de certificação. Estude no seu próprio ritmo e quando quiser.</p>
+      </div>
+      <CoursesPlatformComponent />
       <NavButtons step={4} nextLink="/step-5" />
     </StepLayout>
   );

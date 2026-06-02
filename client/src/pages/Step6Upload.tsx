@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { useState } from "react";
 import { Upload, CheckCircle2, AlertCircle } from "lucide-react";
 
@@ -14,6 +14,12 @@ interface DocumentUpload {
 }
 
 export function Step6Upload() {
+  const search = useSearch();
+  const params = new URLSearchParams(search);
+  const level = params.get('level');
+  const isLevel2 = level === '2';
+  const previousStep = isLevel2 ? '/step-3?level=2' : '/step-5';
+
   const [documents, setDocuments] = useState<DocumentUpload[]>([
     {
       id: "curriculum",
@@ -68,7 +74,7 @@ export function Step6Upload() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/step-5">
+          <Link href={previousStep}>
             <a className="text-blue-900 hover:underline mb-4 inline-block">← Voltar</a>
           </Link>
           <div className="flex items-center gap-4 mb-6">
@@ -226,7 +232,7 @@ export function Step6Upload() {
 
         {/* Navigation Buttons */}
         <div className="flex justify-between gap-4">
-          <Link href="/step-5">
+          <Link href={previousStep}>
             <a>
               <Button variant="outline" className="px-8">
                 ← Anterior
