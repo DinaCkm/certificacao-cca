@@ -267,7 +267,7 @@ export function Step3() {
       title: "Pacote Completo",
       price: "R$ 1.299",
       features: ["Tudo incluído", "Suporte total", "Aulas ON-LINE"],
-      nextStep: "/step-4", // Vai para Step-4 (Cursos)
+      nextStep: "/step-5", // Vai direto para Step-5 (Resultado)
     },
   ];
 
@@ -396,7 +396,18 @@ export function Step4() {
   ];
 
   return (
-    <StepLayout step={4} title="">
+    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-3">
+    <div className="max-w-5xl mx-auto">
+      <div className="flex justify-between items-center mb-6">
+        <Link href="/step-3">
+          <a className="text-blue-900 hover:underline text-sm">← Voltar</a>
+        </Link>
+        <Link href="/step-3">
+          <a>
+            <Button className="bg-green-600 hover:bg-green-700 text-white font-bold">COMPRAR AGORA</Button>
+          </a>
+        </Link>
+      </div>
       <div className="mb-12">
         <h1 className="text-4xl font-bold text-blue-900 mb-4">PREPARE-SE PARA A CERTIFICAÇÃO</h1>
         <p className="text-lg text-gray-700 mb-2">Veja abaixo os cursos que você terá acesso no seu preparatório</p>
@@ -435,8 +446,8 @@ export function Step4() {
         </Link>
       </div>
 
-      <NavButtons step={4} nextLink="/step-5" />
-    </StepLayout>
+    </div>
+    </div>
   );
 }
 
