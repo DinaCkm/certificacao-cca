@@ -109,9 +109,9 @@ export function SelectCertificationLevel() {
               </Button>
             </Link>
           ) : selected === "level2" ? (
-            <Link href={`/step-2?type=${certType}&level=2`}>
+            <Link href={`/requirements-validation?type=${certType}`}>
               <Button className="bg-blue-900 hover:bg-blue-800 px-8">
-                Próximo: Cadastro Básico →
+                Próximo: Validação de Requisitos →
               </Button>
             </Link>
           ) : (
