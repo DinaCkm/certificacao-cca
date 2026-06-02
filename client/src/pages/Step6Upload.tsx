@@ -18,7 +18,9 @@ export function Step6Upload() {
   const search = useSearch();
   const params = new URLSearchParams(search);
   const level = params.get('level');
+  const certType = params.get('type') || 'normal';
   const isLevel2 = level === '2';
+  const isDirect = certType === 'direct';
   const previousStep = isLevel2 ? '/step-3?level=2' : '/step-5';
 
   const [documents, setDocuments] = useState<DocumentUpload[]>([
@@ -246,7 +248,7 @@ export function Step6Upload() {
               </Button>
             </a>
           </Link>
-          <Link href={allRequiredUploaded ? "/step-7" : "#"}>
+          <Link href={allRequiredUploaded ? (isDirect ? "/direct-certification-result" : "/step-7") : "#"}>
             <a>
               <Button
                 className={`px-8 ${allRequiredUploaded ? "bg-blue-900 hover:bg-blue-800" : "bg-gray-400 cursor-not-allowed"}`}

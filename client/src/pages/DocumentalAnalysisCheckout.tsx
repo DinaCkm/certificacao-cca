@@ -34,10 +34,10 @@ export function DocumentalAnalysisCheckout() {
       // Redirecionar baseado no tipo de certificação
       if (isDirect) {
         // Certificação Direta: vai para preenchimento de ficha
-        window.location.href = "/direct-certification-form";
+        window.location.href = "/direct-certification-form?type=direct";
       } else {
         // Nível 1 normal: vai para upload de documentos
-        window.location.href = "/step-6";
+        window.location.href = "/step-6?type=normal";
       }
     }, 2000);
   };

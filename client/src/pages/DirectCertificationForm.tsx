@@ -58,8 +58,8 @@ export function DirectCertificationForm() {
     setTimeout(() => {
       setIsProcessing(false);
       toast.success("Ficha preenchida com sucesso!");
-      // Redirecionar para pagamento da análise documental
-      window.location.href = "/documental-analysis-checkout";
+      // Redirecionar para página de aguardar 15 dias
+      window.location.href = "/direct-certification-waiting";
     }, 1500);
   };
 

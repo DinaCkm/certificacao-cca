@@ -29,6 +29,11 @@ import { Level2TermsAndWarning } from "./pages/Level2TermsAndWarning";
 import { Level2Checkout } from "./pages/Level2Checkout";
 import { CertificationDirectPreparationCheck } from "./pages/CertificationDirectPreparationCheck";
 import { DirectCertificationForm } from "./pages/DirectCertificationForm";
+import { DirectCertificationWaitingInfo } from "./pages/DirectCertificationWaitingInfo";
+import { DirectCertificationInterviewScheduling } from "./pages/DirectCertificationInterviewScheduling";
+import { DirectCertificationInterviewRoom } from "./pages/DirectCertificationInterviewRoom";
+import { DirectCertificationResult } from "./pages/DirectCertificationResult";
+import { DirectRecordingPlayback } from "./pages/DirectRecordingPlayback";
 
 function Router() {
   return (
@@ -62,6 +67,11 @@ function Router() {
       <Route path={"/level2-checkout"} component={Level2Checkout} />
       <Route path={"/certification-direct-preparation-check"} component={CertificationDirectPreparationCheck} />
       <Route path={"/direct-certification-form"} component={DirectCertificationForm} />
+      <Route path={"/direct-certification-waiting"} component={DirectCertificationWaitingInfo} />
+      <Route path={"/direct-interview-scheduling"} component={DirectCertificationInterviewScheduling} />
+      <Route path={"/direct-interview-room"} component={DirectCertificationInterviewRoom} />
+      <Route path={"/direct-certification-result"} component={DirectCertificationResult} />
+      <Route path={"/direct-recording-playback"} component={DirectRecordingPlayback} />
 
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
