@@ -153,7 +153,7 @@ export function InterviewRoom() {
         {/* Interview Info */}
         {interviewData && (
           <Card className="p-4 bg-blue-50 border-2 border-blue-300 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
               <div>
                 <p className="text-gray-600 font-semibold">Data Agendada</p>
                 <p className="text-blue-900 font-bold">
@@ -163,6 +163,10 @@ export function InterviewRoom() {
               <div>
                 <p className="text-gray-600 font-semibold">Horário</p>
                 <p className="text-blue-900 font-bold">{interviewData.time}</p>
+              </div>
+              <div>
+                <p className="text-gray-600 font-semibold">Entrevistador</p>
+                <p className="text-blue-900 font-bold">{interviewData.interviewer}</p>
               </div>
               <div>
                 <p className="text-gray-600 font-semibold">Tempo de Gravação</p>

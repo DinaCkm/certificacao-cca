@@ -53,7 +53,7 @@ export function InterviewResult() {
           <Card className="p-8 mb-8 border-2 border-green-300 bg-green-50">
             <h2 className="text-2xl font-bold text-green-900 mb-6">📋 Resumo da Entrevista</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="bg-white p-4 rounded-lg border border-green-200">
                 <p className="text-sm text-gray-600 font-semibold">Data</p>
                 <p className="text-lg font-bold text-gray-900">
@@ -69,6 +69,11 @@ export function InterviewResult() {
               <div className="bg-white p-4 rounded-lg border border-green-200">
                 <p className="text-sm text-gray-600 font-semibold">Horário</p>
                 <p className="text-lg font-bold text-gray-900">{interviewData.time}</p>
+              </div>
+              
+              <div className="bg-white p-4 rounded-lg border border-green-200">
+                <p className="text-sm text-gray-600 font-semibold">Entrevistador</p>
+                <p className="text-lg font-bold text-gray-900">{interviewData.interviewer}</p>
               </div>
               
               <div className="bg-white p-4 rounded-lg border border-green-200">
