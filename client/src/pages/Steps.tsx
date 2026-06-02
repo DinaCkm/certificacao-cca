@@ -616,6 +616,9 @@ export function Step6() {
 // Step 7 - Entrevista Técnica
 export function Step7() {
   const [uploadDate] = useState(() => new Date());
+  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedTime, setSelectedTime] = useState<string>("");
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const calculateInterviewDate = () => {
     const date = new Date(uploadDate);
@@ -631,6 +634,56 @@ export function Step7() {
     day: "numeric",
   });
 
+  // Generate available dates (15 days from now, plus 30 days)
+  const generateAvailableDates = () => {
+    const dates = [];
+    const startDate = new Date(interviewDate);
+    for (let i = 0; i < 30; i++) {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + i);
+      // Only weekdays (Monday to Friday)
+      if (date.getDay() !== 0 && date.getDay() !== 6) {
+        dates.push(date.toISOString().split("T")[0]);
+      }
+    }
+    return dates;
+  };
+
+  const availableDates = generateAvailableDates();
+
+  // Available times
+  const availableTimes = [
+    "09:00",
+    "09:30",
+    "10:00",
+    "10:30",
+    "11:00",
+    "11:30",
+    "14:00",
+    "14:30",
+    "15:00",
+    "15:30",
+    "16:00",
+    "16:30",
+  ];
+
+  const handleScheduleInterview = () => {
+    if (!selectedDate || !selectedTime) {
+      toast.error("Por favor, selecione uma data e horário");
+      return;
+    }
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmSchedule = () => {
+    toast.success(`Entrevista agendada para ${selectedDate} às ${selectedTime}`);
+    setShowConfirmation(false);
+    // Redirect to next step after 2 seconds
+    setTimeout(() => {
+      window.location.href = "/step-8";
+    }, 2000);
+  };
+
   return (
     <StepLayout step={7} title="Entrevista Técnica">
       <div className="max-w-2xl">
@@ -645,13 +698,114 @@ export function Step7() {
         </Card>
 
         <Card className="p-6 mb-6">
+          <h2 className="text-lg font-semibold text-blue-900 mb-4">Selecione Data e Horário</h2>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-gray-700 font-semibold">Data da Entrevista *</Label>
+              <select
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-full mt-2 p-2 border-2 border-gray-300 rounded"
+              >
+                <option value="">Selecione uma data</option>
+                {availableDates.map((date) => {
+                  const dateObj = new Date(date);
+                  const formatted = dateObj.toLocaleDateString("pt-BR", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  });
+                  return (
+                    <option key={date} value={date}>
+                      {formatted}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            <div>
+              <Label className="text-gray-700 font-semibold">Horário da Entrevista *</Label>
+              <select
+                value={selectedTime}
+                onChange={(e) => setSelectedTime(e.target.value)}
+                className="w-full mt-2 p-2 border-2 border-gray-300 rounded"
+              >
+                <option value="">Selecione um horário</option>
+                {availableTimes.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-6 mb-6">
           <h2 className="text-lg font-semibold text-blue-900 mb-4">Sobre a Entrevista Técnica</h2>
           <p className="text-gray-700 mb-4">
             A entrevista durará aproximadamente 30 minutos e abordará tópicos relacionados à sua experiência profissional.
           </p>
         </Card>
 
-        <NavButtons step={7} nextLink="/step-8" />
+        <div className="flex gap-3 mt-6">
+          <Button
+            variant="outline"
+            onClick={() => window.history.back()}
+          >
+            ← Anterior
+          </Button>
+          <Button
+            onClick={handleScheduleInterview}
+            className="bg-blue-900 hover:bg-blue-800 text-white"
+          >
+            Confirmar Agendamento →
+          </Button>
+        </div>
+
+        {/* Confirmation Dialog */}
+        <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirmar Agendamento</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-gray-700">
+                Você está agendando sua entrevista técnica para:
+              </p>
+              <div className="bg-blue-50 p-4 rounded border-2 border-blue-300">
+                <p className="font-semibold text-blue-900">
+                  {selectedDate && new Date(selectedDate).toLocaleDateString("pt-BR", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+                <p className="font-semibold text-blue-900">{selectedTime}</p>
+              </div>
+              <p className="text-sm text-gray-600">
+                Você receberá um email de confirmação com os detalhes da entrevista.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowConfirmation(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleConfirmSchedule}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                Confirmar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </StepLayout>
   );
