@@ -117,7 +117,22 @@ export function Step2() {
   };
 
   return (
-    <StepLayout step={2} title="Cadastro Básico">
+    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-3">
+      <div className="max-w-5xl mx-auto">
+        <div className="mb-6">
+          <Link href="/select-level">
+            <a className="text-blue-900 hover:underline mb-2 inline-block text-sm">← Voltar</a>
+          </Link>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-blue-900 text-white rounded-full flex items-center justify-center font-bold text-sm">
+              1
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-blue-900">Cadastro Básico</h1>
+              <p className="text-xs text-gray-600">Etapa 1 de 8</p>
+            </div>
+          </div>
+        </div>
       <Card className="p-6 mb-6">
         <form className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -170,8 +185,22 @@ export function Step2() {
         </form>
       </Card>
 
-      <NavButtons step={2} nextLink="/step-3" onNext={handleNext} />
-    </StepLayout>
+      <div className="flex gap-3 mt-6">
+        <Link href="/select-level">
+          <a>
+            <Button variant="outline">← Anterior</Button>
+          </a>
+        </Link>
+        <Link href="/step-3">
+          <a>
+            <Button className="bg-blue-900 hover:bg-blue-800" onClick={handleNext}>
+              Próximo →
+            </Button>
+          </a>
+        </Link>
+      </div>
+      </div>
+    </div>
   );
 }
 

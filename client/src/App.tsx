@@ -15,7 +15,7 @@ import { CertificationLevelSelection } from "./pages/CertificationLevelSelection
 import { RequirementsValidation } from "./pages/RequirementsValidation";
 import { SelectCertificationType } from "./pages/SelectCertificationType";
 import { SelectCertificationLevel } from "./pages/SelectCertificationLevel";
-import { Step1, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9 } from "./pages/Steps";
+import { Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9 } from "./pages/Steps";
 
 function Router() {
   return (
@@ -27,7 +27,6 @@ function Router() {
       <Route path={"/certification-type"} component={CertificationTypeSelection} />
       <Route path={"/requirements-validation"} component={RequirementsValidation} />
       <Route path={"/certification-level"} component={CertificationLevelSelection} />
-      <Route path={"/step-1"} component={Step1} />
       <Route path={"/step-2"} component={Step2} />
       <Route path={"/step-3"} component={Step3} />
       <Route path={"/step-4"} component={Step4} />

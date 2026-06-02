@@ -11,15 +11,14 @@ interface Step {
 }
 
 const steps: Step[] = [
-  { id: 1, title: "Escolha da Jornada", path: "/step-1", icon: "🎯" },
-  { id: 2, title: "Perfil Profissional", path: "/step-2", icon: "👤" },
-  { id: 3, title: "Compra", path: "/step-3", icon: "💳" },
-  { id: 4, title: "Prova/Preparatório", path: "/step-4", icon: "📝" },
-  { id: 5, title: "Resultado", path: "/step-5", icon: "📊" },
-  { id: 6, title: "Upload Documental", path: "/step-6", icon: "📄" },
-  { id: 7, title: "Entrevista Técnica", path: "/step-7", icon: "🎤" },
-  { id: 8, title: "Decisão Final", path: "/step-8", icon: "✅" },
-  { id: 9, title: "Certificado", path: "/step-9", icon: "🏆" },
+  { id: 1, title: "Perfil Profissional", path: "/step-2", icon: "👤" },
+  { id: 2, title: "Compra", path: "/step-3", icon: "💳" },
+  { id: 3, title: "Prova/Preparatório", path: "/step-4", icon: "📝" },
+  { id: 4, title: "Resultado", path: "/step-5", icon: "📊" },
+  { id: 5, title: "Upload Documental", path: "/step-6", icon: "📄" },
+  { id: 6, title: "Entrevista Técnica", path: "/step-7", icon: "🎤" },
+  { id: 7, title: "Decisão Final", path: "/step-8", icon: "✅" },
+  { id: 8, title: "Certificado", path: "/step-9", icon: "🏆" },
 ];
 
 export function NavigationSidebar() {
