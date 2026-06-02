@@ -388,7 +388,7 @@ export function DirectCertificationForm() {
                   Salvando...
                 </>
               ) : (
-                "✓ Prosseguir para Pagamento"
+                "✓ Prosseguir para Upload de Documentos"
               )}
             </Button>
           </div>
