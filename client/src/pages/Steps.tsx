@@ -340,8 +340,12 @@ export function Step3() {
   );
 }
 
-// Step 4 - Plataforma de Cursos (Preparatório)
+// Step 4 - Visualização de Cursos (Preparatório)
 export function Step4() {
+  const search = useSearch();
+  const params = new URLSearchParams(search);
+  const level = params.get('level') || '1';
+
   const courses = [
     {
       id: 1,
@@ -406,11 +410,9 @@ export function Step4() {
         <Link href="/step-3">
           <a className="text-blue-900 hover:underline text-sm">← Voltar</a>
         </Link>
-        <Link href="/step-3">
-          <a>
-            <Button className="bg-green-600 hover:bg-green-700 text-white font-bold">COMPRAR AGORA</Button>
-          </a>
-        </Link>
+        <a href={`/payment?package=Preparatório&price=799&level=${level}`}>
+          <Button className="bg-green-600 hover:bg-green-700 text-white font-bold">COMPRAR AGORA</Button>
+        </a>
       </div>
       <div className="mb-12">
         <h1 className="text-4xl font-bold text-blue-900 mb-4">PREPARE-SE PARA A CERTIFICAÇÃO</h1>
@@ -441,13 +443,11 @@ export function Step4() {
         <h2 className="text-2xl font-bold text-blue-900 mb-4">Pacote Preparatório</h2>
         <p className="text-gray-700 mb-6">Acesso a todos os 6 cursos + simulados + mentoria personalizada</p>
         <p className="text-4xl font-bold text-green-600 mb-6">R$ 799</p>
-        <Link href="/step-3">
-          <a>
-            <Button className="bg-green-600 hover:bg-green-700 text-white text-lg px-8 py-3 rounded-lg font-bold">
-              COMPRAR AGORA
-            </Button>
-          </a>
-        </Link>
+        <a href={`/payment?package=Preparatório&price=799&level=${level}`}>
+          <Button className="bg-green-600 hover:bg-green-700 text-white text-lg px-8 py-3 rounded-lg font-bold">
+            COMPRAR AGORA
+          </Button>
+        </a>
       </div>
 
     </div>
