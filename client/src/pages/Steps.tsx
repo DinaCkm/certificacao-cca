@@ -99,10 +99,10 @@ export function Step1() {
 // Step 2 - Cadastro Básico
 export function Step2() {
   const [formData, setFormData] = useState({
-    name: "",
-    cpf: "",
-    email: "",
-    phone: "",
+    name: "João Silva Santos",
+    cpf: "123.456.789-00",
+    email: "joao.silva@email.com",
+    phone: "(11) 98765-4321",
   });
   const search = useSearch();
   const params = new URLSearchParams(search);
@@ -113,13 +113,32 @@ export function Step2() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Preencher automaticamente com dados de exemplo (protótipo)
+  useEffect(() => {
+    setFormData({
+      name: "João Silva Santos",
+      cpf: "123.456.789-00",
+      email: "joao.silva@email.com",
+      phone: "(11) 98765-4321",
+    });
+  }, []);
+
   const handleNext = () => {
+    // No protótipo, permitir avançar mesmo com campos vazios para testes
     if (!formData.name || !formData.cpf || !formData.email || !formData.phone) {
-      toast.error("Por favor, preencha todos os campos obrigatórios");
-      return;
+      // Preencher com dados de exemplo se estiver vazio
+      const defaultData = {
+        name: "João Silva Santos",
+        cpf: "123.456.789-00",
+        email: "joao.silva@email.com",
+        phone: "(11) 98765-4321",
+      };
+      setFormData(defaultData);
+      localStorage.setItem("userProfileData", JSON.stringify(defaultData));
+    } else {
+      localStorage.setItem("userProfileData", JSON.stringify(formData));
     }
-    // Salvar dados em localStorage
-    localStorage.setItem("userProfileData", JSON.stringify(formData));
+
     if (level === "2") {
       window.location.href = "/step-3?level=2";
     } else {
