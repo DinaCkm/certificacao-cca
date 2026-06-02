@@ -18,8 +18,11 @@ export function PaymentCheckout() {
     // Simular processamento de pagamento
     setTimeout(() => {
       setIsProcessing(false);
-      // Redirecionar para Bem-vindo às Aulas
-      if (level === "2") {
+      // Redirecionar baseado no tipo de pacote
+      if (packageName === "CertificacaoDireta") {
+        // Certificação Direta vai direto para a prova
+        window.location.href = "/exam-security-check";
+      } else if (level === "2") {
         // Nível 2 pula os cursos e vai direto para upload documental
         window.location.href = "/step-6?level=2";
       } else {
