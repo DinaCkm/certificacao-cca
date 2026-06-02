@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Video, Mic, MicOff, VideoOff, PhoneOff } from "lucide-react";
+import { Video, Mic, MicOff, VideoOff, PhoneOff, X, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { BackToHomeButton } from "@/components/BackToHomeButton";
 
@@ -16,14 +16,34 @@ export function InterviewRoom() {
   const [recordingTime, setRecordingTime] = useState(0);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [interviewData, setInterviewData] = useState<any>(null);
+  const [showWaitingModal, setShowWaitingModal] = useState(false);
+  const [isInterviewDay, setIsInterviewDay] = useState(false);
 
-  // Carregar dados da entrevista agendada
+  // Carregar dados da entrevista agendada e verificar data
   useEffect(() => {
     const data = sessionStorage.getItem("interviewData");
     if (data) {
-      setInterviewData(JSON.parse(data));
+      const parsedData = JSON.parse(data);
+      setInterviewData(parsedData);
+      
+      // Verificar se é o dia da entrevista
+      const scheduledDate = new Date(parsedData.date).toDateString();
+      const today = new Date().toDateString();
+      
+      if (scheduledDate === today) {
+        // É o dia da entrevista
+        setIsInterviewDay(true);
+      } else {
+        // Ainda não é o dia da entrevista
+        setShowWaitingModal(true);
+      }
     }
   }, []);
+
+  const handleCloseWaitingModal = () => {
+    setShowWaitingModal(false);
+    window.location.href = "/";
+  };
 
   // Timer de gravação
   useEffect(() => {
@@ -137,6 +157,96 @@ export function InterviewRoom() {
       window.location.href = "/interview-result";
     }, 2000);
   };
+
+  // Se não é o dia da entrevista, mostrar modal de espera
+  if (showWaitingModal && interviewData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-800 p-4 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-md p-8 border-4 border-yellow-400 bg-white">
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-8 h-8 text-yellow-600 flex-shrink-0" />
+                <h2 className="text-2xl font-bold text-gray-900">Aguarde!</h2>
+              </div>
+              <button
+                onClick={handleCloseWaitingModal}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-4 mb-8">
+              <p className="text-lg text-gray-800 font-semibold">
+                Te esperamos nesta página
+              </p>
+              
+              <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
+                <p className="text-sm text-gray-600 mb-2">
+                  <strong>Data do seu agendamento:</strong>
+                </p>
+                <p className="text-lg font-bold text-blue-900">
+                  {new Date(interviewData.date).toLocaleDateString("pt-BR", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+              </div>
+
+              <div className="bg-green-50 p-4 rounded-lg border-2 border-green-200">
+                <p className="text-sm text-gray-600 mb-2">
+                  <strong>Horário:</strong>
+                </p>
+                <p className="text-lg font-bold text-green-900">
+                  {interviewData.time}
+                </p>
+              </div>
+
+              <div className="bg-purple-50 p-4 rounded-lg border-2 border-purple-200">
+                <p className="text-sm text-gray-600 mb-2">
+                  <strong>Entrevistador:</strong>
+                </p>
+                <p className="text-lg font-bold text-purple-900">
+                  {interviewData.interviewer}
+                </p>
+              </div>
+
+              <div className="bg-orange-50 p-4 rounded-lg border-2 border-orange-200">
+                <p className="text-center text-gray-800 font-semibold">
+                  ⏰ Chegue no horário
+                </p>
+              </div>
+            </div>
+
+            <div className="text-center mb-6">
+              <p className="text-xl font-bold text-gray-900">Até Breve! 👋</p>
+            </div>
+
+            <Button
+              onClick={handleCloseWaitingModal}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3"
+            >
+              Retornar ao Menu Inicial
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Se não é o dia da entrevista e ainda não carregou os dados
+  if (!isInterviewDay && !showWaitingModal) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-800 p-4 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-white text-lg">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-800 p-4">
