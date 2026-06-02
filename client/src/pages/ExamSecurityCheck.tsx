@@ -216,13 +216,12 @@ export function ExamSecurityCheck() {
               >
                 ← Cancelar
               </Button>
-              <Link href="/step-5">
-                <a>
-                  <Button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold">
-                    ✓ Finalizar Prova
-                  </Button>
-                </a>
-              </Link>
+              <Button 
+                onClick={() => window.location.href = "/exam-results"}
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold"
+              >
+                ✓ Finalizar Prova
+              </Button>
             </div>
           </>
         )}

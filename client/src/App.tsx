@@ -20,6 +20,7 @@ import { Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9 } from "./pages/
 import { PaymentCheckout } from "./pages/PaymentCheckout";
 import { WelcomeCourses } from "./pages/WelcomeCourses";
 import { CoursesPlatform } from "./pages/CoursesPlatform";
+import { ExamResults } from "./pages/ExamResults";
 
 function Router() {
   return (
@@ -39,6 +40,7 @@ function Router() {
       <Route path={"/welcome-courses"} component={WelcomeCourses} />
       <Route path={"/courses-learning"} component={CoursesPlatform} />
       <Route path={"/exam-security-check"} component={ExamSecurityCheck} />
+      <Route path={"/exam-results"} component={ExamResults} />
       <Route path={"/step-5"} component={Step5} />
       <Route path={"/step-6"} component={Step6} />
       <Route path={"/step-7"} component={Step7} />
