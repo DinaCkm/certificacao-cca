@@ -55,7 +55,7 @@ function Router() {
 
 function App() {
   const [location] = useLocation();
-  const isInitialPage = location === "/" || location === "/home";
+  const isInitialPage = location === "/" || location === "/select-certification-type" || location === "/select-level";
 
   return (
     <ErrorBoundary>
