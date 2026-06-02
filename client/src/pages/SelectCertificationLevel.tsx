@@ -13,7 +13,6 @@ export function SelectCertificationLevel() {
     {
       id: "level1",
       title: "Nível 1",
-      price: "R$ 1.299",
       description: "Para profissionais em desenvolvimento",
       requirements: "Tempo de Experiência: 2-5 anos | Formação: Graduação",
       includes: ["Acesso ao Curso Online", "Prova de Certificação", "Entrevista Técnica", "Certificado"],
@@ -22,7 +21,6 @@ export function SelectCertificationLevel() {
     {
       id: "level2",
       title: "Nível 2",
-      price: "R$ 1.999",
       description: "Para profissionais experientes",
       requirements: "Tempo de Experiência: 5+ anos | Formação: Pós-graduação/MBA",
       includes: ["Sem Curso", "Sem Prova", "Entrevista Técnica", "Certificado"],
@@ -60,15 +58,10 @@ export function SelectCertificationLevel() {
               }`}
               onClick={() => setSelected(level.id)}
             >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-2xl font-bold text-blue-900">
-                    {level.title}
-                  </h3>
-                  <p className="text-2xl font-bold text-green-600 mt-2">
-                    {level.price}
-                  </p>
-                </div>
+              <div className="mb-4">
+                <h3 className="text-2xl font-bold text-blue-900">
+                  {level.title}
+                </h3>
               </div>
 
               <p className="text-sm text-gray-600 mb-4">{level.description}</p>
