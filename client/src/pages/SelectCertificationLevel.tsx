@@ -46,6 +46,15 @@ export function SelectCertificationLevel() {
           </p>
         </div>
 
+        {/* Flowchart */}
+        <div className="mb-8 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+          <img
+            src="https://d2xsxph8kpxj0f.cloudfront.net/310519663427002956/X4DQXhUgAnY9KtzPPBNLwM/fluxograma-certificacao-cca-BJNtryQnGGbzJxxjrdzVdX.webp"
+            alt="Fluxograma completo do processo de certificação ANEFAC CCA"
+            className="w-full h-auto"
+          />
+        </div>
+
         {/* Level Cards */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {levels.map((level) => (
