@@ -158,10 +158,22 @@ export function InterviewRoom() {
     }, 2000);
   };
 
-  // Se não é o dia da entrevista, mostrar modal de espera
+  // Se não é o dia da entrevista, mostrar modal de espera com sala ao fundo
   if (showWaitingModal && interviewData) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-800 p-4 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-800 p-4 flex items-center justify-center relative overflow-hidden">
+        {/* Sala de Entrevista ao Fundo (Desabilitada) */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+          <div className="max-w-5xl mx-auto h-full px-4">
+            <div className="mt-8">
+              <div className="h-96 bg-black rounded-lg border-4 border-blue-400 flex items-center justify-center">
+                <Video className="w-32 h-32 text-gray-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Modal de Espera */}
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <Card className="w-full max-w-md p-8 border-4 border-yellow-400 bg-white">
             <div className="flex items-start justify-between mb-6">
@@ -248,178 +260,192 @@ export function InterviewRoom() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-800 p-4">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex gap-2 mb-4">
-            <BackToHomeButton />
-          </div>
-          <h1 className="text-4xl font-bold text-white mb-2">Sala de Entrevista</h1>
-          <p className="text-blue-100">Sua entrevista está sendo gravada</p>
-        </div>
-
-        {/* Interview Info */}
-        {interviewData && (
-          <Card className="p-4 bg-blue-50 border-2 border-blue-300 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <p className="text-gray-600 font-semibold">Data Agendada</p>
-                <p className="text-blue-900 font-bold">
-                  {new Date(interviewData.date).toLocaleDateString("pt-BR")}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-600 font-semibold">Horário</p>
-                <p className="text-blue-900 font-bold">{interviewData.time}</p>
-              </div>
-              <div>
-                <p className="text-gray-600 font-semibold">Entrevistador</p>
-                <p className="text-blue-900 font-bold">{interviewData.interviewer}</p>
-              </div>
-              <div>
-                <p className="text-gray-600 font-semibold">Tempo de Gravação</p>
-                <p className="text-blue-900 font-bold">{formatTime(recordingTime)}</p>
-              </div>
+  // Se é o dia da entrevista, mostrar sala normalmente
+  if (isInterviewDay && !showWaitingModal) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-800 p-4">
+        <div className="max-w-5xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex gap-2 mb-4">
+              <BackToHomeButton />
             </div>
-          </Card>
-        )}
+            <h1 className="text-4xl font-bold text-white mb-2">Sala de Entrevista</h1>
+            <p className="text-blue-100">Sua entrevista está sendo gravada</p>
+          </div>
 
-        {/* Video Container */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Video Feed */}
-          <div className="lg:col-span-2">
-            <Card className="p-0 bg-black border-4 border-blue-400 overflow-hidden">
-              {isVideoOn ? (
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-cover"
-                  style={{ transform: "scaleX(-1)" }} // Mirror effect
-                />
-              ) : (
-                <div className="w-full aspect-video bg-gray-900 flex items-center justify-center">
-                  <div className="text-center">
-                    <Video className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400 text-lg">Câmera desativada</p>
+          {/* Interview Info */}
+          {interviewData && (
+            <Card className="p-4 bg-blue-50 border-2 border-blue-300 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-600 font-semibold">Data Agendada</p>
+                  <p className="text-blue-900 font-bold">
+                    {new Date(interviewData.date).toLocaleDateString("pt-BR")}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-semibold">Horário</p>
+                  <p className="text-blue-900 font-bold">{interviewData.time}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-semibold">Entrevistador</p>
+                  <p className="text-blue-900 font-bold">{interviewData.interviewer}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600 font-semibold">Tempo de Gravação</p>
+                  <p className="text-blue-900 font-bold">{formatTime(recordingTime)}</p>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Video Container */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            {/* Video Feed */}
+            <div className="lg:col-span-2">
+              <Card className="p-0 bg-black border-4 border-blue-400 overflow-hidden">
+                {isVideoOn ? (
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-cover"
+                    style={{ transform: "scaleX(-1)" }} // Mirror effect
+                  />
+                ) : (
+                  <div className="w-full aspect-video bg-gray-900 flex items-center justify-center">
+                    <div className="text-center">
+                      <Video className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                      <p className="text-gray-400 text-lg">Câmera desativada</p>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            </div>
+
+            {/* Controls */}
+            <div className="space-y-4">
+              {/* Status Card */}
+              <Card className="p-6 bg-white border-2 border-gray-300">
+                <h3 className="font-bold text-blue-900 mb-4">Status</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">Câmera</span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      isVideoOn ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                    }`}>
+                      {isVideoOn ? "✓ Ativa" : "✗ Inativa"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">Microfone</span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      isAudioOn ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                    }`}>
+                      {isAudioOn ? "✓ Ativo" : "✗ Inativo"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">Gravação</span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      isRecording ? "bg-red-100 text-red-800 animate-pulse" : "bg-gray-100 text-gray-800"
+                    }`}>
+                      {isRecording ? "● Gravando" : "Parada"}
+                    </span>
                   </div>
                 </div>
-              )}
-            </Card>
+              </Card>
+
+              {/* Control Buttons */}
+              <div className="space-y-2">
+                {!isVideoOn ? (
+                  <Button
+                    onClick={startCamera}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3"
+                  >
+                    <Video className="w-4 h-4 mr-2" />
+                    Iniciar Câmera
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      onClick={toggleVideo}
+                      className={`w-full font-bold py-2 ${
+                        isVideoOn
+                          ? "bg-orange-600 hover:bg-orange-700 text-white"
+                          : "bg-gray-600 hover:bg-gray-700 text-white"
+                      }`}
+                    >
+                      {isVideoOn ? (
+                        <>
+                          <VideoOff className="w-4 h-4 mr-2" />
+                          Desativar Câmera
+                        </>
+                      ) : (
+                        <>
+                          <Video className="w-4 h-4 mr-2" />
+                          Ativar Câmera
+                        </>
+                      )}
+                    </Button>
+
+                    <Button
+                      onClick={toggleAudio}
+                      className={`w-full font-bold py-2 ${
+                        isAudioOn
+                          ? "bg-orange-600 hover:bg-orange-700 text-white"
+                          : "bg-gray-600 hover:bg-gray-700 text-white"
+                      }`}
+                    >
+                      {isAudioOn ? (
+                        <>
+                          <MicOff className="w-4 h-4 mr-2" />
+                          Desativar Microfone
+                        </>
+                      ) : (
+                        <>
+                          <Mic className="w-4 h-4 mr-2" />
+                          Ativar Microfone
+                        </>
+                      )}
+                    </Button>
+                  </>
+                )}
+              </div>
+
+              {/* Instructions */}
+              <Card className="p-4 bg-yellow-50 border-2 border-yellow-200">
+                <h4 className="font-bold text-yellow-900 mb-2">⚠️ Instruções</h4>
+                <ul className="text-xs text-yellow-800 space-y-1">
+                  <li>✓ Mantenha a câmera ligada</li>
+                  <li>✓ Fale claramente no microfone</li>
+                  <li>✓ Não se afaste da câmera</li>
+                </ul>
+              </Card>
+            </div>
           </div>
 
-          {/* Controls */}
-          <div className="space-y-4">
-            {/* Status Card */}
-            <Card className="p-6 bg-white border-2 border-gray-300">
-              <h3 className="font-bold text-blue-900 mb-4">Status</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Câmera</span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                    isVideoOn ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                  }`}>
-                    {isVideoOn ? "✓ Ativa" : "✗ Inativa"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Microfone</span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                    isAudioOn ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                  }`}>
-                    {isAudioOn ? "✓ Ativo" : "✗ Inativo"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700">Gravação</span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                    isRecording ? "bg-red-100 text-red-800 animate-pulse" : "bg-gray-100 text-gray-800"
-                  }`}>
-                    {isRecording ? "● Gravando" : "Parada"}
-                  </span>
-                </div>
-              </div>
-            </Card>
-
-            {/* Control Buttons */}
-            <div className="space-y-2">
-              {!isVideoOn ? (
-                <Button
-                  onClick={startCamera}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3"
-                >
-                  <Video className="w-4 h-4 mr-2" />
-                  Iniciar Câmera
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    onClick={toggleVideo}
-                    className={`w-full font-bold py-2 ${
-                      isVideoOn
-                        ? "bg-orange-600 hover:bg-orange-700 text-white"
-                        : "bg-gray-600 hover:bg-gray-700 text-white"
-                    }`}
-                  >
-                    {isVideoOn ? (
-                      <>
-                        <VideoOff className="w-4 h-4 mr-2" />
-                        Desativar Câmera
-                      </>
-                    ) : (
-                      <>
-                        <Video className="w-4 h-4 mr-2" />
-                        Ativar Câmera
-                      </>
-                    )}
-                  </Button>
-
-                  <Button
-                    onClick={toggleAudio}
-                    className={`w-full font-bold py-2 ${
-                      isAudioOn
-                        ? "bg-orange-600 hover:bg-orange-700 text-white"
-                        : "bg-gray-600 hover:bg-gray-700 text-white"
-                    }`}
-                  >
-                    {isAudioOn ? (
-                      <>
-                        <MicOff className="w-4 h-4 mr-2" />
-                        Desativar Microfone
-                      </>
-                    ) : (
-                      <>
-                        <Mic className="w-4 h-4 mr-2" />
-                        Ativar Microfone
-                      </>
-                    )}
-                  </Button>
-
-                  <Button
-                    onClick={finishInterview}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3"
-                  >
-                    <PhoneOff className="w-4 h-4 mr-2" />
-                    Finalizar Entrevista
-                  </Button>
-                </>
-              )}
-            </div>
-
-            {/* Instructions */}
-            <Card className="p-4 bg-yellow-50 border-2 border-yellow-300">
-              <h4 className="font-bold text-yellow-900 mb-2 text-sm">⚠️ Instruções</h4>
-              <ul className="text-xs text-yellow-800 space-y-1">
-                <li>✓ Mantenha a câmera ligada</li>
-                <li>✓ Fale claramente no microfone</li>
-                <li>✓ Responda todas as perguntas</li>
-                <li>✓ Clique em "Finalizar" quando terminar</li>
-              </ul>
-            </Card>
+          {/* Finish Button */}
+          <div className="flex gap-4">
+            <Button
+              onClick={finishInterview}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-4 text-lg"
+            >
+              <PhoneOff className="w-5 h-5 mr-2" />
+              Finalizar Entrevista
+            </Button>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // Fallback
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-800 p-4 flex items-center justify-center">
+      <div className="text-center">
+        <p className="text-white text-lg">Carregando sala de entrevista...</p>
       </div>
     </div>
   );
