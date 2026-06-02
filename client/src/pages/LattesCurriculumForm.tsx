@@ -262,7 +262,7 @@ export function LattesCurriculumForm() {
   const validateStep = (step: number) => {
     if (step === 1) {
       if (!formData.fullName || !formData.email || !formData.cpf || !formData.phone) {
-        // toast.error("Por favor, preencha todos os dados pessoais obrigatórios");
+        toast.error("Por favor, preencha todos os dados pessoais obrigatórios");
         return false;
       }
       return true;
@@ -270,7 +270,7 @@ export function LattesCurriculumForm() {
     if (step === 2) {
       for (let edu of formData.education) {
         if (!edu.institution || !edu.course || !edu.startYear || !edu.endYear) {
-          // toast.error("Por favor, preencha todos os dados de formação acadêmica");
+          toast.error("Por favor, preencha todos os dados de formação acadêmica");
           return false;
         }
       }
@@ -278,7 +278,7 @@ export function LattesCurriculumForm() {
     }
     if (step === 3) {
       if (!formData.termsAccepted) {
-        // toast.error("Por favor, aceite os termos e confirme as informações");
+        toast.error("Por favor, aceite os termos e confirme as informações");
         return false;
       }
       return true;
@@ -287,7 +287,7 @@ export function LattesCurriculumForm() {
   };
 
   const handleNext = () => {
-    if (true // validateStep(currentStep)) {
+    if (validateStep(currentStep)) {
       if (currentStep < 3) {
         setCurrentStep(currentStep + 1);
       } else {

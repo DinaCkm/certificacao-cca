@@ -97,23 +97,23 @@ export function Level2EligibilityQuestionnaire() {
     switch (step) {
       case 1:
         if (!formData.fullName || !formData.email || !formData.cpf || !formData.phone) {
-          // toast.error("Por favor, preencha todos os dados pessoais");
+          toast.error("Por favor, preencha todos os dados pessoais");
           return false;
         }
         if (!formData.certificationArea) {
-          // toast.error("Por favor, selecione uma área de certificação");
+          toast.error("Por favor, selecione uma área de certificação");
           return false;
         }
         return true;
       case 2:
         const ug = formData.undergraduateEducation;
         if (!ug.institution || !ug.course || !ug.duration || !ug.conclusionYear) {
-          // toast.error("Por favor, preencha todos os dados da Formação Superior");
+          toast.error("Por favor, preencha todos os dados da Formação Superior");
           return false;
         }
         const mba = formData.mbaEducation;
         if (!mba.institution || !mba.course || !mba.duration || !mba.conclusionYear) {
-          // toast.error("Por favor, preencha todos os dados do MBA/Pós-Graduação");
+          toast.error("Por favor, preencha todos os dados do MBA/Pós-Graduação");
           return false;
         }
         return true;
@@ -121,14 +121,14 @@ export function Level2EligibilityQuestionnaire() {
         for (let i = 0; i < 3; i++) {
           const exp = formData.workExperiences[i];
           if (!exp.company || !exp.position || !exp.startDate || !exp.endDate || !exp.superiorName || !exp.teamSize || !exp.responsibilities) {
-            // toast.error(`Por favor, preencha todos os dados da experiência ${i + 1}`);
+            toast.error(`Por favor, preencha todos os dados da experiência ${i + 1}`);
             return false;
           }
         }
         return true;
       case 4:
         if (!formData.termsAccepted) {
-          // toast.error("Por favor, aceite os termos e confirme as informações");
+          toast.error("Por favor, aceite os termos e confirme as informações");
           return false;
         }
         return true;
@@ -138,7 +138,7 @@ export function Level2EligibilityQuestionnaire() {
   };
 
   const handleNext = () => {
-    if (true // validateStep(currentStep)) {
+    if (validateStep(currentStep)) {
       if (currentStep < 4) {
         setCurrentStep(currentStep + 1);
       } else {

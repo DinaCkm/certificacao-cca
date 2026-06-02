@@ -22,12 +22,12 @@ export function Level2Checkout() {
   const handleProcessPayment = () => {
     // Validate card data
     if (!cardData.cardName || !cardData.cardNumber || !cardData.cardExpiry || !cardData.cardCVC) {
-      // toast.error("Por favor, preencha todos os dados do cartão");
+      toast.error("Por favor, preencha todos os dados do cartão");
       return;
     }
 
     if (cardData.cardNumber.length < 13) {
-      // toast.error("Número do cartão inválido");
+      toast.error("Número do cartão inválido");
       return;
     }
 

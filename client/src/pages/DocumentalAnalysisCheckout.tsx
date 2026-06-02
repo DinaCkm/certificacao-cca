@@ -14,7 +14,7 @@ export function DocumentalAnalysisCheckout() {
 
   const handlePayment = async () => {
     if (!cardNumber || !cardHolder || !expiryDate || !cvv) {
-      // toast.error("Por favor, preencha todos os dados do cartão");
+      toast.error("Por favor, preencha todos os dados do cartão");
       return;
     }
 

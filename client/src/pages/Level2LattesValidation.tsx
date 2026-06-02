@@ -50,7 +50,7 @@ export function Level2LattesValidation() {
   const handleValidation = () => {
     // Validate requirements
     if (!experience || !formation || !leadershipYears || !termsAccepted) {
-      // toast.error("Por favor, preencha todos os campos e aceite os termos");
+      toast.error("Por favor, preencha todos os campos e aceite os termos");
       return;
     }
 
@@ -67,7 +67,7 @@ export function Level2LattesValidation() {
       toast.success("✓ Você atende aos requisitos! Prossiga para o próximo passo.");
     } else {
       setValidationResult("rejected");
-      // toast.error("✗ Você não atende aos requisitos mínimos para o Nível 2");
+      toast.error("✗ Você não atende aos requisitos mínimos para o Nível 2");
     }
   };
 
@@ -80,19 +80,19 @@ export function Level2LattesValidation() {
 
   const validateLattes = () => {
     if (!lattesData.fullName || !lattesData.email || !lattesData.cpf || !lattesData.phone) {
-      // toast.error("Por favor, preencha todos os dados pessoais obrigatórios");
+      toast.error("Por favor, preencha todos os dados pessoais obrigatórios");
       return false;
     }
     if (!lattesData.institution || !lattesData.course || !lattesData.graduationYear) {
-      // toast.error("Por favor, preencha os dados de formação superior");
+      toast.error("Por favor, preencha os dados de formação superior");
       return false;
     }
     if (!lattesData.mbaInstitution || !lattesData.mbaCourse || !lattesData.mbaYear) {
-      // toast.error("Por favor, preencha os dados de MBA/Pós-Graduação");
+      toast.error("Por favor, preencha os dados de MBA/Pós-Graduação");
       return false;
     }
     if (!lattesData.company1 || !lattesData.position1 || !lattesData.startDate1 || !lattesData.endDate1) {
-      // toast.error("Por favor, preencha os dados de pelo menos uma experiência profissional");
+      toast.error("Por favor, preencha os dados de pelo menos uma experiência profissional");
       return false;
     }
     return true;
