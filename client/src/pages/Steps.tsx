@@ -124,20 +124,8 @@ export function Step2() {
   }, []);
 
   const handleNext = () => {
-    // No protótipo, permitir avançar mesmo com campos vazios para testes
-    if (!formData.name || !formData.cpf || !formData.email || !formData.phone) {
-      // Preencher com dados de exemplo se estiver vazio
-      const defaultData = {
-        name: "João Silva Santos",
-        cpf: "123.456.789-00",
-        email: "joao.silva@email.com",
-        phone: "(11) 98765-4321",
-      };
-      setFormData(defaultData);
-      localStorage.setItem("userProfileData", JSON.stringify(defaultData));
-    } else {
-      localStorage.setItem("userProfileData", JSON.stringify(formData));
-    }
+    // Salvar dados (mesmo que vazios) em localStorage
+    localStorage.setItem("userProfileData", JSON.stringify(formData));
 
     if (level === "2") {
       window.location.href = "/step-3?level=2";
