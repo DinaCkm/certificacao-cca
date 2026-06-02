@@ -16,7 +16,7 @@ export function CertificationLevelSelection() {
 
   const getNextLink = () => {
     if (selected === "level1") {
-      return `/step-1?type=${certType}&level=1`;
+      return `/step-2?type=${certType}&level=1`;
     } else if (selected === "level2") {
       // Nível 2 vai direto para pagamento (Step 3)
       return `/step-3?type=${certType}&level=2`;
