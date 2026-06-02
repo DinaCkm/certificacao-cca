@@ -224,7 +224,7 @@ export function CoursesPlatform() {
               }}
               className="bg-blue-600 hover:bg-blue-700"
             >
-              {isRecovery ? "Fazer Prova Novamente" : "AGENDAR A PROVA"} →
+              {isRecovery ? "Fazer Prova Novamente" : "IR PARA A ÁREA DE PROVA"} →
             </Button>
           </div>
 
