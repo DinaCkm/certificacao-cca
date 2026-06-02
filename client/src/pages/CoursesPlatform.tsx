@@ -217,9 +217,9 @@ export function CoursesPlatform() {
             <Button 
               onClick={() => {
                 if (isRecovery) {
-                  window.location.href = "/retake-exam-checkout";
+                  window.location.href = "/exam-security-check";
                 } else {
-                  window.location.href = "/step-4";
+                  window.location.href = "/exam-security-check";
                 }
               }}
               className="bg-blue-600 hover:bg-blue-700"
