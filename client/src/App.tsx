@@ -55,7 +55,7 @@ function Router() {
 
 function App() {
   const [location] = useLocation();
-  const isInitialPage = location === "/";
+  const isInitialPage = location === "/" || location === "/home";
 
   return (
     <ErrorBoundary>
@@ -66,9 +66,9 @@ function App() {
         <TooltipProvider>
           <Toaster />
           {!isInitialPage && <GlobalHeader />}
-          <div className={isInitialPage ? "" : "flex"}>
-            {!isInitialPage && <NavigationSidebar />}
-            <div className={isInitialPage ? "w-full" : "flex-1 min-h-screen"}>
+          <div className={isInitialPage && location === "/" ? "" : "flex"}>
+            {!(isInitialPage && location === "/") && <NavigationSidebar />}
+            <div className={isInitialPage && location === "/" ? "w-full" : "flex-1 min-h-screen"}>
               <Router />
             </div>
           </div>
