@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearch } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,10 @@ export function DocumentalAnalysisCheckout() {
   const [expiryDate, setExpiryDate] = useState("");
   const [cvv, setCvv] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const search = useSearch();
+  const params = new URLSearchParams(search);
+  const certType = params.get("type") || "normal";
+  const isDirect = certType === "direct";
 
   const handlePayment = async () => {
     if (!cardNumber || !cardHolder || !expiryDate || !cvv) {
@@ -26,8 +31,14 @@ export function DocumentalAnalysisCheckout() {
       setIsProcessing(false);
       toast.success("Pagamento realizado com sucesso!");
       
-      // Redirecionar para upload de documentos
-      window.location.href = "/step-6";
+      // Redirecionar baseado no tipo de certificação
+      if (isDirect) {
+        // Certificação Direta: vai para preenchimento de ficha
+        window.location.href = "/direct-certification-form";
+      } else {
+        // Nível 1 normal: vai para upload de documentos
+        window.location.href = "/step-6";
+      }
     }, 2000);
   };
 

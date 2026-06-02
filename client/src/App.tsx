@@ -28,6 +28,7 @@ import { Level2LattesValidation } from "./pages/Level2LattesValidation";
 import { Level2TermsAndWarning } from "./pages/Level2TermsAndWarning";
 import { Level2Checkout } from "./pages/Level2Checkout";
 import { CertificationDirectPreparationCheck } from "./pages/CertificationDirectPreparationCheck";
+import { DirectCertificationForm } from "./pages/DirectCertificationForm";
 
 function Router() {
   return (
@@ -60,6 +61,7 @@ function Router() {
       <Route path={"/level2-terms-warning"} component={Level2TermsAndWarning} />
       <Route path={"/level2-checkout"} component={Level2Checkout} />
       <Route path={"/certification-direct-preparation-check"} component={CertificationDirectPreparationCheck} />
+      <Route path={"/direct-certification-form"} component={DirectCertificationForm} />
 
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

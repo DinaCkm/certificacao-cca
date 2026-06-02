@@ -21,13 +21,13 @@ export function PaymentCheckout() {
       // Redirecionar baseado no tipo de pacote
       if (packageName === "CertificacaoDireta") {
         // Certificação Direta vai direto para a prova
-        window.location.href = "/exam-security-check";
+        window.location.href = "/exam-security-check?type=direct";
       } else if (level === "2") {
         // Nível 2 pula os cursos e vai direto para upload documental
-        window.location.href = "/step-6?level=2";
+        window.location.href = "/step-6?level=2&type=level2";
       } else {
         // Nível 1 vai para página de Bem-vindo às Aulas
-        window.location.href = `/welcome-courses?package=${packageName}&name=Aluno`;
+        window.location.href = `/welcome-courses?package=${packageName}&name=Aluno&type=normal`;
       }
     }, 2000);
   };

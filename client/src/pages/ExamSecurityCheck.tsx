@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,6 +9,10 @@ export function ExamSecurityCheck() {
   const [examStarted, setExamStarted] = useState(false);
   const [showWarning, setShowWarning] = useState(true);
   const [agreedToWarning, setAgreedToWarning] = useState(false);
+  const search = useSearch();
+  const params = new URLSearchParams(search);
+  const certType = params.get("type") || "normal";
+  const isDirect = certType === "direct";
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-4">
@@ -229,7 +233,13 @@ export function ExamSecurityCheck() {
                 ← Cancelar
               </Button>
               <Button 
-                onClick={() => window.location.href = "/exam-results"}
+                onClick={() => {
+                  if (isDirect) {
+                    window.location.href = "/exam-results?type=direct";
+                  } else {
+                    window.location.href = "/exam-results";
+                  }
+                }}
                 className="w-full bg-green-600 hover:bg-green-700 text-white font-bold"
               >
                 ✓ Finalizar Prova

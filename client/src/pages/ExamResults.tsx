@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearch } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -8,6 +9,10 @@ import { BackToHomeButton } from "@/components/BackToHomeButton";
 export function ExamResults() {
   const [selectedResult, setSelectedResult] = useState<"approved" | "rejected" | null>(null);
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
+  const search = useSearch();
+  const params = new URLSearchParams(search);
+  const certType = params.get("type") || "normal";
+  const isDirect = certType === "direct";
 
   // Dados simulados de performance
   const approvedPerformance = {
@@ -148,7 +153,15 @@ export function ExamResults() {
 
                   {/* Action Button */}
                   <Button
-                    onClick={() => window.location.href = "/documental-analysis-checkout"}
+                    onClick={() => {
+                      if (isDirect) {
+                        // Para Certificação Direta: vai direto para pagamento
+                        window.location.href = "/documental-analysis-checkout?type=direct";
+                      } else {
+                        // Para Nível 1 normal: vai para análise documental
+                        window.location.href = "/documental-analysis-checkout";
+                      }
+                    }}
                     className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 text-lg"
                   >
                     Prosseguir para Análise Documental →
