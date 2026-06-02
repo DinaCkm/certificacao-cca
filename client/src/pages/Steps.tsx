@@ -338,12 +338,94 @@ export function Step3() {
 
 // Step 4 - Plataforma de Cursos (Preparatório)
 export function Step4() {
+  const courses = [
+    {
+      id: 1,
+      title: "Fundamentos de Controladoria",
+      category: "Controladoria",
+      duration: "12h",
+      level: "Básico",
+      description: "Conceitos essenciais de controladoria e gestão financeira.",
+    },
+    {
+      id: 2,
+      title: "Análise de Demonstrações Financeiras",
+      category: "Análise",
+      duration: "15h",
+      level: "Intermediário",
+      description: "Técnicas avançadas de análise de balanços e relatórios.",
+    },
+    {
+      id: 3,
+      title: "Gestão de Riscos Financeiros",
+      category: "Finanças",
+      duration: "10h",
+      level: "Intermediário",
+      description: "Identificação e mitigação de riscos em operações financeiras.",
+    },
+    {
+      id: 4,
+      title: "Compliance e Conformidade",
+      category: "Compliance",
+      duration: "8h",
+      level: "Básico",
+      description: "Normas e procedimentos de conformidade regulatória.",
+    },
+    {
+      id: 5,
+      title: "Contabilidade Avançada",
+      category: "Contabilidade",
+      duration: "14h",
+      level: "Avançado",
+      description: "Técnicas avançadas de contabilidade e consolidação.",
+    },
+    {
+      id: 6,
+      title: "Auditoria Interna",
+      category: "Auditoria",
+      duration: "11h",
+      level: "Intermediário",
+      description: "Processos e metodologias de auditoria interna.",
+    },
+  ];
+
   return (
-    <StepLayout step={4} title="Plataforma de Cursos">
-      <div className="mb-6">
-        <p className="text-gray-700 mb-4">Acesse os cursos online para se preparar para a prova de certificação. Estude no seu próprio ritmo e quando quiser.</p>
+    <StepLayout step={4} title="">
+      <div className="mb-12">
+        <h1 className="text-4xl font-bold text-blue-900 mb-4">PREPARE-SE PARA A CERTIFICAÇÃO</h1>
+        <p className="text-lg text-gray-700 mb-2">Veja abaixo os cursos que você terá acesso no seu preparatório</p>
+        <p className="text-lg font-semibold text-blue-900">COM O PACOTE PREPARATÓRIO</p>
       </div>
-      <CoursesPlatformComponent />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {courses.map((course) => (
+          <Card key={course.id} className="p-6 border-2 border-gray-200 hover:border-blue-900 transition-all">
+            <div className="flex justify-between items-start mb-3">
+              <h3 className="font-bold text-blue-900 text-lg flex-1">{course.title}</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">{course.description}</p>
+            <div className="flex flex-wrap gap-2 mb-4">
+              <span className="text-xs bg-blue-100 text-blue-900 px-3 py-1 rounded-full font-semibold">{course.category}</span>
+              <span className="text-xs bg-green-100 text-green-900 px-3 py-1 rounded-full">{course.level}</span>
+            </div>
+            <p className="text-sm text-gray-700 font-semibold">⏱️ {course.duration}</p>
+          </Card>
+        ))}
+      </div>
+
+      <div className="bg-blue-50 border-2 border-blue-900 rounded-lg p-8 text-center">
+        <h2 className="text-2xl font-bold text-blue-900 mb-4">Pacote Preparatório</h2>
+        <p className="text-gray-700 mb-6">Acesso a todos os 6 cursos + simulados + mentoria personalizada</p>
+        <p className="text-4xl font-bold text-green-600 mb-6">R$ 799</p>
+        <Link href="/step-3">
+          <a>
+            <Button className="bg-green-600 hover:bg-green-700 text-white text-lg px-8 py-3 rounded-lg font-bold">
+              COMPRAR AGORA
+            </Button>
+          </a>
+        </Link>
+      </div>
+
       <NavButtons step={4} nextLink="/step-5" />
     </StepLayout>
   );
