@@ -1,25 +1,18 @@
 import React, { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import { BackToHomeButton } from "@/components/BackToHomeButton";
 
 export function SelectCertificationLevel() {
-  const [location] = useLocation();
-
-  // Extrair cert do query string usando useLocation
+  // Ler query string diretamente do window.location
   const certType = useMemo(() => {
-    const queryIndex = location.indexOf("?");
-    if (queryIndex === -1) {
-      return "cca";
-    }
-    
-    const queryString = location.substring(queryIndex + 1);
-    const params = new URLSearchParams(queryString);
+    if (typeof window === "undefined") return "cca";
+    const params = new URLSearchParams(window.location.search);
     const cert = params.get("cert");
-    
+    console.log("Query params:", { cert, search: window.location.search });
     return cert || "cca";
-  }, [location]);
+  }, []);
 
   // Definir níveis específicos para cada certificação
   const levels = useMemo(() => {

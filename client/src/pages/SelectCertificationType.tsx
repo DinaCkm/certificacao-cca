@@ -52,8 +52,15 @@ export function SelectCertificationType() {
 
         {/* Certification Cards */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
-          {certifications.map((cert) => (
-            <Link key={cert.id} href={`/select-level?cert=${cert.id}`} className="block">
+          {certifications.map((cert) => {
+            const routeMap: Record<string, string> = {
+              cac: "/select-level-cac",
+              cca: "/select-level-cca",
+              liders: "/select-level-liders",
+            };
+            const route = routeMap[cert.id] || "/select-level";
+            return (
+            <Link key={cert.id} href={route} className="block">
               <Card className="p-6 transition-all border-2 border-gray-200 hover:border-blue-900 h-full flex flex-col">
                 <div className="text-4xl mb-4">{cert.icon}</div>
                 <h3 className="text-lg font-bold text-blue-900 mb-2">
@@ -71,7 +78,8 @@ export function SelectCertificationType() {
                 </Button>
               </Card>
             </Link>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
