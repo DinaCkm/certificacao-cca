@@ -7,7 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { UserDataProvider } from "./contexts/UserDataContext";
 import { GlobalHeader } from "./components/GlobalHeader";
 import { GlobalFooter } from "./components/GlobalFooter";
-import { NavigationSidebar } from "./components/NavigationSidebar";
+
 import Home from "./pages/Home";
 import { ExamSecurityCheck } from "./pages/ExamSecurityCheck";
 import { CertificationTypeSelection } from "./pages/CertificationTypeSelection";
@@ -107,8 +107,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             {!isInitialPage && <GlobalHeader />}
-            <div className={isInitialPage ? "" : "flex"}>
-              {!isInitialPage && <NavigationSidebar />}
+            <div className={isInitialPage ? "" : ""}>
               <div className={isInitialPage && location === "/" ? "w-full" : "flex-1 min-h-screen"}>
                 <Router />
               </div>

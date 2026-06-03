@@ -5,7 +5,6 @@ import { Link } from "wouter";
 import { BackToHomeButton } from "@/components/BackToHomeButton";
 
 export function SelectCertificationType() {
-  const [selected, setSelected] = useState<string | null>(null);
 
   const certifications = [
     {
@@ -54,43 +53,25 @@ export function SelectCertificationType() {
         {/* Certification Cards */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           {certifications.map((cert) => (
-            <Card
-              key={cert.id}
-              className={`p-6 cursor-pointer transition-all border-2 ${
-                selected === cert.id
-                  ? "border-blue-900 bg-blue-50"
-                  : "border-gray-200 hover:border-blue-900"
-              }`}
-              onClick={() => setSelected(cert.id)}
-            >
-              <div className="text-4xl mb-4">{cert.icon}</div>
-              <h3 className="text-lg font-bold text-blue-900 mb-2">
-                {cert.title}
-              </h3>
-              <p className="text-sm text-gray-600 mb-3">{cert.description}</p>
-              <div className="border-t pt-3">
-                <p className="text-xs font-semibold text-blue-900 mb-1">Requisitos:</p>
-                <p className="text-xs text-gray-600 mb-2">{cert.requirements}</p>
-                <p className="text-xs font-semibold text-blue-900 mb-1">Áreas:</p>
-                <p className="text-xs text-gray-600">{cert.areas}</p>
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        {/* Action Button */}
-        <div className="flex justify-center gap-4">
-          {selected ? (
-            <Link href={`/select-level?cert=${selected}`} className="inline-block">
-              <span className="inline-block bg-blue-900 hover:bg-blue-800 text-white px-8 py-2 rounded font-medium cursor-pointer">
-                Próximo: Escolher Nível →
-              </span>
+            <Link key={cert.id} href={`/select-level?cert=${cert.id}`} className="block">
+              <Card className="p-6 transition-all border-2 border-gray-200 hover:border-blue-900 h-full flex flex-col">
+                <div className="text-4xl mb-4">{cert.icon}</div>
+                <h3 className="text-lg font-bold text-blue-900 mb-2">
+                  {cert.title}
+                </h3>
+                <p className="text-sm text-gray-600 mb-3">{cert.description}</p>
+                <div className="border-t pt-3 flex-1">
+                  <p className="text-xs font-semibold text-blue-900 mb-1">Requisitos:</p>
+                  <p className="text-xs text-gray-600 mb-2">{cert.requirements}</p>
+                  <p className="text-xs font-semibold text-blue-900 mb-1">Áreas:</p>
+                  <p className="text-xs text-gray-600">{cert.areas}</p>
+                </div>
+                <Button className="bg-blue-900 hover:bg-blue-800 w-full mt-4">
+                  Escolher {cert.title.split(" - ")[0]} →
+                </Button>
+              </Card>
             </Link>
-          ) : (
-            <Button disabled className="px-8">
-              Selecione uma certificação
-            </Button>
-          )}
+          ))}
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
@@ -6,28 +6,98 @@ import { BackToHomeButton } from "@/components/BackToHomeButton";
 
 export function SelectCertificationLevel() {
   const [location] = useLocation();
-  const params = new URLSearchParams(location.split("?")[1]);
-  const certType = params.get("cert") || "cca";
-  const [selected, setSelected] = useState<string | null>(null);
 
-  const levels = [
-    {
-      id: "level1",
-      title: "Nível 1",
-      description: "Para profissionais em desenvolvimento",
-      requirements: "Tempo de Experiência: 2-5 anos | Formação: Graduação",
-      includes: ["Acesso ao Curso Online", "Prova de Certificação", "Entrevista Técnica", "Certificado"],
-      path: "Curso → Prova → Entrevista → Certificado",
-    },
-    {
-      id: "level2",
-      title: "Nível 2",
-      description: "Para profissionais experientes",
-      requirements: "Tempo de Experiência: 5+ anos | Formação: Pós-graduação/MBA",
-      includes: ["Sem Curso", "Sem Prova", "Entrevista Técnica", "Certificado"],
-      path: "Pagamento → Entrevista → Certificado",
-    },
-  ];
+  // Extrair cert do query string usando useLocation
+  const certType = useMemo(() => {
+    const queryIndex = location.indexOf("?");
+    if (queryIndex === -1) {
+      return "cca";
+    }
+    
+    const queryString = location.substring(queryIndex + 1);
+    const params = new URLSearchParams(queryString);
+    const cert = params.get("cert");
+    
+    return cert || "cca";
+  }, [location]);
+
+  // Definir níveis específicos para cada certificação
+  const levels = useMemo(() => {
+    switch (certType) {
+      case "cac":
+        return [
+          {
+            id: "cac",
+            title: "CAC",
+            description: "Para profissionais com experiência em controladoria",
+            requirements: "Tempo de Experiência: 2+ anos | Formação: Graduação",
+            includes: ["Acesso ao Curso Online", "Prova de Certificação", "Entrevista Técnica", "Certificado"],
+            path: "Curso → Prova → Entrevista → Certificado",
+          },
+          {
+            id: "cac-plus",
+            title: "CAC Plus",
+            description: "Para executivos consolidados em grandes empresas",
+            requirements: "Tempo de Experiência: 5+ anos | Formação: Consolidação em grandes empresas",
+            includes: ["Sem Curso", "Sem Prova", "Entrevista Técnica", "Certificado"],
+            path: "Pagamento → Entrevista → Certificado",
+          },
+        ];
+      case "cca":
+        return [
+          {
+            id: "cca",
+            title: "CCA",
+            description: "Para profissionais com graduação e experiência validada",
+            requirements: "Formação: Graduação em Administração, Contabilidade ou Economia | Validação de experiência profissional",
+            includes: ["Acesso ao Curso Online", "Prova de Certificação", "Entrevista Técnica", "Certificado"],
+            path: "Curso → Prova → Entrevista → Certificado",
+          },
+          {
+            id: "cca-plus",
+            title: "CCA Plus",
+            description: "Para profissionais com consolidação de mercado",
+            requirements: "Consolidação de mercado | Maior senioridade executiva | Experiência comprovada",
+            includes: ["Sem Curso", "Sem Prova", "Entrevista Técnica", "Certificado"],
+            path: "Pagamento → Entrevista → Certificado",
+          },
+        ];
+      case "liders":
+        return [
+          {
+            id: "liders",
+            title: "Líderes",
+            description: "Para profissionais em 1ª Liderança",
+            requirements: "Tempo de Experiência: 2-5 anos | Formação: Graduação",
+            includes: ["Acesso ao Programa Online", "Prova de Certificação", "Entrevista Técnica", "Certificado"],
+            path: "Programa → Prova → Entrevista → Certificado",
+          },
+          {
+            id: "liders-executivos",
+            title: "Líderes Executivos",
+            description: "Líderes com mais de 2 anos em gestão de pessoas",
+            requirements: "Tempo de Experiência: 5+ anos | Experiência consolidada em liderança",
+            includes: ["Sem Programa", "Sem Prova", "Entrevista Técnica", "Certificado"],
+            path: "Pagamento → Entrevista → Certificado",
+          },
+        ];
+      default:
+        return [];
+    }
+  }, [certType]);
+
+  const getCertificationTitle = () => {
+    switch (certType) {
+      case "cac":
+        return "Certificação Controller ANEFAC (CAC)";
+      case "cca":
+        return "Certificação Controller ANEFAC (CCA)";
+      case "liders":
+        return "Certificação de Líderes";
+      default:
+        return "Escolha o Nível de Certificação";
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 p-4">
@@ -44,7 +114,7 @@ export function SelectCertificationLevel() {
             <BackToHomeButton />
           </div>
           <h1 className="text-3xl font-bold text-blue-900 mb-2">
-            Escolha o Nível de Certificação
+            {getCertificationTitle()}
           </h1>
           <p className="text-gray-600">
             Selecione o nível que melhor se adequa ao seu perfil profissional
@@ -56,12 +126,7 @@ export function SelectCertificationLevel() {
           {levels.map((level) => (
             <Card
               key={level.id}
-              className={`p-6 cursor-pointer transition-all border-2 ${
-                selected === level.id
-                  ? "border-blue-900 bg-blue-50"
-                  : "border-gray-200 hover:border-blue-900"
-              }`}
-              onClick={() => setSelected(level.id)}
+              className="p-6 transition-all border-2 border-gray-200 hover:border-blue-900 flex flex-col"
             >
               <div className="mb-4">
                 <h3 className="text-2xl font-bold text-blue-900">
@@ -89,39 +154,29 @@ export function SelectCertificationLevel() {
                 </ul>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded p-3">
+              <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
                 <p className="text-xs font-semibold text-blue-900">
                   Caminho: {level.path}
                 </p>
               </div>
+
+              {/* Botão de navegação específico para cada nível */}
+              <Link href={`/select-purchase-type?cert=${certType}&level=${level.id}`} className="mt-auto">
+                <Button className="bg-blue-900 hover:bg-blue-800 w-full">
+                  Escolher {level.title} →
+                </Button>
+              </Link>
             </Card>
           ))}
         </div>
 
-        {/* Action Button */}
-        <div className="flex justify-center gap-4">
+        {/* Back Button */}
+        <div className="flex justify-center">
           <Link href="/select-certification-type">
             <Button variant="outline" className="px-8">
-              ← Voltar
+              ← Voltar para Certificações
             </Button>
           </Link>
-          {selected === "level1" ? (
-            <Link href={`/select-purchase-type?type=${certType}&level=level1`}>
-              <Button className="bg-blue-900 hover:bg-blue-800 px-8">
-                Próximo: Escolha o Tipo de Compra →
-              </Button>
-            </Link>
-          ) : selected === "level2" ? (
-            <Link href={`/level2-information?type=${certType}`}>
-              <Button className="bg-blue-900 hover:bg-blue-800 px-8">
-                Próximo: Informações Nível 2 →
-              </Button>
-            </Link>
-          ) : (
-            <Button disabled className="px-8">
-              Selecione um nível
-            </Button>
-          )}
         </div>
       </div>
     </div>
