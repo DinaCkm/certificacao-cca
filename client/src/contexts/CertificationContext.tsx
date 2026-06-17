@@ -121,7 +121,7 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
   },
 ];
 
-const STORAGE_KEY_CERTS = "anefac_certifications_v3";
+const STORAGE_KEY_CERTS = "anefac_certifications_v4";
 
 function loadCertifications(): Certification[] {
   try {
