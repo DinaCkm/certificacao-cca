@@ -22,7 +22,7 @@ export function ResultadoProva() {
   const processoEncerrado = !aprovado && tentativa >= 2;
 
   return (
-    <FluxoLayout currentStep={6} title="Resultado da Prova">
+    <FluxoLayout currentStep={5} title="Resultado da Prova">
       <div className="max-w-2xl mx-auto">
         <Card className={`border-2 mb-6 ${aprovado ? "border-green-300 bg-green-50" : processoEncerrado ? "border-red-300 bg-red-50" : "border-amber-300 bg-amber-50"}`}>
           <CardContent className="p-8 text-center">

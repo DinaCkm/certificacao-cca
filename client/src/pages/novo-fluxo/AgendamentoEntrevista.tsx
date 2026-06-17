@@ -63,7 +63,7 @@ export function AgendamentoEntrevista() {
   if (confirmado) {
     const dataFormatada = new Date(dataSelecionada + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
     return (
-      <FluxoLayout currentStep={6} title="Entrevista Agendada!">
+      <FluxoLayout currentStep={5} title="Entrevista Agendada!">
         <div className="max-w-xl mx-auto">
           <Card className="border-green-300 bg-green-50">
             <CardContent className="p-8 text-center">
@@ -96,7 +96,7 @@ export function AgendamentoEntrevista() {
 
   return (
     <FluxoLayout
-      currentStep={6}
+      currentStep={5}
       title="Agendamento de Entrevista"
       subtitle="Escolha a data e o horário para sua entrevista técnica. A entrevista será realizada por videoconferência."
     >

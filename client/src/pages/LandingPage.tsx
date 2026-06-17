@@ -162,7 +162,10 @@ function Navbar({ onScrollTo }: { onScrollTo: (id: string) => void }) {
 
 function Hero({ certsCount, onScrollTo }: { certsCount: number; onScrollTo: (id: string) => void }) {
   return (
-    <section className="relative min-h-screen flex items-center anefac-hero-bg anefac-hero-bg-pattern overflow-hidden">
+    <section
+      className="relative min-h-screen flex items-center anefac-hero-bg anefac-hero-bg-pattern overflow-hidden"
+      style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0f2044 30%, #1a3a6b 65%, #1e4fa0 100%)' }}
+    >
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-blue-500/10 blur-3xl" />
@@ -580,7 +583,7 @@ function Edital({ certsAtivas }: { certsAtivas: Certification[] }) {
       <div className="max-w-5xl mx-auto px-6">
         <div className="rounded-3xl overflow-hidden border border-blue-100 shadow-xl">
           {/* Header */}
-          <div className="anefac-hero-bg p-8 sm:p-10">
+          <div className="anefac-hero-bg p-8 sm:p-10" style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0f2044 30%, #1a3a6b 65%, #1e4fa0 100%)' }}>
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center flex-shrink-0">
                 <FileText className="w-7 h-7 text-white" />
@@ -795,7 +798,10 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Final */}
-      <section className="py-24 anefac-hero-bg anefac-hero-bg-pattern relative overflow-hidden">
+      <section
+        className="py-24 anefac-hero-bg anefac-hero-bg-pattern relative overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0f2044 30%, #1a3a6b 65%, #1e4fa0 100%)' }}
+      >
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-blue-400/10 blur-3xl" />
           <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-indigo-400/10 blur-3xl" />

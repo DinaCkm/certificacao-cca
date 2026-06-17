@@ -78,8 +78,8 @@ export function UploadDocumentos() {
       });
       return;
     }
-    atualizarStatus("pagamento1");
-    navigate("/novo-fluxo/pagamento-analise");
+    atualizarStatus("aguardando_validacao");
+    navigate("/novo-fluxo/aguardando-validacao");
   };
 
   if (!certAtual) return null;
@@ -89,8 +89,8 @@ export function UploadDocumentos() {
       currentStep={3}
       title="Upload de Documentos"
       subtitle={`Envie os documentos exigidos para a ${certAtual.nome}. Todos os arquivos obrigatórios devem ser enviados antes de prosseguir.`}
-      backHref="/novo-fluxo/cadastro"
-      backLabel="← Voltar para o cadastro"
+      backHref="/novo-fluxo/pagamento-analise"
+      backLabel="← Voltar para pagamento"
     >
       {/* Progress */}
       <Card className="mb-6 border-blue-200 bg-blue-50">
@@ -211,14 +211,14 @@ export function UploadDocumentos() {
         <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
           <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
           <p className="text-xs text-red-700">
-            <strong>Atenção:</strong> Você ainda precisa enviar {obrigatoriosPendentes.length} documento(s) obrigatório(s) para prosseguir para o pagamento.
+            <strong>Atenção:</strong>             Você ainda precisa enviar {obrigatoriosPendentes.length} documento(s) obrigatório(s) para prosseguir para a validação.
           </p>
         </div>
       )}
 
       {/* Actions */}
       <div className="flex justify-between gap-3 pt-6 border-t border-border">
-        <Button variant="outline" onClick={() => navigate("/novo-fluxo/cadastro")}>
+        <Button variant="outline" onClick={() => navigate("/novo-fluxo/pagamento-analise")}>
           ← Voltar
         </Button>
         <Button
@@ -226,7 +226,7 @@ export function UploadDocumentos() {
           onClick={handleContinuar}
           disabled={obrigatoriosPendentes.length > 0}
         >
-          Continuar para Pagamento →
+          Enviar Documentos →
         </Button>
       </div>
     </FluxoLayout>

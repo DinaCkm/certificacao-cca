@@ -18,10 +18,9 @@ export function AguardandoValidacao() {
   if (!certAtual) return null;
 
   const ETAPAS = [
-    { label: "Certificação selecionada", done: true },
     { label: "Cadastro realizado", done: true },
-    { label: "Documentos enviados", done: true },
     { label: "Pagamento da taxa de análise", done: true },
+    { label: "Documentos enviados", done: true },
     { label: "Validação documental pela banca", done: false, current: true },
     { label: processo.caminhoAvaliacao === "B" ? "Prova de competência" : "Entrevista técnica", done: false },
     { label: "Entrevista técnica", done: false },
@@ -31,7 +30,7 @@ export function AguardandoValidacao() {
 
   return (
     <FluxoLayout
-      currentStep={5}
+      currentStep={4}
       title="Aguardando Validação Documental"
       subtitle="Seu processo foi recebido com sucesso. Nossa banca de avaliadores irá analisar seus documentos em breve."
     >

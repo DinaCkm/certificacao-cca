@@ -49,7 +49,7 @@ export function PagamentoAnalise() {
     setProcessando(false);
     registrarPagamento1();
     toast({ title: "Pagamento confirmado!", description: "Sua taxa de análise foi processada com sucesso." });
-    navigate("/novo-fluxo/aguardando-validacao");
+    navigate("/novo-fluxo/upload-documentos");
   };
 
   if (!certAtual) return null;
@@ -62,11 +62,11 @@ export function PagamentoAnalise() {
 
   return (
     <FluxoLayout
-      currentStep={4}
+      currentStep={2}
       title="Pagamento — Taxa de Análise Documental"
       subtitle="Este é o primeiro pagamento do processo. Ele cobre a análise dos seus documentos, a prova (se aplicável) e a entrevista técnica."
-      backHref="/novo-fluxo/upload-documentos"
-      backLabel="← Voltar para upload"
+      backHref="/novo-fluxo/cadastro"
+      backLabel="← Voltar para cadastro"
     >
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Payment Form */}

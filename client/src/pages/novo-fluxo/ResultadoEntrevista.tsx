@@ -19,7 +19,7 @@ export function ResultadoEntrevista() {
   if (!certAtual) return null;
 
   return (
-    <FluxoLayout currentStep={aprovado ? 7 : 6} title="Resultado da Entrevista">
+    <FluxoLayout currentStep={5} title="Resultado da Entrevista">
       <div className="max-w-2xl mx-auto">
         <Card className={`border-2 mb-6 ${aprovado ? "border-green-300 bg-green-50" : "border-red-300 bg-red-50"}`}>
           <CardContent className="p-8 text-center">

@@ -118,7 +118,7 @@ export function Prova() {
 
   if (!iniciada) {
     return (
-      <FluxoLayout currentStep={6} title="Prova de Competência" subtitle={`Prova da ${certAtual.nome} — Leia as instruções antes de iniciar.`}>
+      <FluxoLayout currentStep={5} title="Prova de Competência" subtitle={`Prova da ${certAtual.nome} — Leia as instruções antes de iniciar.`}>
         <Card className="max-w-2xl mx-auto">
           <CardContent className="p-8">
             <div className="text-center mb-8">
@@ -161,7 +161,7 @@ export function Prova() {
   }
 
   return (
-    <FluxoLayout currentStep={6} title="Prova de Competência">
+    <FluxoLayout currentStep={5} title="Prova de Competência">
       {/* Timer */}
       <div className={cn(
         "sticky top-[120px] z-40 flex items-center justify-between bg-white border rounded-xl px-5 py-3 shadow-sm mb-6",

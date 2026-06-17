@@ -46,7 +46,7 @@ export function PagamentoEmissao() {
 
   return (
     <FluxoLayout
-      currentStep={7}
+      currentStep={6}
       title="Pagamento — Taxa de Emissão do Certificado"
       subtitle="Este é o pagamento final. Após a confirmação, seu certificado será emitido e enviado por e-mail."
     >

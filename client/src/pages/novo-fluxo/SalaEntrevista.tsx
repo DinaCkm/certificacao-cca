@@ -46,7 +46,7 @@ export function SalaEntrevista() {
   if (!certAtual) return null;
 
   return (
-    <FluxoLayout currentStep={6} title="Sala de Entrevista" subtitle="Entrevista técnica por videoconferência">
+    <FluxoLayout currentStep={5} title="Sala de Entrevista" subtitle="Entrevista técnica por videoconferência">
       {fase === "aguardando" && (
         <div className="max-w-2xl mx-auto">
           <Card className="border-blue-200 bg-blue-50 mb-6">

@@ -14,13 +14,13 @@ interface FluxoLayoutProps {
 }
 
 const STEPS = [
-  { num: 1, label: "Certificação", short: "Cert." },
-  { num: 2, label: "Cadastro",     short: "Cadastro" },
-  { num: 3, label: "Documentos",   short: "Docs" },
-  { num: 4, label: "Pagamento 1",  short: "Pgto 1" },
-  { num: 5, label: "Validação",    short: "Valid." },
-  { num: 6, label: "Avaliação",    short: "Aval." },
-  { num: 7, label: "Certificado",  short: "Cert." },
+  { num: 1, label: "Cadastro",    short: "Cadastro" },
+  { num: 2, label: "Pagamento 1", short: "Pgto 1" },
+  { num: 3, label: "Upload",      short: "Upload" },
+  { num: 4, label: "Validação",   short: "Valid." },
+  { num: 5, label: "Avaliação",   short: "Aval." },
+  { num: 6, label: "Pagamento 2", short: "Pgto 2" },
+  { num: 7, label: "Certificado", short: "Cert." },
 ];
 
 const MAX_WIDTH_MAP = {

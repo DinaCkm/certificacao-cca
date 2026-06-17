@@ -189,7 +189,7 @@
 
   /* Premium gradient backgrounds */
   .anefac-hero-bg {
-    background: linear-gradient(135deg, #0f2044 0%, #1a3a6b 40%, #1e4fa0 70%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #0a1628 0%, #0f2044 30%, #1a3a6b 65%, #1e4fa0 100%) !important;
   }
 
   .anefac-hero-bg-pattern {

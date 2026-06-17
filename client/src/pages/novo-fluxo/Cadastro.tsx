@@ -96,15 +96,15 @@ export function Cadastro() {
     }
     localStorage.setItem("anefac_candidato_dados", JSON.stringify(form));
     atualizarCandidato({ candidatoNome: form.nome, candidatoEmail: form.email, candidatoCPF: form.cpf, candidatoTelefone: form.telefone, candidatoEmpresa: form.empresa, candidatoCargo: form.cargo });
-    atualizarStatus("upload");
-    navigate("/novo-fluxo/upload-documentos");
+    atualizarStatus("pagamento_analise");
+    navigate("/novo-fluxo/pagamento-analise");
   };
 
   if (!certAtual) return null;
 
   return (
     <FluxoLayout
-      currentStep={2}
+      currentStep={1}
       title="Cadastro do Candidato"
       subtitle={`Preencha seus dados para iniciar o processo da ${certAtual.nome}.`}
       backHref="/novo-fluxo"
@@ -287,7 +287,7 @@ export function Cadastro() {
             <CardContent className="p-5">
               <h3 className="font-semibold text-foreground mb-3 text-sm">Próxima etapa</h3>
               <p className="text-xs text-muted-foreground mb-3">
-                Após o cadastro, você deverá enviar os documentos exigidos para análise:
+                Após o cadastro, você realizará o pagamento da taxa de análise documental:
               </p>
               <ul className="space-y-1.5">
                 {certAtual.documentosExigidos.slice(0, 3).map((doc) => (
