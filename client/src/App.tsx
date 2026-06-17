@@ -65,7 +65,7 @@ import { AdminCertificacoes } from "./pages/novo-fluxo/admin/AdminCertificacoes"
 function Router() {
   return (
     <Switch>
-      <Route path={"/"} component={SelectCertificationType} />
+      <Route path={"/"} component={SelecionarCertificacao} />
       <Route path={"/home"} component={Home} />
       <Route path={"/select-certification-type"} component={SelectCertificationType} />
 
@@ -139,7 +139,11 @@ function Router() {
 
 function App() {
   const [location] = useLocation();
-  const isInitialPage = location === "/" || location === "/select-certification-type" || location === "/select-level";
+  const isInitialPage =
+    location === "/" ||
+    location === "/select-certification-type" ||
+    location === "/select-level" ||
+    location.startsWith("/novo-fluxo");
 
   return (
     <ErrorBoundary>
