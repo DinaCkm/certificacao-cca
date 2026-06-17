@@ -1,7 +1,7 @@
 import React from "react";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 import { useCertification } from "@/contexts/CertificationContext";
-import { cn } from "@/lib/utils";
+import { CheckCircle, ChevronRight, ArrowLeft } from "lucide-react";
 
 interface FluxoLayoutProps {
   children: React.ReactNode;
@@ -14,21 +14,21 @@ interface FluxoLayoutProps {
 }
 
 const STEPS = [
-  { id: 1, label: "Certificação" },
-  { id: 2, label: "Cadastro" },
-  { id: 3, label: "Documentos" },
-  { id: 4, label: "Pagamento" },
-  { id: 5, label: "Validação" },
-  { id: 6, label: "Avaliação" },
-  { id: 7, label: "Certificado" },
+  { num: 1, label: "Certificação", short: "Cert." },
+  { num: 2, label: "Cadastro",     short: "Cadastro" },
+  { num: 3, label: "Documentos",   short: "Docs" },
+  { num: 4, label: "Pagamento 1",  short: "Pgto 1" },
+  { num: 5, label: "Validação",    short: "Valid." },
+  { num: 6, label: "Avaliação",    short: "Aval." },
+  { num: 7, label: "Certificado",  short: "Cert." },
 ];
 
-const MAX_WIDTHS = {
-  sm: "max-w-xl",
-  md: "max-w-2xl",
-  lg: "max-w-4xl",
-  xl: "max-w-5xl",
-  "2xl": "max-w-6xl",
+const MAX_WIDTH_MAP = {
+  sm:  "max-w-2xl",
+  md:  "max-w-3xl",
+  lg:  "max-w-5xl",
+  xl:  "max-w-6xl",
+  "2xl": "max-w-7xl",
 };
 
 export function FluxoLayout({
@@ -37,121 +37,152 @@ export function FluxoLayout({
   title,
   subtitle,
   backHref,
-  backLabel = "Voltar",
+  backLabel,
   maxWidth = "xl",
 }: FluxoLayoutProps) {
-  const { processo } = useCertification();
+  const [, navigate] = useLocation();
+  const { processo, getCertificacaoAtual } = useCertification();
+  const certAtual = getCertificacaoAtual();
+  const progress = Math.round(((currentStep - 1) / (STEPS.length - 1)) * 100);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30">
-      {/* Header */}
-      <header className="bg-white border-b border-border shadow-sm sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <Link href="/">
-            <a className="flex items-center gap-2.5 group shrink-0">
-              <div className="w-9 h-9 bg-blue-900 rounded-lg flex items-center justify-center shadow-sm">
-                <span className="text-white font-bold text-sm">A</span>
-              </div>
-              <div className="hidden sm:block">
-                <span className="font-bold text-blue-900 text-base leading-none block">ANEFAC</span>
-                <span className="text-xs text-muted-foreground leading-none">Certificação Profissional</span>
-              </div>
-            </a>
-          </Link>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* ── Top Header ──────────────────────────────────────────────────────── */}
+      <header className="bg-white border-b border-gray-100 sticky top-0 z-40 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center gap-4">
+          {/* Logo */}
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2.5 flex-shrink-0 group"
+          >
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-700 to-blue-900 flex items-center justify-center shadow-md group-hover:shadow-blue-200 transition-shadow">
+              <span className="text-white font-black text-xs">A</span>
+            </div>
+            <span className="font-black text-gray-900 text-base hidden sm:block">ANEFAC</span>
+          </button>
 
-          {processo.certificacaoNome && (
-            <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5 text-xs">
-              <span className="text-blue-500 font-medium hidden sm:inline">Certificação:</span>
-              <span className="font-bold text-blue-900">{processo.certificacaoNome}</span>
+          <div className="w-px h-6 bg-gray-200 hidden sm:block" />
+
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-1.5 text-xs text-gray-400 min-w-0 flex-1">
+            <button
+              onClick={() => navigate("/")}
+              className="hover:text-blue-700 transition-colors font-medium hidden sm:block"
+            >
+              Certificações
+            </button>
+            <ChevronRight className="w-3 h-3 hidden sm:block flex-shrink-0" />
+            {certAtual && (
+              <>
+                <span className="text-gray-400 hidden sm:block truncate">Certificação {certAtual.numero}</span>
+                <ChevronRight className="w-3 h-3 hidden sm:block flex-shrink-0" />
+              </>
+            )}
+            <span className="text-gray-700 font-semibold truncate">{title}</span>
+          </div>
+
+          {/* Cert badge */}
+          {certAtual && (
+            <div className="flex-shrink-0 hidden md:flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-xl px-3 py-1.5">
+              <div className="w-6 h-6 rounded-lg bg-blue-700 flex items-center justify-center">
+                <span className="text-white font-black text-xs">{certAtual.numero}</span>
+              </div>
+              <span className="text-xs font-semibold text-blue-800 max-w-[140px] truncate">
+                {certAtual.nome}
+              </span>
             </div>
           )}
         </div>
 
-        {/* Step Progress */}
-        <div className="bg-white border-t border-border/50">
-          <div className="max-w-5xl mx-auto px-4 py-2.5">
-            <div className="flex items-center gap-1 overflow-x-auto pb-0.5 scrollbar-hide">
-              {STEPS.map((step, idx) => {
-                const isCompleted = step.id < currentStep;
-                const isCurrent = step.id === currentStep;
-                const isUpcoming = step.id > currentStep;
-
-                return (
-                  <React.Fragment key={step.id}>
-                    <div
-                      className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all shrink-0",
-                        isCompleted && "bg-green-100 text-green-700",
-                        isCurrent && "bg-blue-900 text-white shadow-sm",
-                        isUpcoming && "bg-gray-100 text-gray-400"
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold shrink-0",
-                          isCompleted && "bg-green-500 text-white",
-                          isCurrent && "bg-white text-blue-900",
-                          isUpcoming && "bg-gray-300 text-gray-500"
-                        )}
-                      >
-                        {isCompleted ? "✓" : step.id}
-                      </span>
-                      <span className="hidden sm:inline">{step.label}</span>
-                    </div>
-                    {idx < STEPS.length - 1 && (
-                      <div
-                        className={cn(
-                          "h-px flex-1 min-w-[6px]",
-                          step.id < currentStep ? "bg-green-400" : "bg-gray-200"
-                        )}
-                      />
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </div>
-          </div>
+        {/* Progress bar */}
+        <div className="h-1 bg-gray-100">
+          <div
+            className="h-full progress-fill rounded-r-full transition-all duration-700"
+            style={{ width: `${progress}%` }}
+          />
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className={cn("mx-auto px-4 py-8", MAX_WIDTHS[maxWidth])}>
-        {/* Back Button */}
-        {backHref && (
-          <div className="mb-5">
-            <Link href={backHref}>
-              <a className="inline-flex items-center gap-1.5 text-sm text-blue-700 hover:text-blue-900 font-medium transition-colors">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                {backLabel}
-              </a>
-            </Link>
+      {/* ── Step Indicator ──────────────────────────────────────────────────── */}
+      <div className="bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <div className="flex items-center justify-between relative">
+            {/* Background connector */}
+            <div className="absolute left-4 right-4 top-4 h-0.5 bg-gray-100 hidden sm:block" />
+            {/* Active connector */}
+            <div
+              className="absolute left-4 top-4 h-0.5 bg-gradient-to-r from-blue-600 to-blue-400 hidden sm:block transition-all duration-700"
+              style={{ width: `calc(${Math.min(progress, 100)}% - 2rem)` }}
+            />
+
+            {STEPS.map((step) => {
+              const isDone   = step.num < currentStep;
+              const isActive = step.num === currentStep;
+              return (
+                <div key={step.num} className="flex flex-col items-center gap-1.5 relative z-10">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    isDone
+                      ? "step-done shadow-md"
+                      : isActive
+                      ? "step-active shadow-lg animate-pulse-glow"
+                      : "bg-white border-2 border-gray-200"
+                  }`}>
+                    {isDone ? (
+                      <CheckCircle className="w-4 h-4 text-white" />
+                    ) : (
+                      <span className={`text-xs font-black ${isActive ? "text-white" : "text-gray-400"}`}>
+                        {step.num}
+                      </span>
+                    )}
+                  </div>
+                  <span className={`text-xs font-semibold hidden sm:block transition-colors ${
+                    isDone ? "text-emerald-600" : isActive ? "text-blue-700" : "text-gray-400"
+                  }`}>
+                    {step.short}
+                  </span>
+                </div>
+              );
+            })}
           </div>
-        )}
-
-        {/* Page Title */}
-        <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-blue-900 mb-1.5">{title}</h1>
-          {subtitle && <p className="text-muted-foreground text-sm sm:text-base">{subtitle}</p>}
         </div>
+      </div>
 
-        {children}
+      {/* ── Page Content ────────────────────────────────────────────────────── */}
+      <main className="flex-1 py-8 sm:py-10">
+        <div className={`${MAX_WIDTH_MAP[maxWidth]} mx-auto px-4 sm:px-6`}>
+          {/* Page header */}
+          <div className="mb-8">
+            {backHref && (
+              <button
+                onClick={() => navigate(backHref)}
+                className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-blue-700 transition-colors mb-4 group"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+                {backLabel || "Voltar"}
+              </button>
+            )}
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-11 h-11 rounded-xl step-active flex items-center justify-center shadow-md">
+                <span className="text-white font-black text-sm">{currentStep}</span>
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-black text-gray-900 leading-tight">{title}</h1>
+                {subtitle && (
+                  <p className="text-gray-500 text-sm mt-1 leading-relaxed">{subtitle}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {children}
+        </div>
       </main>
 
-      {/* Footer */}
-      <footer className="mt-16 border-t border-border bg-white">
-        <div className="max-w-5xl mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground text-center sm:text-left">
-            © {new Date().getFullYear()} ANEFAC — Associação Nacional dos Executivos de Finanças, Administração e Contabilidade
-          </p>
-          <div className="flex gap-4">
-            {["Política de Privacidade", "Termos de Uso", "Suporte"].map((item) => (
-              <a key={item} href="#" className="text-xs text-muted-foreground hover:text-blue-700 transition-colors">
-                {item}
-              </a>
-            ))}
-          </div>
+      {/* ── Footer ──────────────────────────────────────────────────────────── */}
+      <footer className="bg-white border-t border-gray-100 py-4 px-6">
+        <div className="max-w-7xl mx-auto flex items-center justify-between text-xs text-gray-400">
+          <span>ANEFAC — Processo de Certificação</span>
+          <span>Etapa {currentStep} de {STEPS.length}</span>
         </div>
       </footer>
     </div>

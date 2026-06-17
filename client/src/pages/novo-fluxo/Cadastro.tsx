@@ -95,7 +95,7 @@ export function Cadastro() {
       return;
     }
     localStorage.setItem("anefac_candidato_dados", JSON.stringify(form));
-    atualizarCandidato(form.nome, form.email);
+    atualizarCandidato({ candidatoNome: form.nome, candidatoEmail: form.email, candidatoCPF: form.cpf, candidatoTelefone: form.telefone, candidatoEmpresa: form.empresa, candidatoCargo: form.cargo });
     atualizarStatus("upload");
     navigate("/novo-fluxo/upload-documentos");
   };
@@ -112,10 +112,10 @@ export function Cadastro() {
     >
       {/* Certification reminder */}
       <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-        <span className="text-2xl">{certAtual.icone}</span>
+        <div className="w-10 h-10 rounded-xl bg-blue-700 flex items-center justify-center text-white font-black text-lg">{certAtual.numero}</div>
         <div>
           <p className="text-sm font-bold text-blue-900">{certAtual.nome}</p>
-          <p className="text-xs text-blue-600">{certAtual.subtitulo} · {certAtual.nivel}</p>
+          <p className="text-xs text-blue-600">{certAtual.subtitulo}</p>
         </div>
       </div>
 

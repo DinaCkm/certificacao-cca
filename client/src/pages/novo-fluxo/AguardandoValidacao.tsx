@@ -23,7 +23,7 @@ export function AguardandoValidacao() {
     { label: "Documentos enviados", done: true },
     { label: "Pagamento da taxa de análise", done: true },
     { label: "Validação documental pela banca", done: false, current: true },
-    { label: processo.exigeProva ? "Prova de competência" : "Entrevista técnica", done: false },
+    { label: processo.caminhoAvaliacao === "B" ? "Prova de competência" : "Entrevista técnica", done: false },
     { label: "Entrevista técnica", done: false },
     { label: "Pagamento da taxa de emissão", done: false },
     { label: "Emissão do certificado", done: false },
@@ -113,7 +113,7 @@ export function AguardandoValidacao() {
             <CardContent className="p-6">
               <h3 className="font-semibold text-foreground mb-4">O que acontece após a validação?</h3>
               <div className="space-y-3">
-                {certAtual.exigeProva ? (
+                {certAtual.caminhoDefault === "B" ? (
                   <>
                     <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
                       <span className="text-lg">📝</span>
@@ -157,10 +157,10 @@ export function AguardandoValidacao() {
             <CardContent className="p-5">
               <h3 className="font-semibold text-foreground mb-3 text-sm">Sua certificação</h3>
               <div className="flex items-center gap-3 mb-3">
-                <span className="text-2xl">{certAtual.icone}</span>
+                <span className="text-2xl">{certAtual.numero}</span>
                 <div>
                   <p className="font-bold text-foreground text-sm">{certAtual.nome}</p>
-                  <p className="text-xs text-muted-foreground">{certAtual.nivel}</p>
+                  <p className="text-xs text-muted-foreground">{"Nível " + certAtual.numero}</p>
                 </div>
               </div>
               <div className="text-xs text-muted-foreground space-y-1 border-t pt-3">

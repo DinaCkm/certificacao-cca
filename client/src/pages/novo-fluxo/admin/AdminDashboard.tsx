@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useCertification, CERTIFICATIONS_DATA } from "@/contexts/CertificationContext";
+import { useCertification } from "@/contexts/CertificationContext";
 import {
   Users, FileText, Award, DollarSign, CheckCircle, Clock,
   XCircle, BarChart3, Settings, ChevronRight, AlertCircle

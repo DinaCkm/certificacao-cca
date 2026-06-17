@@ -148,7 +148,7 @@ export function PagamentoEmissao() {
             <CardContent className="p-5">
               <h3 className="font-semibold text-foreground mb-4 text-sm">Resumo do pagamento</h3>
               <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
-                <span className="text-2xl">{certAtual.icone}</span>
+                <span className="text-2xl">{certAtual.numero}</span>
                 <div>
                   <p className="font-bold text-foreground text-sm">{certAtual.nome}</p>
                   <p className="text-xs text-muted-foreground">Taxa de Emissão do Certificado</p>

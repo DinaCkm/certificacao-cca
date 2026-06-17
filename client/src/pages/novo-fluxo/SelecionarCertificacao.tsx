@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useCertification, Certification, CERTIFICATIONS_DATA } from "@/contexts/CertificationContext";
+import { useCertification, Certification } from "@/contexts/CertificationContext";
 import { cn } from "@/lib/utils";
 import {
   CheckCircle,
@@ -81,7 +81,7 @@ function CertificationDetailModal({
         <DialogHeader>
           <div className="flex items-start gap-4">
             <div className={cn("w-14 h-14 rounded-xl flex items-center justify-center text-2xl shrink-0", cor.icon)}>
-              {cert.icone}
+              {cert.numero}
             </div>
             <div className="flex-1">
               <DialogTitle className="text-xl font-bold text-blue-900">{cert.nome}</DialogTitle>
@@ -267,7 +267,7 @@ function CertificationCard({
       <div className={cn("p-5 pb-4", cor.bg)}>
         <div className="flex items-start gap-3 mt-1">
           <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center text-xl shrink-0", cor.icon)}>
-            {cert.icone}
+            {cert.numero}
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-foreground text-base leading-tight">{cert.nome}</h3>
@@ -492,7 +492,7 @@ export function SelecionarCertificacao() {
         <div className="max-w-5xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           {selectedCert ? (
             <div className="flex items-center gap-3">
-              <span className="text-2xl">{selectedCert.icone}</span>
+              <span className="text-2xl">{selectedCert.numero}</span>
               <div>
                 <p className="font-bold text-foreground text-sm">{selectedCert.nome}</p>
                 <p className="text-xs text-muted-foreground">

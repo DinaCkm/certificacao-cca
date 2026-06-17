@@ -116,10 +116,10 @@ export function AdminValidacaoDocumental() {
                   <span className="text-sm font-semibold text-foreground">Certificação</span>
                 </div>
                 <p className="font-bold text-foreground text-sm">{certAtual.nome}</p>
-                <p className="text-xs text-muted-foreground">{certAtual.nivel}</p>
+                <p className="text-xs text-muted-foreground">{"Nível " + certAtual.numero}</p>
                 <div className="mt-3 pt-3 border-t text-xs text-muted-foreground space-y-1">
                   <p>Taxa de análise paga: <strong className="text-green-700">R$ {certAtual.taxaAnalise.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</strong></p>
-                  <p>Exige prova: <strong>{certAtual.exigeProva ? "Sim (Caminho B padrão)" : "Não (Caminho A padrão)"}</strong></p>
+                  <p>Exige prova: <strong>{certAtual.caminhoDefault === "B" ? "Sim (Caminho B padrão)" : "Não (Caminho A padrão)"}</strong></p>
                 </div>
               </CardContent>
             </Card>

@@ -210,7 +210,7 @@ export function PagamentoAnalise() {
             <CardContent className="p-5">
               <h3 className="font-semibold text-foreground mb-4 text-sm">Resumo do pagamento</h3>
               <div className="flex items-center gap-3 mb-4 pb-4 border-b border-border">
-                <span className="text-2xl">{certAtual.icone}</span>
+                <span className="text-2xl">{certAtual.numero}</span>
                 <div>
                   <p className="font-bold text-foreground text-sm">{certAtual.nome}</p>
                   <p className="text-xs text-muted-foreground">Taxa de Análise Documental</p>
@@ -222,7 +222,7 @@ export function PagamentoAnalise() {
                   <span className="font-medium">R$ {certAtual.taxaAnalise.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Inclui: análise documental{certAtual.exigeProva ? ", prova" : ""}, entrevista</span>
+                  <span>Inclui: análise documental{certAtual.caminhoDefault === "B" ? ", prova" : ""}, entrevista</span>
                 </div>
               </div>
               <div className="flex justify-between font-bold text-base border-t pt-3">
