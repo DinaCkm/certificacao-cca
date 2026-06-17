@@ -42,6 +42,26 @@ import { InterviewRoom } from "./pages/InterviewRoom";
 import { InterviewResult } from "./pages/InterviewResult";
 import { SelectPurchaseType } from "./pages/SelectPurchaseType";
 
+// ── Novo Fluxo ANEFAC ──────────────────────────────────────────────────────
+import { CertificationProvider } from "./contexts/CertificationContext";
+import { SelecionarCertificacao } from "./pages/novo-fluxo/SelecionarCertificacao";
+import { Cadastro } from "./pages/novo-fluxo/Cadastro";
+import { UploadDocumentos } from "./pages/novo-fluxo/UploadDocumentos";
+import { PagamentoAnalise } from "./pages/novo-fluxo/PagamentoAnalise";
+import { AguardandoValidacao } from "./pages/novo-fluxo/AguardandoValidacao";
+import { Prova } from "./pages/novo-fluxo/Prova";
+import { ResultadoProva } from "./pages/novo-fluxo/ResultadoProva";
+import { AgendamentoEntrevista } from "./pages/novo-fluxo/AgendamentoEntrevista";
+import { SalaEntrevista } from "./pages/novo-fluxo/SalaEntrevista";
+import { ResultadoEntrevista } from "./pages/novo-fluxo/ResultadoEntrevista";
+import { PagamentoEmissao } from "./pages/novo-fluxo/PagamentoEmissao";
+import { EmissaoCertificado } from "./pages/novo-fluxo/EmissaoCertificado";
+import { ProcessoEncerrado } from "./pages/novo-fluxo/ProcessoEncerrado";
+import { AdminValidacaoDocumental } from "./pages/novo-fluxo/admin/ValidacaoDocumental";
+import { AdminDashboard } from "./pages/novo-fluxo/admin/AdminDashboard";
+import { AdminCertificacoes } from "./pages/novo-fluxo/admin/AdminCertificacoes";
+// ───────────────────────────────────────────────────────────────────────────
+
 function Router() {
   return (
     <Switch>
@@ -87,6 +107,24 @@ function Router() {
       <Route path={"/interview-room"} component={InterviewRoom} />
       <Route path={"/interview-result"} component={InterviewResult} />
 
+      {/* ── Novo Fluxo ANEFAC ─────────────────────────────────────────────── */}
+      <Route path={"/novo-fluxo"} component={SelecionarCertificacao} />
+      <Route path={"/novo-fluxo/cadastro"} component={Cadastro} />
+      <Route path={"/novo-fluxo/upload-documentos"} component={UploadDocumentos} />
+      <Route path={"/novo-fluxo/pagamento-analise"} component={PagamentoAnalise} />
+      <Route path={"/novo-fluxo/aguardando-validacao"} component={AguardandoValidacao} />
+      <Route path={"/novo-fluxo/prova"} component={Prova} />
+      <Route path={"/novo-fluxo/resultado-prova"} component={ResultadoProva} />
+      <Route path={"/novo-fluxo/agendamento-entrevista"} component={AgendamentoEntrevista} />
+      <Route path={"/novo-fluxo/sala-entrevista"} component={SalaEntrevista} />
+      <Route path={"/novo-fluxo/resultado-entrevista"} component={ResultadoEntrevista} />
+      <Route path={"/novo-fluxo/pagamento-emissao"} component={PagamentoEmissao} />
+      <Route path={"/novo-fluxo/emissao-certificado"} component={EmissaoCertificado} />
+      <Route path={"/novo-fluxo/processo-encerrado"} component={ProcessoEncerrado} />
+      <Route path={"/novo-fluxo/admin"} component={AdminDashboard} />
+      <Route path={"/novo-fluxo/admin/validacao"} component={AdminValidacaoDocumental} />
+      <Route path={"/novo-fluxo/admin/certificacoes"} component={AdminCertificacoes} />
+      {/* ─────────────────────────────────────────────────────────────────────── */}
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
@@ -105,6 +143,7 @@ function App() {
 
   return (
     <ErrorBoundary>
+      <CertificationProvider>
       <UserDataProvider>
         <ThemeProvider
           defaultTheme="light"
@@ -122,6 +161,7 @@ function App() {
           </TooltipProvider>
         </ThemeProvider>
       </UserDataProvider>
+      </CertificationProvider>
     </ErrorBoundary>
   );
 }
