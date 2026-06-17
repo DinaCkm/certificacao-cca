@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSiteConfig } from "@/contexts/SiteConfigContext";
 
 const NAV_LINKS = [
   { label: "Início", href: "/" },
@@ -14,6 +15,7 @@ export function Navbar() {
   const [location] = useLocation();
   const [menuAberto, setMenuAberto] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { config } = useSiteConfig();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -51,6 +53,13 @@ export function Navbar() {
               <span className={cn("text-xs leading-none transition-colors",
                 scrolled || !isHome ? "text-gray-500" : "text-blue-200")}>
                 Certificações
+              </span>
+              <span className={cn(
+                "inline-flex items-center gap-1 text-xs font-medium mt-0.5 leading-none transition-colors",
+                scrolled || !isHome ? "text-yellow-600" : "text-yellow-300"
+              )}>
+                <Star className="w-3 h-3 fill-current" />
+                {config.hero.badge}
               </span>
             </div>
           </a>
