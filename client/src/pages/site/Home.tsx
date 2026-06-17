@@ -40,12 +40,13 @@ export function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/certificacoes">
-              <a className="inline-flex items-center gap-2 bg-white text-blue-900 font-bold px-8 py-4 rounded-xl hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl text-base">
-                Ver certificações disponíveis
-                <ArrowRight className="w-5 h-5" />
-              </a>
-            </Link>
+            <a
+              href="#sobre"
+              onClick={(e) => { e.preventDefault(); document.getElementById('sobre')?.scrollIntoView({ behavior: 'smooth' }); }}
+              className="inline-flex items-center gap-2 bg-white text-blue-900 font-bold px-8 py-4 rounded-xl hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl text-base cursor-pointer">
+              Conheça as Certificações ANEFAC
+              <ArrowRight className="w-5 h-5" />
+            </a>
             <Link href="/como-funciona">
               <a className="inline-flex items-center gap-2 bg-white/10 border border-white/30 text-white font-semibold px-8 py-4 rounded-xl hover:bg-white/20 transition-all text-base">
                 Como funciona
@@ -70,7 +71,7 @@ export function Home() {
       </section>
 
       {/* Institutional Section */}
-      <section className="py-24 bg-gray-50">
+      <section id="sobre" className="py-24 bg-gray-50">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-black text-gray-900 mb-4">
@@ -110,6 +111,17 @@ export function Home() {
                 <p className="text-gray-600 text-sm leading-relaxed">{texto}</p>
               </div>
             ))}
+          </div>
+
+          {/* CTA after cards */}
+          <div className="text-center mt-12">
+            <Link href="/certificacoes">
+              <a className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-xl text-white transition-all text-base shadow-md hover:shadow-lg"
+                style={{ background: "linear-gradient(135deg, #1e3a6e 0%, #2d5be3 100%)" }}>
+                Ver certificações disponíveis
+                <ArrowRight className="w-5 h-5" />
+              </a>
+            </Link>
           </div>
         </div>
       </section>
