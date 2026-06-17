@@ -44,6 +44,12 @@ import { SelectPurchaseType } from "./pages/SelectPurchaseType";
 
 // ── Novo Fluxo ANEFAC ──────────────────────────────────────────────────────
 import { CertificationProvider } from "./contexts/CertificationContext";
+import { SiteConfigProvider } from "./contexts/SiteConfigContext";
+import { Home as SiteHome } from "./pages/site/Home";
+import { Certificacoes } from "./pages/site/Certificacoes";
+import { ComoFunciona } from "./pages/site/ComoFunciona";
+import { Simulacao } from "./pages/site/Simulacao";
+import { CertificacaoDetalhe } from "./pages/site/CertificacaoDetalhe";
 import LandingPage from "./pages/LandingPage";
 import { SelecionarCertificacao } from "./pages/novo-fluxo/SelecionarCertificacao";
 import { Cadastro } from "./pages/novo-fluxo/Cadastro";
@@ -66,7 +72,11 @@ import { AdminCertificacoes } from "./pages/novo-fluxo/admin/AdminCertificacoes"
 function Router() {
   return (
     <Switch>
-      <Route path={"/"} component={LandingPage} />
+      <Route path={"/"} component={SiteHome} />
+      <Route path={"/certificacoes"} component={Certificacoes} />
+      <Route path={"/certificacoes/:id"} component={CertificacaoDetalhe} />
+      <Route path={"/como-funciona"} component={ComoFunciona} />
+      <Route path={"/simulacao"} component={Simulacao} />
       <Route path={"/home"} component={Home} />
       <Route path={"/select-certification-type"} component={SelectCertificationType} />
 
@@ -109,7 +119,7 @@ function Router() {
       <Route path={"/interview-result"} component={InterviewResult} />
 
       {/* ── Novo Fluxo ANEFAC ─────────────────────────────────────────────── */}
-      <Route path={"/novo-fluxo"} component={LandingPage} />
+      <Route path={"/novo-fluxo"} component={SiteHome} />
       <Route path={"/novo-fluxo/cadastro"} component={Cadastro} />
       <Route path={"/novo-fluxo/upload-documentos"} component={UploadDocumentos} />
       <Route path={"/novo-fluxo/pagamento-analise"} component={PagamentoAnalise} />
@@ -145,10 +155,15 @@ function App() {
     location === "/select-certification-type" ||
     location === "/select-level" ||
     location.startsWith("/novo-fluxo") ||
-    location === "/";
+    location === "/" ||
+    location === "/certificacoes" ||
+    location.startsWith("/certificacoes/") ||
+    location === "/como-funciona" ||
+    location === "/simulacao";
 
   return (
     <ErrorBoundary>
+      <SiteConfigProvider>
       <CertificationProvider>
       <UserDataProvider>
         <ThemeProvider
@@ -168,6 +183,7 @@ function App() {
         </ThemeProvider>
       </UserDataProvider>
       </CertificationProvider>
+      </SiteConfigProvider>
     </ErrorBoundary>
   );
 }
