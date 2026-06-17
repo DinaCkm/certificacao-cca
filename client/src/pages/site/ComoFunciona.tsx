@@ -33,7 +33,7 @@ const ETAPAS = [
     numero: "04",
     icone: Shield,
     titulo: "Validação Documental",
-    descricao: "A banca avaliadora analisa seus documentos em até 5 a 10 dias úteis. Você receberá um e-mail com o resultado e o próximo passo.",
+    descricao: "Sua documentação será avaliada pela banca examinadora. A decisão de liberação para a Certificação Controller ou Controller Plus será publicada no mural do aluno. Você também receberá um e-mail informando a decisão da banca e os próximos passos.",
     cor: "bg-indigo-100 text-indigo-700",
     destaque: false,
   },
