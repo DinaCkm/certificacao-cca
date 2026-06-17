@@ -132,15 +132,28 @@ export function Certificacoes() {
           </div>
         )}
 
-        {/* Bottom CTA */}
-        <div className="mt-16 text-center">
-          <p className="text-gray-500 text-sm mb-4">Não sabe qual certificação escolher?</p>
-          <Link href="/simulacao">
-            <a className="inline-flex items-center gap-2 border-2 border-blue-200 text-blue-700 font-semibold px-6 py-3 rounded-xl hover:bg-blue-50 transition-colors text-sm">
-              Faça uma simulação gratuita e descubra
-              <ArrowRight className="w-4 h-4" />
-            </a>
-          </Link>
+        {/* Bottom CTA Banner */}
+        <div className="mt-20 bg-white rounded-3xl border border-gray-100 shadow-sm px-8 py-16 text-center">
+          <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">
+            Pronto para dar o próximo passo?
+          </h2>
+          <p className="text-lg text-gray-500 max-w-2xl mx-auto mb-10">
+            Explore as certificações disponíveis, entenda o processo e faça uma simulação dos seus conhecimentos.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/certificacoes">
+              <a className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-xl text-white transition-all text-base shadow-md hover:shadow-lg"
+                style={{ background: "linear-gradient(135deg, #1e3a6e 0%, #2d5be3 100%)" }}>
+                Ver certificações
+                <ArrowRight className="w-5 h-5" />
+              </a>
+            </Link>
+            <Link href="/simulacao">
+              <a className="inline-flex items-center gap-2 border-2 border-gray-200 text-gray-700 font-semibold px-8 py-4 rounded-xl hover:border-blue-300 hover:text-blue-700 transition-all text-base">
+                Fazer simulação gratuita
+              </a>
+            </Link>
+          </div>
         </div>
       </div>
 
