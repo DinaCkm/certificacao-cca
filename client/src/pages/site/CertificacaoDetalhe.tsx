@@ -6,10 +6,10 @@ import { ArrowRight, FileText, DollarSign, Clock, Users, CheckCircle, ExternalLi
 
 export function CertificacaoDetalhe() {
   const params = useParams<{ id: string }>();
-  const { certificacoes, iniciarProcesso } = useCertification();
+  const { certifications, selecionarCertificacao } = useCertification();
   const [, navigate] = useLocation();
 
-  const cert = certificacoes.find((c) => c.id === params.id);
+  const cert = (certifications || []).find((c) => c.id === params.id);
 
   if (!cert) {
     return (
@@ -26,7 +26,7 @@ export function CertificacaoDetalhe() {
   }
 
   const handleInscrever = () => {
-    iniciarProcesso(cert.id);
+    selecionarCertificacao(cert);
     navigate("/novo-fluxo/cadastro");
   };
 

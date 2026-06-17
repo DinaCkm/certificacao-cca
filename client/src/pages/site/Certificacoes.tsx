@@ -5,8 +5,8 @@ import { useCertification } from "@/contexts/CertificationContext";
 import { ArrowRight, FileText, Clock, DollarSign, Users, ChevronDown, ChevronUp } from "lucide-react";
 
 export function Certificacoes() {
-  const { certificacoes } = useCertification();
-  const ativas = certificacoes.filter((c) => c.ativa);
+  const { certifications } = useCertification();
+  const ativas = (certifications || []).filter((c) => c.ativa);
   const [expandida, setExpandida] = useState<number | null>(null);
 
   return (
