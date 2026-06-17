@@ -31,13 +31,8 @@ export function Home() {
           </div>
 
           <h1 className="text-5xl md:text-7xl font-black text-white mb-6 leading-tight">
-            {config.hero.titulo.split(" ").map((word, i) =>
-              config.hero.palavrasDestaque.includes(word) ? (
-                <span key={i} className="text-yellow-400"> {word} </span>
-              ) : (
-                <span key={i}> {word} </span>
-              )
-            )}
+            {config.hero.titulo}{" "}
+            <span className="text-yellow-400">{config.hero.tituloDestaque}</span>
           </h1>
 
           <p className="text-xl text-blue-200 max-w-2xl mx-auto mb-12 leading-relaxed">
@@ -59,8 +54,12 @@ export function Home() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20 pt-12 border-t border-white/10">
-            {config.hero.stats.map((stat, i) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mt-20 pt-12 border-t border-white/10">
+            {[
+              { valor: "4+", label: config.hero.stat1Label },
+              { valor: "100%", label: config.hero.stat2Label },
+              { valor: "2x", label: config.hero.stat3Label },
+            ].map((stat, i) => (
               <div key={i} className="text-center">
                 <p className="text-3xl font-black text-yellow-400 mb-1">{stat.valor}</p>
                 <p className="text-blue-300 text-sm">{stat.label}</p>

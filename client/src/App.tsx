@@ -67,6 +67,7 @@ import { ProcessoEncerrado } from "./pages/novo-fluxo/ProcessoEncerrado";
 import { AdminValidacaoDocumental } from "./pages/novo-fluxo/admin/ValidacaoDocumental";
 import { AdminDashboard } from "./pages/novo-fluxo/admin/AdminDashboard";
 import { AdminCertificacoes } from "./pages/novo-fluxo/admin/AdminCertificacoes";
+import { AdminSiteConfig } from "./pages/novo-fluxo/admin/AdminSiteConfig";
 // ───────────────────────────────────────────────────────────────────────────
 
 function Router() {
@@ -135,6 +136,7 @@ function Router() {
       <Route path={"/novo-fluxo/admin"} component={AdminDashboard} />
       <Route path={"/novo-fluxo/admin/validacao"} component={AdminValidacaoDocumental} />
       <Route path={"/novo-fluxo/admin/certificacoes"} component={AdminCertificacoes} />
+      <Route path={"/novo-fluxo/admin/site"} component={AdminSiteConfig} />
       {/* ─────────────────────────────────────────────────────────────────────── */}
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
