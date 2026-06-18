@@ -126,9 +126,9 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
         },
         {
           numero: "04",
-          titulo: "Análise Documental",
-          descricao: "O Comitê de Certificação ANEFAC analisa os documentos enviados em até 10 dias úteis. O candidato é notificado sobre o resultado.",
-          nota: "Caminho B: candidatos que não atingem os critérios documentais realizam prova antes da entrevista.",
+          titulo: "Resultado da Análise Documental",
+          descricao: "O Comitê de Certificação ANEFAC analisa os documentos enviados em até 10 dias úteis e notifica o candidato sobre o resultado com uma das duas opções abaixo:",
+          nota: "Opção 01 — CCA Plus: O candidato que comprova os requisitos de 5 anos de experiência em empresa de grande porte e apresenta as 2 cartas de recomendação é convocado diretamente para entrevista com o Comitê de Certificação ANEFAC.\n\nOpção 02 — CCA: O candidato que ainda não atende aos requisitos da modalidade Plus é direcionado para o exame de proficiência em conhecimento técnico (aplicado pela ANEFAC e FUCAPE), antes de seguir para a entrevista.",
         },
         {
           numero: "05",

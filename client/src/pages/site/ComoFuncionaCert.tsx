@@ -129,12 +129,17 @@ export function ComoFuncionaCert() {
                       <h3 className="font-bold text-gray-900 mb-2">{etapa.titulo}</h3>
                       <p className="text-gray-600 text-sm leading-relaxed">{etapa.descricao}</p>
                       {etapa.nota && (
-                        <div
-                          className="mt-3 flex items-start gap-2 rounded-xl px-4 py-3 text-sm"
-                          style={{ background: accent.light, color: accent.text }}
-                        >
-                          <Info className="w-4 h-4 shrink-0 mt-0.5" />
-                          <span>{etapa.nota}</span>
+                        <div className="mt-3 space-y-2">
+                          {etapa.nota.split('\n\n').map((bloco, bi) => (
+                            <div
+                              key={bi}
+                              className="flex items-start gap-2 rounded-xl px-4 py-3 text-sm"
+                              style={{ background: accent.light, color: accent.text }}
+                            >
+                              <Info className="w-4 h-4 shrink-0 mt-0.5" />
+                              <span>{bloco}</span>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
