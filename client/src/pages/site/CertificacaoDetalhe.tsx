@@ -2,13 +2,12 @@ import React from "react";
 import { Link, useParams, useLocation } from "wouter";
 import { Navbar } from "@/components/Navbar";
 import { useCertification } from "@/contexts/CertificationContext";
-import { ArrowRight, FileText, DollarSign, Clock, Users, CheckCircle, ExternalLink, ArrowLeft } from "lucide-react";
+import { ArrowRight, FileText, DollarSign, Clock, Users, CheckCircle, ExternalLink, ArrowLeft, BookOpen, Award } from "lucide-react";
 
 export function CertificacaoDetalhe() {
   const params = useParams<{ id: string }>();
   const { certifications, selecionarCertificacao } = useCertification();
   const [, navigate] = useLocation();
-
   const cert = (certifications || []).find((c) => c.id === params.id);
 
   if (!cert) {
@@ -112,42 +111,6 @@ export function CertificacaoDetalhe() {
                 ))}
               </div>
             </div>
-
-            {/* Edital */}
-            {cert.editalUrl && (
-              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
-                    <FileText className="w-6 h-6 text-blue-700" />
-                  </div>
-                  <div className="flex-1">
-                    <h2 className="font-bold text-blue-900 mb-1">Edital da Certificação {cert.numero}</h2>
-                    <p className="text-blue-700 text-sm mb-4">
-                      Leia o edital completo antes de se inscrever. Ele contém todas as regras, critérios de avaliação e informações sobre o processo.
-                    </p>
-                    <a
-                      href={cert.editalUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-blue-700 text-white font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-blue-800 transition-colors"
-                    >
-                      <FileText className="w-4 h-4" />
-                      Abrir edital (PDF)
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {!cert.editalUrl && (
-              <div className="bg-gray-100 border border-gray-200 rounded-2xl p-6">
-                <div className="flex items-center gap-3">
-                  <FileText className="w-5 h-5 text-gray-400" />
-                  <p className="text-gray-500 text-sm">O edital desta certificação ainda não foi publicado. Acompanhe as atualizações.</p>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Sidebar */}
@@ -160,7 +123,7 @@ export function CertificacaoDetalhe() {
                 <div className="flex items-center justify-between py-3 border-b border-gray-100">
                   <div className="flex items-center gap-2">
                     <DollarSign className="w-4 h-4 text-amber-600" />
-                    <span className="text-sm text-gray-600">Taxa de análise</span>
+                    <span className="text-sm text-gray-600">Taxa de análise e avaliação</span>
                   </div>
                   <span className="font-bold text-gray-900 text-sm">
                     R$ {cert.taxaAnalise.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
@@ -169,7 +132,7 @@ export function CertificacaoDetalhe() {
                 <div className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-2">
                     <DollarSign className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm text-gray-600">Taxa de emissão</span>
+                    <span className="text-sm text-gray-600">Taxa de emissão do certificado</span>
                   </div>
                   <span className="font-bold text-gray-900 text-sm">
                     R$ {cert.taxaEmissao.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
@@ -178,7 +141,7 @@ export function CertificacaoDetalhe() {
               </div>
               <div className="bg-gray-50 rounded-xl p-3 mt-3">
                 <p className="text-xs text-gray-500 leading-relaxed">
-                  A taxa de análise é paga antes do upload de documentos e cobre todo o processo de avaliação. A taxa de emissão é paga somente após aprovação final.
+                  A taxa de análise e avaliação é paga antes do upload de documentos. A taxa de emissão do certificado é paga somente após aprovação final.
                 </p>
               </div>
             </div>
@@ -194,29 +157,39 @@ export function CertificacaoDetalhe() {
               </p>
             </div>
 
-            {/* CTA */}
-            <div className="bg-white rounded-2xl border-2 border-blue-200 shadow-sm p-6">
-              <h3 className="font-bold text-gray-900 mb-2">Pronto para se inscrever?</h3>
-              <p className="text-gray-500 text-sm mb-5">
-                Inicie o processo agora. Você precisará de cerca de 10 minutos para preencher o cadastro.
-              </p>
+            {/* CTAs */}
+            <div className="bg-white rounded-2xl border-2 border-blue-200 shadow-sm p-6 space-y-3">
+              <h3 className="font-bold text-gray-900 mb-1">O que você deseja fazer?</h3>
+
+              {/* Botão 1 — Preparação */}
+              <Link href="/cursos">
+                <a className="w-full flex items-center gap-3 bg-amber-400 hover:bg-amber-500 text-amber-900 font-bold py-3.5 px-4 rounded-xl transition-all text-sm">
+                  <BookOpen className="w-5 h-5 shrink-0" />
+                  <span>Quero me preparar para a Certificação</span>
+                </a>
+              </Link>
+
+              {/* Botão 2 — Inscrição */}
               <button
                 onClick={handleInscrever}
-                className="w-full flex items-center justify-center gap-2 text-white font-bold py-4 rounded-xl transition-all text-base"
+                className="w-full flex items-center gap-3 text-white font-bold py-3.5 px-4 rounded-xl transition-all text-sm"
                 style={{ background: "linear-gradient(135deg, #1e3a6e 0%, #2d5be3 100%)" }}
               >
-                Iniciar inscrição
-                <ArrowRight className="w-5 h-5" />
+                <Award className="w-5 h-5 shrink-0" />
+                <span>Estou pronto, quero me certificar</span>
               </button>
+
+              {/* Botão 3 — Edital/Comunicado (somente se cadastrado) */}
               {cert.editalUrl && (
                 <a
                   href={cert.editalUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full mt-3 flex items-center justify-center gap-2 border border-gray-200 text-gray-700 font-medium py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm"
+                  className="w-full flex items-center gap-3 border border-blue-200 text-blue-700 font-medium py-3.5 px-4 rounded-xl hover:bg-blue-50 transition-colors text-sm"
                 >
-                  <FileText className="w-4 h-4" />
-                  Ler o edital antes
+                  <FileText className="w-5 h-5 shrink-0" />
+                  <span>Edital / Comunicado</span>
+                  <ExternalLink className="w-3.5 h-3.5 ml-auto" />
                 </a>
               )}
             </div>
@@ -236,6 +209,7 @@ export function CertificacaoDetalhe() {
           <p className="text-xs text-gray-400">© {new Date().getFullYear()} ANEFAC. Todos os direitos reservados.</p>
         </div>
       </footer>
+
     </div>
   );
 }
