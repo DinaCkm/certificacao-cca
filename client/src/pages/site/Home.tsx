@@ -206,24 +206,28 @@ export function Home() {
             <div className="mb-16">
               <div className="grid md:grid-cols-2 gap-6">
                 {certsCCA.map((cert) => (
-                  <Link key={cert.id} href="/certificacoes">
-                    <a className="group block bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-6 hover:shadow-xl hover:shadow-blue-100 transition-all hover:-translate-y-1 cursor-pointer">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-md" style={{ background: corMap[cert.cor] || "#2563eb" }}>
-                          {cert.numero}
-                        </div>
-                        <span className="text-xs font-bold text-blue-600 bg-blue-100 px-2.5 py-1 rounded-full">{cert.subtitulo}</span>
+                  <div key={cert.id} className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-6 hover:shadow-xl hover:shadow-blue-100 transition-all hover:-translate-y-1">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-md" style={{ background: corMap[cert.cor] || "#2563eb" }}>
+                        {cert.numero}
                       </div>
-                      <h4 className="text-lg font-black text-gray-900 mb-2 group-hover:text-blue-700 transition-colors">{cert.nome}</h4>
-                      <p className="text-sm text-gray-600 leading-relaxed mb-4">{cert.descricaoBreve}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-400">{cert.competencias.length} competências avaliadas</span>
-                        <span className="inline-flex items-center gap-1 text-blue-600 text-sm font-bold group-hover:gap-2 transition-all">
+                      <span className="text-xs font-bold text-blue-600 bg-blue-100 px-2.5 py-1 rounded-full">{cert.subtitulo}</span>
+                    </div>
+                    <h4 className="text-lg font-black text-gray-900 mb-2">{cert.nome}</h4>
+                    <p className="text-sm text-gray-600 leading-relaxed mb-4">{cert.descricaoBreve}</p>
+                    <div className="flex items-center justify-between">
+                      <Link href={`/como-funciona/${cert.id}`}>
+                        <a className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 hover:text-blue-900 transition-colors">
+                          <BookOpen className="w-4 h-4" /> Como funciona
+                        </a>
+                      </Link>
+                      <Link href="/certificacoes">
+                        <a className="inline-flex items-center gap-1 text-blue-600 text-sm font-bold hover:gap-2 transition-all">
                           Ver detalhes <ArrowRight className="w-4 h-4" />
-                        </span>
-                      </div>
-                    </a>
-                  </Link>
+                        </a>
+                      </Link>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -243,37 +247,38 @@ export function Home() {
               </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {certsLideranca.map((cert) => (
-                  <Link key={cert.id} href="/certificacoes">
-                    <a className="group block bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-xl transition-all hover:-translate-y-1 cursor-pointer overflow-hidden relative">
-                      {/* Color accent bar */}
-                      <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl" style={{ background: corMap[cert.cor] || "#16a34a" }} />
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-md mb-3" style={{ background: corMap[cert.cor] || "#16a34a" }}>
-                        N{cert.numero - 2}
-                      </div>
-                      <h4 className="text-sm font-black text-gray-900 mb-1 group-hover:text-green-700 transition-colors leading-tight">{cert.subtitulo}</h4>
-                      <p className="text-xs text-gray-500 leading-relaxed mb-3">{cert.descricaoBreve}</p>
-                      <span className="inline-flex items-center gap-1 text-xs font-bold" style={{ color: corMap[cert.cor] || "#16a34a" }}>
-                        Saiba mais <ArrowRight className="w-3 h-3" />
-                      </span>
-                    </a>
-                  </Link>
+                  <div key={cert.id} className="bg-white border border-gray-100 rounded-2xl p-5 hover:shadow-xl transition-all hover:-translate-y-1 overflow-hidden relative flex flex-col">
+                    {/* Color accent bar */}
+                    <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl" style={{ background: corMap[cert.cor] || "#16a34a" }} />
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-md mb-3" style={{ background: corMap[cert.cor] || "#16a34a" }}>
+                      N{cert.numero - 2}
+                    </div>
+                    <h4 className="text-sm font-black text-gray-900 mb-1 leading-tight">{cert.subtitulo}</h4>
+                    <p className="text-xs text-gray-500 leading-relaxed mb-3 flex-1">{cert.descricaoBreve}</p>
+                    <div className="flex flex-col gap-1.5 mt-auto">
+                      <Link href={`/como-funciona/${cert.id}`}>
+                        <a className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-900 transition-colors">
+                          <BookOpen className="w-3.5 h-3.5" /> Como funciona
+                        </a>
+                      </Link>
+                      <Link href="/certificacoes">
+                        <a className="inline-flex items-center gap-1 text-xs font-bold transition-all" style={{ color: corMap[cert.cor] || "#16a34a" }}>
+                          Saiba mais <ArrowRight className="w-3 h-3" />
+                        </a>
+                      </Link>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* CTAs — aparecem após os cards de certificações */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
+          {/* CTA — após os cards */}
+          <div className="flex justify-center mt-12">
             <Link href="/certificacoes">
               <a className="group inline-flex items-center gap-2 bg-yellow-400 text-blue-900 font-black px-8 py-4 rounded-2xl hover:bg-yellow-300 transition-all shadow-lg shadow-yellow-400/30 hover:shadow-yellow-400/50 text-base hover:scale-105">
                 {config.hero.ctaPrimario}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </a>
-            </Link>
-            <Link href="/certificacoes">
-              <a className="inline-flex items-center gap-2 bg-blue-900 border border-blue-700 text-white font-semibold px-8 py-4 rounded-2xl hover:bg-blue-800 transition-all text-base">
-                <BookOpen className="w-5 h-5" />
-                {config.hero.ctaSecundario}
               </a>
             </Link>
           </div>
