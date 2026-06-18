@@ -1,17 +1,60 @@
 import React, { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Navbar } from "@/components/Navbar";
 import { useCertification } from "@/contexts/CertificationContext";
-import { useInstitucional } from "@/contexts/InstitucionalContext";
-import { DocumentoModal } from "@/components/DocumentoModal";
-import { ArrowRight, FileText, Clock, DollarSign, Users, ChevronDown, ChevronUp, Info } from "lucide-react";
+import { ArrowRight, FileText, Clock, DollarSign, Users, ChevronDown, ChevronUp, BookOpen, Award, X, User, Mail, Heart, ExternalLink } from "lucide-react";
+
+type LeadDestino = "cursos" | "certificar" | null;
+
+interface LeadState {
+  certId: string;
+  destino: LeadDestino;
+}
 
 export function Certificacoes() {
-  const { certifications } = useCertification();
-  const { institucional } = useInstitucional();
+  const { certifications, selecionarCertificacao } = useCertification();
+  const [, navigate] = useLocation();
   const ativas = (certifications || []).filter((c) => c.status === "ativa" || c.status === "em_breve");
   const [expandida, setExpandida] = useState<number | null>(null);
-  const [modalEdital, setModalEdital] = useState(false);
+
+  // Lead capture popup
+  const [leadState, setLeadState] = useState<LeadState | null>(null);
+  const [leadNome, setLeadNome] = useState("");
+  const [leadEmail, setLeadEmail] = useState("");
+
+  const abrirPopup = (certId: string, destino: LeadDestino) => {
+    setLeadState({ certId, destino });
+    setLeadNome("");
+    setLeadEmail("");
+  };
+
+  const prosseguir = (identificado: boolean) => {
+    if (!leadState) return;
+    const cert = (certifications || []).find((c) => c.id === leadState.certId);
+
+    if (identificado && leadNome.trim() && leadEmail.trim()) {
+      const leads = JSON.parse(localStorage.getItem("anefac_leads") || "[]");
+      leads.push({
+        nome: leadNome.trim(),
+        email: leadEmail.trim(),
+        certId: leadState.certId,
+        certNome: cert?.nome || "",
+        destino: leadState.destino,
+        data: new Date().toISOString(),
+      });
+      localStorage.setItem("anefac_leads", JSON.stringify(leads));
+    }
+
+    const destino = leadState.destino;
+    setLeadState(null);
+
+    if (destino === "cursos") {
+      navigate("/cursos");
+    } else if (destino === "certificar" && cert) {
+      selecionarCertificacao(cert);
+      navigate("/novo-fluxo/cadastro");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -75,33 +118,57 @@ export function Certificacoes() {
                         <p className="text-blue-700 font-medium text-sm mb-3">{cert.subtitulo}</p>
                         <p className="text-gray-600 text-sm leading-relaxed max-w-2xl">{cert.descricao}</p>
                       </div>
-                      <div className="flex flex-col gap-2 shrink-0">
+
+                      {/* Botões */}
+                      <div className="flex flex-col gap-2 shrink-0 min-w-[220px]">
                         {cert.status === "em_breve" ? (
-                          <span className="inline-flex items-center gap-2 text-gray-500 bg-gray-100 font-bold px-5 py-2.5 rounded-xl text-sm cursor-not-allowed">
+                          <span className="inline-flex items-center gap-2 text-gray-500 bg-gray-100 font-bold px-5 py-2.5 rounded-xl text-sm cursor-not-allowed justify-center">
                             Em breve
                           </span>
                         ) : (
-                          <Link href={`/certificacoes/${cert.id}`}>
-                            <a className="inline-flex items-center gap-2 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-all hover:shadow-lg"
-                              style={{ background: "linear-gradient(135deg, #1e3a6e 0%, #2d5be3 100%)" }}>
-                              Inscrever-se
-                              <ArrowRight className="w-4 h-4" />
-                            </a>
-                          </Link>
+                          <>
+                            {/* Botão 1 — Preparação */}
+                            <button
+                              onClick={() => abrirPopup(cert.id, "cursos")}
+                              className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-500 text-amber-900 font-bold px-5 py-2.5 rounded-xl text-sm transition-all"
+                            >
+                              <BookOpen className="w-4 h-4 shrink-0" />
+                              <span>Quero me preparar</span>
+                            </button>
+
+                            {/* Botão 2 — Certificar */}
+                            <button
+                              onClick={() => abrirPopup(cert.id, "certificar")}
+                              className="inline-flex items-center gap-2 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-all hover:shadow-lg"
+                              style={{ background: "linear-gradient(135deg, #1e3a6e 0%, #2d5be3 100%)" }}
+                            >
+                              <Award className="w-4 h-4 shrink-0" />
+                              <span>Quero me certificar</span>
+                            </button>
+
+                            {/* Botão 3 — Como funciona */}
+                            <Link href={`/como-funciona/${cert.id}`}>
+                              <a className="inline-flex items-center gap-2 border border-blue-200 text-blue-700 font-medium px-5 py-2.5 rounded-xl text-sm hover:bg-blue-50 transition-colors">
+                                <FileText className="w-4 h-4 shrink-0" />
+                                <span>Como funciona</span>
+                              </a>
+                            </Link>
+
+                            {/* Botão 4 — Edital (somente se cadastrado) */}
+                            {cert.editalUrl && (
+                              <a
+                                href={cert.editalUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 border border-gray-200 text-gray-600 font-medium px-5 py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-colors"
+                              >
+                                <FileText className="w-4 h-4 shrink-0 text-blue-500" />
+                                <span>Edital / Comunicado</span>
+                                <ExternalLink className="w-3 h-3 ml-auto" />
+                              </a>
+                            )}
+                          </>
                         )}
-                        <Link href={`/como-funciona/${cert.id}`}>
-                          <a className="inline-flex items-center gap-2 border border-blue-200 text-blue-700 font-medium px-5 py-2.5 rounded-xl text-sm hover:bg-blue-50 transition-colors">
-                            <Info className="w-4 h-4" />
-                            Como funciona
-                          </a>
-                        </Link>
-                        <button
-                          onClick={() => setModalEdital(true)}
-                          className="inline-flex items-center gap-2 border border-gray-200 text-gray-700 font-medium px-5 py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-colors"
-                        >
-                          <FileText className="w-4 h-4 text-blue-600" />
-                          Leia o Edital
-                        </button>
                       </div>
                     </div>
 
@@ -154,18 +221,7 @@ export function Certificacoes() {
             ))}
           </div>
         )}
-
       </div>
-
-      {/* Modals */}
-      {modalEdital && (
-        <DocumentoModal
-          titulo={institucional.edital.titulo}
-          conteudo={institucional.edital.conteudo}
-          urlExterna={institucional.edital.urlExterna}
-          onClose={() => setModalEdital(false)}
-        />
-      )}
 
       {/* Footer */}
       <footer className="py-10 border-t border-gray-100 bg-white">
@@ -179,6 +235,83 @@ export function Certificacoes() {
           <p className="text-xs text-gray-400">© {new Date().getFullYear()} ANEFAC. Todos os direitos reservados.</p>
         </div>
       </footer>
+
+      {/* Popup de captura de lead */}
+      {leadState && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(15,31,78,0.75)" }}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md">
+
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #1e3a6e 0%, #2d5be3 100%)" }}>
+                  <Heart className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-black text-gray-900 text-lg">Antes de continuar...</h2>
+                  <p className="text-gray-400 text-xs">Só um segundo!</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setLeadState(null)}
+                className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+              >
+                <X className="w-4 h-4 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Mensagem amigável */}
+            <div className="px-6 pb-5">
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Adoraríamos saber quem você é! Assim podemos te enviar informações relevantes e, caso precise de ajuda no caminho, nossa equipe poderá entrar em contato. 😊
+              </p>
+            </div>
+
+            {/* Formulário */}
+            <div className="px-6 space-y-3">
+              <div className="relative">
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Seu nome completo"
+                  value={leadNome}
+                  onChange={(e) => setLeadNome(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition"
+                />
+              </div>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="email"
+                  placeholder="Seu melhor e-mail"
+                  value={leadEmail}
+                  onChange={(e) => setLeadEmail(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition"
+                />
+              </div>
+            </div>
+
+            {/* Botões */}
+            <div className="p-6 space-y-2.5">
+              <button
+                onClick={() => prosseguir(true)}
+                disabled={!leadNome.trim() || !leadEmail.trim()}
+                className="w-full flex items-center justify-center gap-2 text-white font-bold py-3.5 rounded-xl transition-all text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ background: "linear-gradient(135deg, #1e3a6e 0%, #2d5be3 100%)" }}
+              >
+                Continuar
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => prosseguir(false)}
+                className="w-full text-gray-400 hover:text-gray-600 text-xs py-2 transition-colors"
+              >
+                Prefiro não me identificar agora, continuar mesmo assim
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
