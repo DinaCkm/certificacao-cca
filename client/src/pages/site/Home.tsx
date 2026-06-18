@@ -198,35 +198,12 @@ export function Home() {
             <span className="inline-block bg-blue-50 text-blue-700 text-sm font-bold px-4 py-1.5 rounded-full mb-4">Nossas Certificações</span>
             <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">Programas de Certificação</h2>
             <p className="text-lg text-gray-500 max-w-2xl mx-auto">Escolha o programa que melhor se adapta ao seu momento profissional e objetivos de carreira.</p>
-            {/* CTAs — aparecem aqui, após o título da seção */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-              <Link href="/certificacoes">
-                <a className="group inline-flex items-center gap-2 bg-yellow-400 text-blue-900 font-black px-8 py-4 rounded-2xl hover:bg-yellow-300 transition-all shadow-lg shadow-yellow-400/30 hover:shadow-yellow-400/50 text-base hover:scale-105">
-                  {config.hero.ctaPrimario}
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </a>
-              </Link>
-              <Link href="/certificacoes">
-                <a className="inline-flex items-center gap-2 bg-blue-900 border border-blue-700 text-white font-semibold px-8 py-4 rounded-2xl hover:bg-blue-800 transition-all text-base">
-                  <BookOpen className="w-5 h-5" />
-                  {config.hero.ctaSecundario}
-                </a>
-              </Link>
-            </div>
+
           </div>
 
           {/* CCA Block */}
           {certsCCA.length > 0 && (
             <div className="mb-16">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-blue-700 flex items-center justify-center">
-                  <Award className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-black text-gray-900">Certificação Controller ANEFAC</h3>
-                  <p className="text-sm text-gray-500">Programa oficial de certificação em controladoria</p>
-                </div>
-              </div>
               <div className="grid md:grid-cols-2 gap-6">
                 {certsCCA.map((cert) => (
                   <Link key={cert.id} href="/certificacoes">
@@ -285,11 +262,18 @@ export function Home() {
             </div>
           )}
 
-          <div className="text-center mt-12">
+          {/* CTAs — aparecem após os cards de certificações */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
             <Link href="/certificacoes">
-              <a className="inline-flex items-center gap-2 bg-blue-700 text-white font-bold px-8 py-4 rounded-2xl hover:bg-blue-800 transition-all shadow-lg shadow-blue-200 hover:shadow-blue-300 hover:scale-105 text-base">
-                Ver todas as certificações
-                <ArrowRight className="w-5 h-5" />
+              <a className="group inline-flex items-center gap-2 bg-yellow-400 text-blue-900 font-black px-8 py-4 rounded-2xl hover:bg-yellow-300 transition-all shadow-lg shadow-yellow-400/30 hover:shadow-yellow-400/50 text-base hover:scale-105">
+                {config.hero.ctaPrimario}
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </a>
+            </Link>
+            <Link href="/certificacoes">
+              <a className="inline-flex items-center gap-2 bg-blue-900 border border-blue-700 text-white font-semibold px-8 py-4 rounded-2xl hover:bg-blue-800 transition-all text-base">
+                <BookOpen className="w-5 h-5" />
+                {config.hero.ctaSecundario}
               </a>
             </Link>
           </div>

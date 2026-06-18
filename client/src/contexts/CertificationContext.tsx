@@ -121,8 +121,8 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
         },
         {
           numero: "03",
-          titulo: "Pagamento da Taxa de Análise",
-          descricao: "Pagamento da taxa de análise documental (R$ 350,00), que cobre todo o processo de avaliação até a entrevista.",
+          titulo: "Pagamento da Taxa de Análise e Avaliação",
+          descricao: "Pagamento da taxa de análise e avaliação documental (R$ 350,00), que cobre todo o processo de avaliação até a entrevista.",
         },
         {
           numero: "04",
@@ -137,11 +137,11 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
         },
         {
           numero: "06",
-          titulo: "Emissão do Certificado",
-          descricao: "Após aprovação na entrevista, o candidato realiza o pagamento da taxa de emissão (R$ 250,00) e recebe o certificado CCA.",
+          titulo: "Taxa de Emissão do Certificado",
+          descricao: "Após aprovação na entrevista, o candidato realiza o pagamento da taxa de emissão do certificado (R$ 250,00) e recebe o certificado CCA.",
         },
       ],
-      investimento: "Taxa de análise: R$ 350,00 | Taxa de emissão: R$ 250,00 (paga somente após aprovação)",
+      investimento: "Taxa de análise e avaliação: R$ 350,00 | Taxa de emissão do certificado: R$ 250,00 (paga somente após aprovação)",
       observacoes: "O processo completo leva em média 30 a 60 dias, dependendo da disponibilidade para entrevista e da análise documental.",
     },
   },
@@ -193,8 +193,8 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
         },
         {
           numero: "03",
-          titulo: "Pagamento da Taxa de Análise",
-          descricao: "Pagamento da taxa de análise documental (R$ 450,00), que cobre todo o processo de avaliação.",
+          titulo: "Pagamento da Taxa de Análise e Avaliação",
+          descricao: "Pagamento da taxa de análise e avaliação documental (R$ 450,00), que cobre todo o processo de avaliação.",
         },
         {
           numero: "04",
@@ -209,11 +209,11 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
         },
         {
           numero: "06",
-          titulo: "Emissão do Certificado",
-          descricao: "Após aprovação, o candidato realiza o pagamento da taxa de emissão (R$ 350,00) e recebe o certificado CCA Plus.",
+          titulo: "Taxa de Emissão do Certificado",
+          descricao: "Após aprovação, o candidato realiza o pagamento da taxa de emissão do certificado (R$ 350,00) e recebe o certificado CCA Plus.",
         },
       ],
-      investimento: "Taxa de análise: R$ 450,00 | Taxa de emissão: R$ 350,00 (paga somente após aprovação)",
+      investimento: "Taxa de análise e avaliação: R$ 450,00 | Taxa de emissão do certificado: R$ 350,00 (paga somente após aprovação)",
       observacoes: "O processo completo leva em média 30 a 60 dias. Candidatos CCA Plus seguem o Caminho A (entrevista direta, sem prova).",
     },
   },
