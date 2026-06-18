@@ -55,13 +55,6 @@ export function Navbar() {
                 scrolled || !isHome ? "text-gray-500" : "text-blue-200")}>
                 Certificações
               </span>
-              <span className={cn(
-                "inline-flex items-center gap-1 text-xs font-medium mt-0.5 leading-none transition-colors",
-                scrolled || !isHome ? "text-yellow-600" : "text-yellow-300"
-              )}>
-                <Star className="w-3 h-3 fill-current" />
-                {config.hero.badge}
-              </span>
             </div>
           </a>
         </Link>
