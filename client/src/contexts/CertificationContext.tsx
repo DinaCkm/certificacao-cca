@@ -116,10 +116,157 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
     caminhoDefault: "A",
     status: "ativa",
     cor: "gold",
-  }
+  },
+
+  // ── Certificações de Liderança EcodoBem ──────────────────────────────────────
+  {
+    id: "ecodobem-lideranca-n1",
+    numero: 3,
+    nome: "Certificação de Liderança EcodoBem – Nível 1",
+    subtitulo: "Fundamentos da Liderança",
+    descricao:
+      "Certificação voltada à validação das competências fundamentais para profissionais que estão iniciando sua jornada de liderança ou se preparando para assumir responsabilidades de condução de pessoas, atividades ou pequenos projetos. Este nível reconhece a importância das bases tradicionais da boa liderança: disciplina, escuta, atenção, responsabilidade pessoal e capacidade de compreender a si mesmo antes de liderar os outros.",
+    descricaoBreve: "Competências básicas para liderar a si mesmo e preparar-se para liderar pessoas.",
+    publicoAlvo: "Profissionais em desenvolvimento, potenciais líderes, sucessores, analistas, especialistas, jovens talentos e colaboradores indicados para futuras posições de liderança.",
+    competencias: [
+      "Atenção",
+      "Autopercepção",
+      "Disciplina",
+      "Empatia",
+      "Escuta Ativa",
+      "Gestão de Tempo",
+      "Memória",
+      "Raciocínio Lógico e Espacial"
+    ],
+    preRequisitos: [
+      "Entrevista diagnóstica inicial para análise de perfil, experiência profissional e maturidade comportamental",
+      "Formação obrigatória de 6 meses após confirmação do nível",
+      "Prova de certificação ao final da formação"
+    ],
+    documentosExigidos: [
+      "Documentos pessoais (RG/CPF)",
+      "Comprovante de vínculo profissional ou histórico de experiência"
+    ],
+    cursos: [],
+    taxaAnalise: 350,
+    taxaEmissao: 250,
+    caminhoDefault: null,
+    status: "ativa",
+    cor: "blue",
+  },
+  {
+    id: "ecodobem-lideranca-n2",
+    numero: 4,
+    nome: "Certificação de Liderança EcodoBem – Nível 2",
+    subtitulo: "Liderança Essencial",
+    descricao:
+      "Certificação destinada a profissionais que já demonstram maior prontidão para lidar com desafios de liderança, organização de rotinas, comunicação com equipes, adaptação a mudanças e entrega de resultados com equilíbrio emocional. Este nível reconhece o líder que começa a sair da execução individual para assumir uma atuação mais orientada à influência, à organização coletiva e ao acompanhamento de pessoas.",
+    descricaoBreve: "Competências essenciais para condução de pessoas, rotinas e entregas.",
+    publicoAlvo: "Líderes iniciantes, supervisores, coordenadores em desenvolvimento, sucessores, profissionais que conduzem projetos ou responsáveis por pequenas equipes.",
+    competencias: [
+      "Adaptabilidade",
+      "Leitura de Cenário",
+      "Planejamento e Organização",
+      "Comunicação Assertiva",
+      "Inteligência Emocional",
+      "Resiliência",
+      "Proatividade"
+    ],
+    preRequisitos: [
+      "Entrevista diagnóstica inicial para análise de experiência, repertório profissional e capacidade de condução de pessoas",
+      "Formação obrigatória de 6 meses após confirmação do nível",
+      "Prova de certificação ao final da formação"
+    ],
+    documentosExigidos: [
+      "Documentos pessoais (RG/CPF)",
+      "Comprovante de vínculo profissional ou histórico de experiência em liderança"
+    ],
+    cursos: [],
+    taxaAnalise: 350,
+    taxaEmissao: 250,
+    caminhoDefault: null,
+    status: "ativa",
+    cor: "green",
+  },
+  {
+    id: "ecodobem-lideranca-n3",
+    numero: 5,
+    nome: "Certificação de Liderança EcodoBem – Nível 3",
+    subtitulo: "Liderança Master",
+    descricao:
+      "Certificação voltada a líderes que já exercem papel efetivo de gestão e precisam demonstrar maturidade na condução de pessoas, resolução de conflitos, influência, negociação, tomada de decisão e entrega de resultados. Este nível reconhece a liderança que já atua com maior responsabilidade sobre equipes, metas, processos e relações organizacionais.",
+    descricaoBreve: "Gestão de pessoas, resultados e relações organizacionais para líderes experientes.",
+    publicoAlvo: "Gestores, coordenadores, supervisores experientes, gerentes, líderes de equipe e profissionais que respondem por metas, pessoas, indicadores ou projetos estratégicos.",
+    competencias: [
+      "Accountability",
+      "Foco em Resultados",
+      "Gestão de Conflitos",
+      "Gestão de Equipes",
+      "Gestão de Pessoas",
+      "Influência",
+      "Negociação",
+      "Presença Executiva",
+      "Protagonismo",
+      "Relacionamentos Conectivos",
+      "Responsabilidade Social",
+      "Tomada de Decisão",
+      "Visão Estratégica"
+    ],
+    preRequisitos: [
+      "Entrevista diagnóstica inicial para análise de trajetória, experiência em liderança e repertório comportamental",
+      "Formação obrigatória de 6 meses após confirmação do nível",
+      "Prova de certificação ao final da formação"
+    ],
+    documentosExigidos: [
+      "Documentos pessoais (RG/CPF)",
+      "Comprovante de experiência formal ou informal em gestão de pessoas"
+    ],
+    cursos: [],
+    taxaAnalise: 350,
+    taxaEmissao: 250,
+    caminhoDefault: null,
+    status: "ativa",
+    cor: "orange",
+  },
+  {
+    id: "ecodobem-lideranca-n4",
+    numero: 6,
+    nome: "Certificação de Liderança EcodoBem – Nível 4",
+    subtitulo: "Liderança Estratégica do Futuro",
+    descricao:
+      "Certificação avançada destinada a líderes que atuam ou se preparam para atuar em posições de maior complexidade, com responsabilidade sobre decisões estratégicas, leitura de cenários, transformação organizacional, gestão de mudanças e construção de futuro. Este nível reconhece líderes capazes de unir experiência, visão sistêmica, responsabilidade institucional e capacidade de preparar pessoas e organizações para novos desafios.",
+    descricaoBreve: "Competências do futuro para transformação, sustentabilidade e alta liderança.",
+    publicoAlvo: "Gerentes, executivos, líderes estratégicos, sucessores de alta responsabilidade e profissionais em preparação para posições de direção ou transformação organizacional.",
+    competencias: [
+      "Mindset Visionário",
+      "Arquitetura de Mudanças",
+      "Radar de Cenários",
+      "Mentalidade Sistêmica",
+      "Estratégia de Longo Alcance",
+      "Adaptabilidade Dinâmica",
+      "Decisões Ágeis",
+      "Gestão da Comunicação",
+      "Inteligência Emocional Tática"
+    ],
+    preRequisitos: [
+      "Entrevista diagnóstica inicial para análise de experiência em liderança, visão estratégica e atuação em cenários complexos",
+      "Formação obrigatória de 6 meses após confirmação do nível",
+      "Prova de certificação ao final da formação"
+    ],
+    documentosExigidos: [
+      "Documentos pessoais (RG/CPF)",
+      "Histórico profissional demonstrando atuação estratégica ou em posições de alta responsabilidade"
+    ],
+    cursos: [],
+    taxaAnalise: 350,
+    taxaEmissao: 250,
+    caminhoDefault: null,
+    status: "ativa",
+    cor: "purple",
+  },
 ];
 
-const STORAGE_KEY_CERTS = "anefac_certifications_v5";
+const STORAGE_KEY_CERTS = "anefac_certifications_v6";
 
 function loadCertifications(): Certification[] {
   try {
