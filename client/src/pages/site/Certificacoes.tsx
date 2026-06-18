@@ -6,7 +6,7 @@ import { ArrowRight, FileText, Clock, DollarSign, Users, ChevronDown, ChevronUp 
 
 export function Certificacoes() {
   const { certifications } = useCertification();
-  const ativas = (certifications || []).filter((c) => c.ativa);
+  const ativas = (certifications || []).filter((c) => c.status === "ativa" || c.status === "em_breve");
   const [expandida, setExpandida] = useState<number | null>(null);
 
   return (
@@ -61,13 +61,19 @@ export function Certificacoes() {
                         <p className="text-gray-600 text-sm leading-relaxed max-w-2xl">{cert.descricao}</p>
                       </div>
                       <div className="flex flex-col gap-2 shrink-0">
-                        <Link href={`/certificacoes/${cert.id}`}>
-                          <a className="inline-flex items-center gap-2 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-all"
-                            style={{ background: "linear-gradient(135deg, #1e3a6e 0%, #2d5be3 100%)" }}>
-                            Inscrever-se
-                            <ArrowRight className="w-4 h-4" />
-                          </a>
-                        </Link>
+                        {cert.status === "em_breve" ? (
+                          <span className="inline-flex items-center gap-2 text-gray-500 bg-gray-100 font-bold px-5 py-2.5 rounded-xl text-sm cursor-not-allowed">
+                            Em breve
+                          </span>
+                        ) : (
+                          <Link href={`/certificacoes/${cert.id}`}>
+                            <a className="inline-flex items-center gap-2 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-all hover:shadow-lg"
+                              style={{ background: "linear-gradient(135deg, #1e3a6e 0%, #2d5be3 100%)" }}>
+                              Inscrever-se
+                              <ArrowRight className="w-4 h-4" />
+                            </a>
+                          </Link>
+                        )}
                         {cert.editalUrl && (
                           <a
                             href={cert.editalUrl}
