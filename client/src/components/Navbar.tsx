@@ -41,10 +41,11 @@ export function Navbar() {
         {/* Logo */}
         <Link href="/">
           <a className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-white text-base"
-              style={{ background: "linear-gradient(135deg, #1e3a6e 0%, #2d5be3 100%)" }}>
-              A
-            </div>
+            <img
+              src="/logo-cca.png"
+              alt="CCA ANEFAC"
+              className="h-12 w-12 object-contain rounded-full"
+            />
             <div>
               <span className={cn("font-bold text-lg leading-none block transition-colors",
                 scrolled || !isHome ? "text-gray-900" : "text-white")}>
