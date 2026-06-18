@@ -89,7 +89,7 @@ export function Certificacoes() {
                             </a>
                           </Link>
                         )}
-                        <Link href="/como-funciona">
+                        <Link href={cert.id.startsWith('ecodobem-') ? '/como-funciona-lideranca' : '/como-funciona'}>
                           <a className="inline-flex items-center gap-2 border border-blue-200 text-blue-700 font-medium px-5 py-2.5 rounded-xl text-sm hover:bg-blue-50 transition-colors">
                             <Info className="w-4 h-4" />
                             Como funciona

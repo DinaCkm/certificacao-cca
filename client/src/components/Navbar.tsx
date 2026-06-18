@@ -7,7 +7,6 @@ import { useSiteConfig } from "@/contexts/SiteConfigContext";
 const NAV_LINKS = [
   { label: "Início", href: "/" },
   { label: "Certificações", href: "/certificacoes" },
-  { label: "Como funciona", href: "/como-funciona" },
   { label: "Simulação", href: "/simulacao" },
 ];
 
