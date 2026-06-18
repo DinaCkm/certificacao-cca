@@ -360,7 +360,7 @@ export function Home() {
               { valor: 56, sufixo: "+", label: "Anos de credibilidade", icon: Star },
               { valor: 6, sufixo: "", label: "Certificações disponíveis", icon: Award },
               { valor: 100, sufixo: "%", label: "Processo online", icon: Globe },
-              { valor: 10, sufixo, label: "Dias úteis para análise", icon: TrendingUp },
+              { valor: 10, sufixo: "+", label: "Dias úteis para análise", icon: TrendingUp },
             ].map((item, i) => {
               const count = useCounter(item.valor, 2000, statsRef.inView);
               return (
