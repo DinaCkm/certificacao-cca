@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCertification } from "@/contexts/CertificationContext";
-import { CheckCircle, XCircle, FileText, User, Award, ArrowRight, AlertCircle } from "lucide-react";
+import { CheckCircle, XCircle, FileText, User, Award, ArrowRight, AlertCircle, Eye, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,6 +16,10 @@ export function AdminValidacaoDocumental() {
   const [caminhoEscolhido, setCaminhoEscolhido] = useState<"A" | "B" | "reprovado" | null>(null);
   const [parecer, setParecer] = useState("");
   const [confirmando, setConfirmando] = useState(false);
+  const [docViewer, setDocViewer] = useState<{ nome: string; url: string } | null>(null);
+
+  // Recupera os arquivos enviados pelo candidato do localStorage
+  const docFiles: Record<string, string> = JSON.parse(localStorage.getItem("anefac_documentos_enviados") || "{}");
 
   const candidatoDados = JSON.parse(localStorage.getItem("anefac_candidato_dados") || "{}");
 
@@ -62,6 +66,51 @@ export function AdminValidacaoDocumental() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Document Viewer Modal */}
+      {docViewer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-blue-700" />
+                <span className="font-semibold text-foreground text-sm">{docViewer.nome}</span>
+              </div>
+              <button
+                onClick={() => setDocViewer(null)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <X className="w-4 h-4 text-gray-500" />
+              </button>
+            </div>
+            {/* Modal Content */}
+            <div className="flex-1 overflow-hidden rounded-b-2xl bg-gray-100">
+              {docViewer.url ? (
+                docViewer.url.startsWith("data:image") ? (
+                  <img
+                    src={docViewer.url}
+                    alt={docViewer.nome}
+                    className="w-full h-full object-contain p-4"
+                  />
+                ) : (
+                  <iframe
+                    src={docViewer.url}
+                    title={docViewer.nome}
+                    className="w-full h-full min-h-[60vh]"
+                    style={{ border: "none" }}
+                  />
+                )
+              ) : (
+                <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                  <FileText className="w-12 h-12 mb-3 opacity-30" />
+                  <p className="text-sm font-medium">Arquivo não disponível para visualização</p>
+                  <p className="text-xs mt-1 opacity-70">O arquivo foi recebido mas não pode ser exibido nesta versão demo.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       {/* Admin Header */}
       <header className="bg-blue-900 text-white px-6 py-4">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
@@ -134,13 +183,27 @@ export function AdminValidacaoDocumental() {
                   Documentos enviados
                 </h3>
                 <div className="space-y-2">
-                  {certAtual.documentosExigidos.map((doc, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <CheckCircle className="w-4 h-4 text-green-600 shrink-0" />
-                      <span className="text-sm text-foreground flex-1">{doc}</span>
-                      <span className="text-xs text-green-600 font-medium">Recebido</span>
-                    </div>
-                  ))}
+                  {certAtual.documentosExigidos.map((doc, i) => {
+                    const fileUrl = docFiles[doc];
+                    return (
+                      <div key={i} className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <CheckCircle className="w-4 h-4 text-green-600 shrink-0" />
+                        <span className="text-sm text-foreground flex-1">{doc}</span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-xs text-green-600 font-medium">Recebido</span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs px-2 border-blue-200 text-blue-700 hover:bg-blue-50"
+                            onClick={() => setDocViewer({ nome: doc, url: fileUrl || "" })}
+                          >
+                            <Eye className="w-3.5 h-3.5 mr-1" />
+                            Visualizar
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
