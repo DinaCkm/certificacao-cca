@@ -4,7 +4,8 @@ import { FluxoLayout } from "@/components/FluxoLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCertification } from "@/contexts/CertificationContext";
-import { Upload, CheckCircle, X, FileText, AlertCircle, Info } from "lucide-react";
+import { useInstitucional } from "@/contexts/InstitucionalContext";
+import { Upload, CheckCircle, X, FileText, AlertCircle, Info, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,6 +20,7 @@ interface DocumentoUpload {
 
 export function UploadDocumentos() {
   const { processo, atualizarStatus, getCertificacaoAtual } = useCertification();
+  const { config: institucional } = useInstitucional();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const certAtual = getCertificacaoAtual();
@@ -160,6 +162,20 @@ export function UploadDocumentos() {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">{doc.descricao}</p>
+
+                  {/* Botão de download para o Código de Conduta */}
+                  {doc.nome.toLowerCase().includes("código de conduta") || doc.nome.toLowerCase().includes("codigo de conduta") ? (
+                    <a
+                      href={institucional.codigoConduta.urlExterna || "/documentos/codigo-conduta-anefac.pdf"}
+                      download
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 mt-2 text-xs text-blue-700 font-semibold bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors px-3 py-1.5 rounded-lg"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Baixar Código de Conduta ANEFAC para assinar
+                    </a>
+                  ) : null}
 
                   {doc.arquivo && (
                     <div className="flex items-center gap-2 mt-2 bg-white border border-green-200 rounded-lg px-3 py-1.5">
