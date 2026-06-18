@@ -2,12 +2,17 @@ import React, { useState } from "react";
 import { Link } from "wouter";
 import { Navbar } from "@/components/Navbar";
 import { useCertification } from "@/contexts/CertificationContext";
-import { ArrowRight, FileText, Clock, DollarSign, Users, ChevronDown, ChevronUp } from "lucide-react";
+import { useInstitucional } from "@/contexts/InstitucionalContext";
+import { DocumentoModal } from "@/components/DocumentoModal";
+import { ArrowRight, FileText, Clock, DollarSign, Users, ChevronDown, ChevronUp, BookOpen, Info } from "lucide-react";
 
 export function Certificacoes() {
   const { certifications } = useCertification();
+  const { institucional } = useInstitucional();
   const ativas = (certifications || []).filter((c) => c.status === "ativa" || c.status === "em_breve");
   const [expandida, setExpandida] = useState<number | null>(null);
+  const [modalEdital, setModalEdital] = useState(false);
+  const [modalComoFunciona, setModalComoFunciona] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -85,17 +90,20 @@ export function Certificacoes() {
                             </a>
                           </Link>
                         )}
-                        {cert.editalUrl && (
-                          <a
-                            href={cert.editalUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 border border-gray-200 text-gray-700 font-medium px-5 py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-colors"
-                          >
-                            <FileText className="w-4 h-4 text-blue-600" />
-                            Ver edital
-                          </a>
-                        )}
+                        <button
+                          onClick={() => setModalComoFunciona(true)}
+                          className="inline-flex items-center gap-2 border border-blue-200 text-blue-700 font-medium px-5 py-2.5 rounded-xl text-sm hover:bg-blue-50 transition-colors"
+                        >
+                          <Info className="w-4 h-4" />
+                          Como funciona
+                        </button>
+                        <button
+                          onClick={() => setModalEdital(true)}
+                          className="inline-flex items-center gap-2 border border-gray-200 text-gray-700 font-medium px-5 py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-colors"
+                        >
+                          <FileText className="w-4 h-4 text-blue-600" />
+                          Leia o Edital
+                        </button>
                       </div>
                     </div>
 
@@ -150,6 +158,24 @@ export function Certificacoes() {
         )}
 
       </div>
+
+      {/* Modals */}
+      {modalEdital && (
+        <DocumentoModal
+          titulo={institucional.edital.titulo}
+          conteudo={institucional.edital.conteudo}
+          urlExterna={institucional.edital.urlExterna}
+          onClose={() => setModalEdital(false)}
+        />
+      )}
+      {modalComoFunciona && (
+        <DocumentoModal
+          titulo={institucional.regulamento.titulo}
+          conteudo={institucional.regulamento.conteudo}
+          urlExterna={institucional.regulamento.urlExterna}
+          onClose={() => setModalComoFunciona(false)}
+        />
+      )}
 
       {/* Footer */}
       <footer className="py-10 border-t border-gray-100 bg-white">
