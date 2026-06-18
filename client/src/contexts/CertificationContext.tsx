@@ -50,80 +50,76 @@ export interface Certification {
 
 export const CERTIFICATIONS_DEFAULT: Certification[] = [
   {
-    id: "certificacao-1",
+    id: "cca",
     numero: 1,
-    nome: "Certificação 1",
-    subtitulo: "Área de atuação",
+    nome: "Certificação Controller ANEFAC (CCA)",
+    subtitulo: "Controladoria",
     descricao:
-      "Descrição completa da Certificação 1. Este texto será editado pelo administrador no painel de gestão de certificações.",
-    descricaoBreve: "Resumo da Certificação 1 para exibição na landing page.",
-    publicoAlvo: "Profissionais da área com experiência comprovada.",
-    competencias: ["Competência A", "Competência B", "Competência C"],
-    preRequisitos: ["Graduação em área relacionada", "Experiência mínima comprovada"],
-    documentosExigidos: [
-      "Diploma de graduação",
-      "Comprovante de experiência profissional",
-      "Currículo atualizado",
-      "Documento de identidade com foto",
+      "A Certificação Controller ANEFAC CCA visa certificar profissionais que já possuem experiência em gestão, e que busquem se consolidar na função de Controller.",
+    descricaoBreve: "Para profissionais que já possuem experiência em gestão e buscam se consolidar na função de Controller.",
+    publicoAlvo: "Profissionais com graduação que possuem pelo menos 2 anos de experiência em gestão e desejam se consolidar como Controller.",
+    competencias: [
+      "Contabilidade",
+      "Economia e Finanças",
+      "Administração",
+      "Tributário",
+      "Governança Corporativa",
+      "Tecnologia",
+      "Capital Humano"
     ],
-    cursos: ["Curso preparatório A", "Curso preparatório B"],
-    taxaAnalise: 0,
-    taxaEmissao: 0,
+    preRequisitos: [
+      "Graduação em IES reconhecida pelo MEC (preferencialmente Administração, Contabilidade ou Economia)",
+      "Ou diploma em cursos stricto/lato sensu na área administrativo-financeira",
+      "Experiência em gestão por pelo menos 2 anos"
+    ],
+    documentosExigidos: [
+      "Diploma de graduação ou pós-graduação",
+      "Declaração da empresa atual comprovando experiência",
+      "Código de Conduta ANEFAC assinado"
+    ],
+    cursos: [],
+    taxaAnalise: 350,
+    taxaEmissao: 250,
     caminhoDefault: "B",
     status: "ativa",
     cor: "blue",
   },
   {
-    id: "certificacao-2",
+    id: "cca-plus",
     numero: 2,
-    nome: "Certificação 2",
-    subtitulo: "Área de atuação",
+    nome: "Certificação Controller ANEFAC Plus",
+    subtitulo: "Controladoria Avançada",
     descricao:
-      "Descrição completa da Certificação 2. Este texto será editado pelo administrador no painel de gestão de certificações.",
-    descricaoBreve: "Resumo da Certificação 2 para exibição na landing page.",
-    publicoAlvo: "Profissionais da área com experiência comprovada.",
-    competencias: ["Competência A", "Competência B", "Competência C"],
-    preRequisitos: ["Graduação em área relacionada", "Experiência mínima comprovada"],
-    documentosExigidos: [
-      "Diploma de graduação",
-      "Comprovante de experiência profissional",
-      "Currículo atualizado",
-      "Documento de identidade com foto",
+      "A Certificação Controller ANEFAC CCA-plus visa certificar profissionais que já atuam, consolidados, na função de Controller em empresas de grande porte.",
+    descricaoBreve: "Para profissionais atuantes e consolidados como Controller por, pelo menos, cinco anos em empresa de grande porte.",
+    publicoAlvo: "Profissionais consolidados na função de Controller com no mínimo 5 anos de experiência em empresas de grande porte.",
+    competencias: [
+      "Gestão Estratégica",
+      "Governança Corporativa Avançada",
+      "Liderança",
+      "Tomada de Decisão"
     ],
-    cursos: ["Curso preparatório A", "Curso preparatório B"],
-    taxaAnalise: 0,
-    taxaEmissao: 0,
-    caminhoDefault: "B",
+    preRequisitos: [
+      "Graduação em IES reconhecida pelo MEC",
+      "Experiência na área de controladoria por pelo menos 5 anos em empresa de grande porte",
+      "Carta de Recomendação assinada por 2 executivos de alto escalão"
+    ],
+    documentosExigidos: [
+      "Diploma de graduação ou pós-graduação",
+      "Declaração comprovando 5 anos de experiência em empresa de grande porte",
+      "2 Cartas de Recomendação de executivos",
+      "Código de Conduta ANEFAC assinado"
+    ],
+    cursos: [],
+    taxaAnalise: 450,
+    taxaEmissao: 350,
+    caminhoDefault: "A",
     status: "ativa",
     cor: "gold",
-  },
-  {
-    id: "certificacao-3",
-    numero: 3,
-    nome: "Certificação 3",
-    subtitulo: "Área de atuação",
-    descricao:
-      "Descrição completa da Certificação 3. Este texto será editado pelo administrador no painel de gestão de certificações.",
-    descricaoBreve: "Resumo da Certificação 3 para exibição na landing page.",
-    publicoAlvo: "Profissionais da área com experiência comprovada.",
-    competencias: ["Competência A", "Competência B", "Competência C"],
-    preRequisitos: ["Graduação em área relacionada", "Experiência mínima comprovada"],
-    documentosExigidos: [
-      "Diploma de graduação",
-      "Comprovante de experiência profissional",
-      "Currículo atualizado",
-      "Documento de identidade com foto",
-    ],
-    cursos: ["Curso preparatório A", "Curso preparatório B"],
-    taxaAnalise: 0,
-    taxaEmissao: 0,
-    caminhoDefault: "A",
-    status: "em_breve",
-    cor: "purple",
-  },
+  }
 ];
 
-const STORAGE_KEY_CERTS = "anefac_certifications_v4";
+const STORAGE_KEY_CERTS = "anefac_certifications_v5";
 
 function loadCertifications(): Certification[] {
   try {
