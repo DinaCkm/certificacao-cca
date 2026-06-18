@@ -4,7 +4,7 @@ import { Navbar } from "@/components/Navbar";
 import { useCertification } from "@/contexts/CertificationContext";
 import { useInstitucional } from "@/contexts/InstitucionalContext";
 import { DocumentoModal } from "@/components/DocumentoModal";
-import { ArrowRight, FileText, Clock, DollarSign, Users, ChevronDown, ChevronUp, BookOpen, Info } from "lucide-react";
+import { ArrowRight, FileText, Clock, DollarSign, Users, ChevronDown, ChevronUp, Info } from "lucide-react";
 
 export function Certificacoes() {
   const { certifications } = useCertification();
@@ -12,7 +12,6 @@ export function Certificacoes() {
   const ativas = (certifications || []).filter((c) => c.status === "ativa" || c.status === "em_breve");
   const [expandida, setExpandida] = useState<number | null>(null);
   const [modalEdital, setModalEdital] = useState(false);
-  const [modalComoFunciona, setModalComoFunciona] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -90,13 +89,12 @@ export function Certificacoes() {
                             </a>
                           </Link>
                         )}
-                        <button
-                          onClick={() => setModalComoFunciona(true)}
-                          className="inline-flex items-center gap-2 border border-blue-200 text-blue-700 font-medium px-5 py-2.5 rounded-xl text-sm hover:bg-blue-50 transition-colors"
-                        >
-                          <Info className="w-4 h-4" />
-                          Como funciona
-                        </button>
+                        <Link href="/como-funciona">
+                          <a className="inline-flex items-center gap-2 border border-blue-200 text-blue-700 font-medium px-5 py-2.5 rounded-xl text-sm hover:bg-blue-50 transition-colors">
+                            <Info className="w-4 h-4" />
+                            Como funciona
+                          </a>
+                        </Link>
                         <button
                           onClick={() => setModalEdital(true)}
                           className="inline-flex items-center gap-2 border border-gray-200 text-gray-700 font-medium px-5 py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-colors"
@@ -166,14 +164,6 @@ export function Certificacoes() {
           conteudo={institucional.edital.conteudo}
           urlExterna={institucional.edital.urlExterna}
           onClose={() => setModalEdital(false)}
-        />
-      )}
-      {modalComoFunciona && (
-        <DocumentoModal
-          titulo={institucional.regulamento.titulo}
-          conteudo={institucional.regulamento.conteudo}
-          urlExterna={institucional.regulamento.urlExterna}
-          onClose={() => setModalComoFunciona(false)}
         />
       )}
 
