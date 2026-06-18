@@ -34,6 +34,8 @@ export interface Certification {
   caminhoDefault: CaminhoAvaliacao;
   status: CertificationStatus;
   cor: "blue" | "gold" | "green" | "purple" | "orange" | "red" | "teal";
+  imagemUrl?: string;            // URL da imagem de capa da certificação
+  editalUrl?: string;            // URL do PDF do edital
   // Conteúdo do edital
   edital?: {
     dataAbertura?: string;

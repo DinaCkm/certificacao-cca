@@ -42,6 +42,17 @@ export function Certificacoes() {
                 key={cert.id}
                 className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
               >
+                {/* Imagem de capa */}
+                {cert.imagemUrl && (
+                  <div className="w-full h-48 overflow-hidden">
+                    <img
+                      src={cert.imagemUrl}
+                      alt={cert.nome}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
                 {/* Card Header */}
                 <div className="flex items-start gap-6 p-8">
                   {/* Number Badge */}

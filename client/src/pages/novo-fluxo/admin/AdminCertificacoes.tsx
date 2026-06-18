@@ -212,6 +212,38 @@ function CertEditor({
             </div>
           </div>
 
+          {/* Imagem e Edital */}
+          <div>
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Imagem e Edital</h3>
+            <div className="space-y-4">
+              <div>
+                <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">URL da imagem de capa</Label>
+                <Input
+                  value={form.imagemUrl || ""}
+                  onChange={(e) => set("imagemUrl", e.target.value)}
+                  placeholder="https://exemplo.com/imagem.jpg"
+                  className="rounded-xl"
+                />
+                {form.imagemUrl && (
+                  <div className="mt-2 rounded-xl overflow-hidden border border-gray-100 h-32">
+                    <img src={form.imagemUrl} alt="Preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  </div>
+                )}
+                <p className="text-xs text-gray-400 mt-1">Cole a URL de uma imagem para exibir no card da certificação.</p>
+              </div>
+              <div>
+                <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">URL do Edital (PDF)</Label>
+                <Input
+                  value={form.editalUrl || ""}
+                  onChange={(e) => set("editalUrl", e.target.value)}
+                  placeholder="https://exemplo.com/edital.pdf"
+                  className="rounded-xl"
+                />
+                <p className="text-xs text-gray-400 mt-1">Link do PDF do edital que será exibido na página da certificação.</p>
+              </div>
+            </div>
+          </div>
+
           {/* Taxas e caminho */}
           <div>
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Taxas e avaliação</h3>
