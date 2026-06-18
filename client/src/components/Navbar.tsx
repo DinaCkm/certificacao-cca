@@ -42,9 +42,9 @@ export function Navbar() {
         <Link href="/">
           <a className="flex items-center gap-2.5 group">
             <img
-              src="/logo-cca.png"
-              alt="CCA ANEFAC"
-              className="h-12 w-12 object-contain rounded-full"
+              src="/logo-anefac.png"
+              alt="ANEFAC"
+              className="h-10 w-auto object-contain"
             />
             <div>
               <span className={cn("font-bold text-lg leading-none block transition-colors",
