@@ -47,8 +47,7 @@ import { CertificationProvider } from "./contexts/CertificationContext";
 import { SiteConfigProvider } from "./contexts/SiteConfigContext";
 import { Home as SiteHome } from "./pages/site/Home";
 import { Certificacoes } from "./pages/site/Certificacoes";
-import { ComoFunciona } from "./pages/site/ComoFunciona";
-import { ComoFuncionaLideranca } from "./pages/site/ComoFuncionaLideranca";
+import { ComoFuncionaCert } from "./pages/site/ComoFuncionaCert";
 import { Simulacao } from "./pages/site/Simulacao";
 import { CertificacaoDetalhe } from "./pages/site/CertificacaoDetalhe";
 import LandingPage from "./pages/LandingPage";
@@ -79,8 +78,7 @@ function Router() {
       <Route path={"/"} component={SiteHome} />
       <Route path={"/certificacoes"} component={Certificacoes} />
       <Route path={"/certificacoes/:id"} component={CertificacaoDetalhe} />
-      <Route path={"/como-funciona"} component={ComoFunciona} />
-      <Route path={"/como-funciona-lideranca"} component={ComoFuncionaLideranca} />
+      <Route path={"/como-funciona/:id"} component={ComoFuncionaCert} />
       <Route path={"/simulacao"} component={Simulacao} />
       <Route path={"/home"} component={Home} />
       <Route path={"/select-certification-type"} component={SelectCertificationType} />
@@ -165,8 +163,7 @@ function App() {
     location === "/" ||
     location === "/certificacoes" ||
     location.startsWith("/certificacoes/") ||
-    location === "/como-funciona" ||
-    location === "/como-funciona-lideranca" ||
+    location.startsWith("/como-funciona/") ||
     location === "/simulacao";
 
   return (

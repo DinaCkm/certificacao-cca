@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useLocation } from "wouter";
-import { useCertification, Certification } from "@/contexts/CertificationContext";
+import { useCertification, Certification, ComoFuncionaEtapa, ComoFuncionaContent } from "@/contexts/CertificationContext";
 import {
   Award, Edit, Eye, Plus, CheckCircle, Clock, XCircle,
-  ChevronLeft, Save, X, Trash2, Settings, AlertCircle
+  ChevronLeft, Save, X, Trash2, Settings, AlertCircle, BookOpen, ChevronDown, ChevronUp
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,149 @@ const COR_OPTIONS = [
 
 const MAX_CERTS = 10;
 
+const EMPTY_COMO_FUNCIONA: ComoFuncionaContent = {
+  titulo: "",
+  subtitulo: "",
+  etapas: [],
+  investimento: "",
+  inclusoes: "",
+  observacoes: "",
+};
+
+// ─── Editor de Etapas do Como Funciona ─────────────────────────────────────────
+
+function EtapaEditor({
+  etapas,
+  onChange,
+}: {
+  etapas: ComoFuncionaEtapa[];
+  onChange: (etapas: ComoFuncionaEtapa[]) => void;
+}) {
+  const [expandida, setExpandida] = useState<number | null>(null);
+
+  function addEtapa() {
+    const nova: ComoFuncionaEtapa = {
+      numero: String(etapas.length + 1).padStart(2, "0"),
+      titulo: `Etapa ${etapas.length + 1}`,
+      descricao: "",
+      nota: "",
+    };
+    onChange([...etapas, nova]);
+    setExpandida(etapas.length);
+  }
+
+  function removeEtapa(i: number) {
+    onChange(etapas.filter((_, j) => j !== i));
+    setExpandida(null);
+  }
+
+  function updateEtapa(i: number, field: keyof ComoFuncionaEtapa, value: string) {
+    const updated = etapas.map((e, j) => j === i ? { ...e, [field]: value } : e);
+    onChange(updated);
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <Label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Etapas do processo</Label>
+        <button
+          type="button"
+          onClick={addEtapa}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          Adicionar etapa
+        </button>
+      </div>
+
+      {etapas.length === 0 && (
+        <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-xl">
+          <p className="text-sm text-gray-400">Nenhuma etapa cadastrada. Clique em "Adicionar etapa" para começar.</p>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        {etapas.map((etapa, i) => (
+          <div key={i} className="border border-gray-200 rounded-xl overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setExpandida(expandida === i ? null : i)}
+              className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors text-left"
+            >
+              <span className="flex items-center gap-3">
+                <span className="w-7 h-7 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center text-xs font-bold shrink-0">
+                  {etapa.numero}
+                </span>
+                <span className="truncate">{etapa.titulo || "Sem título"}</span>
+              </span>
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); removeEtapa(i); }}
+                  className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+                {expandida === i ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+              </div>
+            </button>
+
+            {expandida === i && (
+              <div className="px-4 pb-4 pt-3 border-t border-gray-100 space-y-3 bg-gray-50/50">
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-600 mb-1 block">Número</Label>
+                    <Input
+                      value={etapa.numero}
+                      onChange={(e) => updateEtapa(i, "numero", e.target.value)}
+                      placeholder="01"
+                      className="rounded-lg text-sm"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-xs font-semibold text-gray-600 mb-1 block">Título da etapa *</Label>
+                    <Input
+                      value={etapa.titulo}
+                      onChange={(e) => updateEtapa(i, "titulo", e.target.value)}
+                      placeholder="Ex: Análise Documental"
+                      className="rounded-lg text-sm"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-gray-600 mb-1 block">Descrição *</Label>
+                  <textarea
+                    value={etapa.descricao}
+                    onChange={(e) => updateEtapa(i, "descricao", e.target.value)}
+                    rows={3}
+                    placeholder="Descreva o que acontece nesta etapa..."
+                    className="w-full px-3 py-2 rounded-lg border border-input bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-gray-600 mb-1 block">
+                    Nota de destaque <span className="text-gray-400 font-normal">(opcional — aparece como caixa azul)</span>
+                  </Label>
+                  <Input
+                    value={etapa.nota || ""}
+                    onChange={(e) => updateEtapa(i, "nota", e.target.value)}
+                    placeholder="Ex: Caminho A: entrevista direta. Caminho B: prova + entrevista."
+                    className="rounded-lg text-sm"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal de edição da certificação ───────────────────────────────────────────
+
+type EditorTab = "dados" | "como-funciona";
+
 function CertEditor({
   cert,
   onSave,
@@ -42,6 +185,7 @@ function CertEditor({
   onCancel: () => void;
 }) {
   const [form, setForm] = useState<Partial<Certification>>(cert);
+  const [abaAtiva, setAbaAtiva] = useState<EditorTab>("dados");
 
   function set(field: keyof Certification, value: unknown) {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -51,11 +195,23 @@ function CertEditor({
     set(field, value.split("\n").filter(Boolean));
   }
 
+  function setCF(field: keyof ComoFuncionaContent, value: unknown) {
+    setForm((prev) => ({
+      ...prev,
+      comoFunciona: {
+        ...(prev.comoFunciona || EMPTY_COMO_FUNCIONA),
+        [field]: value,
+      },
+    }));
+  }
+
+  const cf = form.comoFunciona || EMPTY_COMO_FUNCIONA;
+
   return (
     <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-3xl">
+        <div className="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-3xl shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-blue-700 flex items-center justify-center">
               <Settings className="w-4 h-4 text-white" />
@@ -64,7 +220,7 @@ function CertEditor({
               <h2 className="font-black text-gray-900">
                 {cert.id ? `Editar Certificação ${cert.numero}` : "Nova Certificação"}
               </h2>
-              <p className="text-xs text-gray-400">Preencha os dados da certificação</p>
+              <p className="text-xs text-gray-400">{cert.nome || "Preencha os dados da certificação"}</p>
             </div>
           </div>
           <button onClick={onCancel} className="p-2 rounded-xl hover:bg-gray-100 transition-colors">
@@ -72,232 +228,370 @@ function CertEditor({
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
-          {/* Identificação */}
-          <div>
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Identificação</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Número *</Label>
-                <Input
-                  type="number" min={1} max={10}
-                  value={form.numero || ""}
-                  onChange={(e) => set("numero", parseInt(e.target.value))}
-                  placeholder="Ex: 1"
-                  className="rounded-xl"
-                />
-              </div>
-              <div>
-                <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Status *</Label>
-                <select
-                  value={form.status || "inativa"}
-                  onChange={(e) => set("status", e.target.value)}
-                  className="w-full h-10 px-3 rounded-xl border border-input bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                >
-                  {Object.entries(STATUS_CONFIG).map(([key, { label }]) => (
-                    <option key={key} value={key}>{label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-span-2">
-                <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Nome da certificação *</Label>
-                <Input
-                  value={form.nome || ""}
-                  onChange={(e) => set("nome", e.target.value)}
-                  placeholder="Ex: Certificação Controller Financeiro"
-                  className="rounded-xl"
-                />
-              </div>
-              <div className="col-span-2">
-                <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Subtítulo</Label>
-                <Input
-                  value={form.subtitulo || ""}
-                  onChange={(e) => set("subtitulo", e.target.value)}
-                  placeholder="Ex: Nível Avançado"
-                  className="rounded-xl"
-                />
-              </div>
-            </div>
-          </div>
+        {/* Tabs */}
+        <div className="flex border-b border-gray-100 px-6 shrink-0 bg-white">
+          <button
+            onClick={() => setAbaAtiva("dados")}
+            className={cn(
+              "flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-colors",
+              abaAtiva === "dados"
+                ? "border-blue-600 text-blue-700"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            )}
+          >
+            <Settings className="w-4 h-4" />
+            Dados da Certificação
+          </button>
+          <button
+            onClick={() => setAbaAtiva("como-funciona")}
+            className={cn(
+              "flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-colors",
+              abaAtiva === "como-funciona"
+                ? "border-blue-600 text-blue-700"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            )}
+          >
+            <BookOpen className="w-4 h-4" />
+            Como Funciona
+            {(!cf.etapas || cf.etapas.length === 0) && (
+              <span className="ml-1 w-2 h-2 rounded-full bg-amber-400 inline-block" title="Não configurado" />
+            )}
+          </button>
+        </div>
 
-          {/* Cor */}
-          <div>
-            <Label className="text-xs font-semibold text-gray-700 mb-3 block">Cor de destaque</Label>
-            <div className="flex flex-wrap gap-2">
-              {COR_OPTIONS.map(({ value, label, cls }) => (
-                <button
-                  key={value}
-                  onClick={() => set("cor", value)}
-                  className={cn(
-                    "flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-xs font-semibold transition-all",
-                    form.cor === value
-                      ? "border-blue-500 bg-blue-50 text-blue-800"
-                      : "border-gray-200 text-gray-600 hover:border-gray-300"
-                  )}
-                >
-                  <span className={cn("w-3.5 h-3.5 rounded-full", cls)} />
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
+        {/* Content — scrollable */}
+        <div className="overflow-y-auto flex-1 p-6">
 
-          {/* Descrição */}
-          <div>
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Conteúdo</h3>
-            <div className="space-y-4">
+          {/* ── ABA: DADOS DA CERTIFICAÇÃO ── */}
+          {abaAtiva === "dados" && (
+            <div className="space-y-6">
+              {/* Identificação */}
               <div>
-                <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Descrição *</Label>
-                <textarea
-                  value={form.descricao || ""}
-                  onChange={(e) => set("descricao", e.target.value)}
-                  rows={3}
-                  placeholder="Descreva o objetivo e o escopo desta certificação..."
-                  className="w-full px-3 py-2.5 rounded-xl border border-input bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Público-alvo *</Label>
-                <textarea
-                  value={form.publicoAlvo || ""}
-                  onChange={(e) => set("publicoAlvo", e.target.value)}
-                  rows={2}
-                  placeholder="Descreva o perfil profissional do candidato ideal..."
-                  className="w-full px-3 py-2.5 rounded-xl border border-input bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Listas */}
-          <div>
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Requisitos e competências</h3>
-            <div className="space-y-4">
-              <div>
-                <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">
-                  Competências avaliadas <span className="text-gray-400 font-normal">(uma por linha)</span>
-                </Label>
-                <textarea
-                  value={(form.competencias || []).join("\n")}
-                  onChange={(e) => setListField("competencias", e.target.value)}
-                  rows={3}
-                  placeholder={"Gestão financeira\nControle orçamentário\nAnálise de dados"}
-                  className="w-full px-3 py-2.5 rounded-xl border border-input bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
-                />
-              </div>
-              <div>
-                <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">
-                  Pré-requisitos <span className="text-gray-400 font-normal">(um por linha)</span>
-                </Label>
-                <textarea
-                  value={(form.preRequisitos || []).join("\n")}
-                  onChange={(e) => setListField("preRequisitos", e.target.value)}
-                  rows={3}
-                  placeholder={"Graduação em área correlata\n5 anos de experiência\nCargo de liderança"}
-                  className="w-full px-3 py-2.5 rounded-xl border border-input bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
-                />
-              </div>
-              <div>
-                <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">
-                  Documentos exigidos <span className="text-gray-400 font-normal">(um por linha)</span>
-                </Label>
-                <textarea
-                  value={(form.documentosExigidos || []).join("\n")}
-                  onChange={(e) => setListField("documentosExigidos", e.target.value)}
-                  rows={3}
-                  placeholder={"Diploma de graduação\nCurrículo atualizado\nComprovante de experiência"}
-                  className="w-full px-3 py-2.5 rounded-xl border border-input bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Imagem e Edital */}
-          <div>
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Imagem e Edital</h3>
-            <div className="space-y-4">
-              <div>
-                <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">URL da imagem de capa</Label>
-                <Input
-                  value={form.imagemUrl || ""}
-                  onChange={(e) => set("imagemUrl", e.target.value)}
-                  placeholder="https://exemplo.com/imagem.jpg"
-                  className="rounded-xl"
-                />
-                {form.imagemUrl && (
-                  <div className="mt-2 rounded-xl overflow-hidden border border-gray-100 h-32">
-                    <img src={form.imagemUrl} alt="Preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Identificação</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Número *</Label>
+                    <Input
+                      type="number" min={1} max={10}
+                      value={form.numero || ""}
+                      onChange={(e) => set("numero", parseInt(e.target.value))}
+                      placeholder="Ex: 1"
+                      className="rounded-xl"
+                    />
                   </div>
-                )}
-                <p className="text-xs text-gray-400 mt-1">Cole a URL de uma imagem para exibir no card da certificação.</p>
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Status *</Label>
+                    <select
+                      value={form.status || "inativa"}
+                      onChange={(e) => set("status", e.target.value)}
+                      className="w-full h-10 px-3 rounded-xl border border-input bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    >
+                      {Object.entries(STATUS_CONFIG).map(([key, { label }]) => (
+                        <option key={key} value={key}>{label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Nome da certificação *</Label>
+                    <Input
+                      value={form.nome || ""}
+                      onChange={(e) => set("nome", e.target.value)}
+                      placeholder="Ex: Certificação Controller Financeiro"
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Subtítulo</Label>
+                    <Input
+                      value={form.subtitulo || ""}
+                      onChange={(e) => set("subtitulo", e.target.value)}
+                      placeholder="Ex: Nível Avançado"
+                      className="rounded-xl"
+                    />
+                  </div>
+                </div>
               </div>
-              <div>
-                <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">URL do Edital (PDF)</Label>
-                <Input
-                  value={form.editalUrl || ""}
-                  onChange={(e) => set("editalUrl", e.target.value)}
-                  placeholder="https://exemplo.com/edital.pdf"
-                  className="rounded-xl"
-                />
-                <p className="text-xs text-gray-400 mt-1">Link do PDF do edital que será exibido na página da certificação.</p>
-              </div>
-            </div>
-          </div>
 
-          {/* Taxas e caminho */}
-          <div>
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Taxas e avaliação</h3>
-            <div className="grid grid-cols-2 gap-4">
+              {/* Cor */}
               <div>
-                <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Taxa de Análise (R$)</Label>
-                <Input
-                  type="number" min={0}
-                  value={form.taxaAnalise || ""}
-                  onChange={(e) => set("taxaAnalise", parseFloat(e.target.value))}
-                  placeholder="Ex: 350.00"
-                  className="rounded-xl"
-                />
-              </div>
-              <div>
-                <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Taxa de Emissão (R$)</Label>
-                <Input
-                  type="number" min={0}
-                  value={form.taxaEmissao || ""}
-                  onChange={(e) => set("taxaEmissao", parseFloat(e.target.value))}
-                  placeholder="Ex: 250.00"
-                  className="rounded-xl"
-                />
-              </div>
-              <div className="col-span-2">
-                <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Caminho padrão de avaliação</Label>
-                <div className="flex gap-3">
-                  {(["A", "B"] as const).map((c) => (
+                <Label className="text-xs font-semibold text-gray-700 mb-3 block">Cor de destaque</Label>
+                <div className="flex flex-wrap gap-2">
+                  {COR_OPTIONS.map(({ value, label, cls }) => (
                     <button
-                      key={c}
-                      onClick={() => set("caminhoDefault", c)}
+                      key={value}
+                      type="button"
+                      onClick={() => set("cor", value)}
                       className={cn(
-                        "flex-1 py-3 rounded-xl border-2 text-sm font-bold transition-all",
-                        form.caminhoDefault === c
-                          ? c === "A"
-                            ? "border-blue-500 bg-blue-50 text-blue-800"
-                            : "border-purple-500 bg-purple-50 text-purple-800"
-                          : "border-gray-200 text-gray-500 hover:border-gray-300"
+                        "flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-xs font-semibold transition-all",
+                        form.cor === value
+                          ? "border-blue-500 bg-blue-50 text-blue-800"
+                          : "border-gray-200 text-gray-600 hover:border-gray-300"
                       )}
                     >
-                      Caminho {c}
-                      <span className="block text-xs font-normal mt-0.5">
-                        {c === "A" ? "Entrevista direta" : "Prova + Entrevista"}
-                      </span>
+                      <span className={cn("w-3.5 h-3.5 rounded-full", cls)} />
+                      {label}
                     </button>
                   ))}
                 </div>
               </div>
+
+              {/* Descrição */}
+              <div>
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Conteúdo</h3>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Descrição *</Label>
+                    <textarea
+                      value={form.descricao || ""}
+                      onChange={(e) => set("descricao", e.target.value)}
+                      rows={3}
+                      placeholder="Descreva o objetivo e o escopo desta certificação..."
+                      className="w-full px-3 py-2.5 rounded-xl border border-input bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Público-alvo *</Label>
+                    <textarea
+                      value={form.publicoAlvo || ""}
+                      onChange={(e) => set("publicoAlvo", e.target.value)}
+                      rows={2}
+                      placeholder="Descreva o perfil profissional do candidato ideal..."
+                      className="w-full px-3 py-2.5 rounded-xl border border-input bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Listas */}
+              <div>
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Requisitos e competências</h3>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">
+                      Competências avaliadas <span className="text-gray-400 font-normal">(uma por linha)</span>
+                    </Label>
+                    <textarea
+                      value={(form.competencias || []).join("\n")}
+                      onChange={(e) => setListField("competencias", e.target.value)}
+                      rows={3}
+                      placeholder={"Gestão financeira\nControle orçamentário\nAnálise de dados"}
+                      className="w-full px-3 py-2.5 rounded-xl border border-input bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">
+                      Pré-requisitos <span className="text-gray-400 font-normal">(um por linha)</span>
+                    </Label>
+                    <textarea
+                      value={(form.preRequisitos || []).join("\n")}
+                      onChange={(e) => setListField("preRequisitos", e.target.value)}
+                      rows={3}
+                      placeholder={"Graduação em área correlata\n5 anos de experiência\nCargo de liderança"}
+                      className="w-full px-3 py-2.5 rounded-xl border border-input bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">
+                      Documentos exigidos <span className="text-gray-400 font-normal">(um por linha)</span>
+                    </Label>
+                    <textarea
+                      value={(form.documentosExigidos || []).join("\n")}
+                      onChange={(e) => setListField("documentosExigidos", e.target.value)}
+                      rows={3}
+                      placeholder={"Diploma de graduação\nCurrículo atualizado\nComprovante de experiência"}
+                      className="w-full px-3 py-2.5 rounded-xl border border-input bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Imagem e Edital */}
+              <div>
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Imagem e Edital</h3>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">URL da imagem de capa</Label>
+                    <Input
+                      value={form.imagemUrl || ""}
+                      onChange={(e) => set("imagemUrl", e.target.value)}
+                      placeholder="https://exemplo.com/imagem.jpg"
+                      className="rounded-xl"
+                    />
+                    {form.imagemUrl && (
+                      <div className="mt-2 rounded-xl overflow-hidden border border-gray-100 h-32">
+                        <img src={form.imagemUrl} alt="Preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-400 mt-1">Cole a URL de uma imagem para exibir no card da certificação.</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">URL do Edital (PDF)</Label>
+                    <Input
+                      value={form.editalUrl || ""}
+                      onChange={(e) => set("editalUrl", e.target.value)}
+                      placeholder="https://exemplo.com/edital.pdf"
+                      className="rounded-xl"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Link do PDF do edital que será exibido na página da certificação.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Taxas e caminho */}
+              <div>
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Taxas e avaliação</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Taxa de Análise (R$)</Label>
+                    <Input
+                      type="number" min={0}
+                      value={form.taxaAnalise || ""}
+                      onChange={(e) => set("taxaAnalise", parseFloat(e.target.value))}
+                      placeholder="Ex: 350.00"
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Taxa de Emissão (R$)</Label>
+                    <Input
+                      type="number" min={0}
+                      value={form.taxaEmissao || ""}
+                      onChange={(e) => set("taxaEmissao", parseFloat(e.target.value))}
+                      placeholder="Ex: 250.00"
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Caminho padrão de avaliação</Label>
+                    <div className="flex gap-3">
+                      {(["A", "B"] as const).map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => set("caminhoDefault", c)}
+                          className={cn(
+                            "flex-1 py-3 rounded-xl border-2 text-sm font-bold transition-all",
+                            form.caminhoDefault === c
+                              ? c === "A"
+                                ? "border-blue-500 bg-blue-50 text-blue-800"
+                                : "border-purple-500 bg-purple-50 text-purple-800"
+                              : "border-gray-200 text-gray-500 hover:border-gray-300"
+                          )}
+                        >
+                          Caminho {c}
+                          <span className="block text-xs font-normal mt-0.5">
+                            {c === "A" ? "Entrevista direta" : "Prova + Entrevista"}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* ── ABA: COMO FUNCIONA ── */}
+          {abaAtiva === "como-funciona" && (
+            <div className="space-y-6">
+              {/* Aviso se vazio */}
+              {(!cf.etapas || cf.etapas.length === 0) && (
+                <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                  <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-amber-800">Conteúdo não configurado</p>
+                    <p className="text-xs text-amber-600 mt-0.5">
+                      Preencha as etapas abaixo para que a página "Como funciona" desta certificação seja exibida corretamente no site.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Cabeçalho da página */}
+              <div>
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Cabeçalho da página</h3>
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Título da página</Label>
+                    <Input
+                      value={cf.titulo || ""}
+                      onChange={(e) => setCF("titulo", e.target.value)}
+                      placeholder={`Como funciona — ${form.nome || "Certificação"}`}
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Subtítulo / Introdução</Label>
+                    <textarea
+                      value={cf.subtitulo || ""}
+                      onChange={(e) => setCF("subtitulo", e.target.value)}
+                      rows={2}
+                      placeholder="Breve descrição do processo de certificação..."
+                      className="w-full px-3 py-2.5 rounded-xl border border-input bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Etapas */}
+              <div>
+                <EtapaEditor
+                  etapas={cf.etapas || []}
+                  onChange={(etapas) => setCF("etapas", etapas)}
+                />
+              </div>
+
+              {/* Informações complementares */}
+              <div>
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Informações complementares</h3>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">
+                      Investimento
+                      <span className="text-gray-400 font-normal ml-1">(exibido na sidebar)</span>
+                    </Label>
+                    <Input
+                      value={cf.investimento || ""}
+                      onChange={(e) => setCF("investimento", e.target.value)}
+                      placeholder="Ex: Taxa de análise: R$ 350,00 | Taxa de emissão: R$ 250,00"
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">
+                      O que está incluído
+                      <span className="text-gray-400 font-normal ml-1">(separe itens com · )</span>
+                    </Label>
+                    <textarea
+                      value={cf.inclusoes || ""}
+                      onChange={(e) => setCF("inclusoes", e.target.value)}
+                      rows={3}
+                      placeholder="Aulas de desenvolvimento · Webinares ao vivo · Mentoria · Projetos práticos"
+                      className="w-full px-3 py-2.5 rounded-xl border border-input bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Use o caractere · (ponto médio) para separar os itens da lista.</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">
+                      Observações importantes
+                      <span className="text-gray-400 font-normal ml-1">(caixa de destaque azul)</span>
+                    </Label>
+                    <textarea
+                      value={cf.observacoes || ""}
+                      onChange={(e) => setCF("observacoes", e.target.value)}
+                      rows={2}
+                      placeholder="Ex: O processo completo leva em média 30 a 60 dias..."
+                      className="w-full px-3 py-2.5 rounded-xl border border-input bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer actions */}
-        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex gap-3 rounded-b-3xl">
+        <div className="bg-white border-t border-gray-100 px-6 py-4 flex gap-3 rounded-b-3xl shrink-0">
           <Button variant="outline" onClick={onCancel} className="flex-1 rounded-xl">
             Cancelar
           </Button>
@@ -313,6 +607,8 @@ function CertEditor({
     </div>
   );
 }
+
+// ─── Página principal ───────────────────────────────────────────────────────────
 
 export function AdminCertificacoes() {
   const [, navigate] = useLocation();
@@ -332,11 +628,13 @@ export function AdminCertificacoes() {
       competencias: [],
       preRequisitos: [],
       documentosExigidos: [],
+      cursos: [],
       taxaAnalise: 0,
       taxaEmissao: 0,
       status: "inativa",
       cor: "blue",
       caminhoDefault: "A",
+      comoFunciona: { ...EMPTY_COMO_FUNCIONA },
     });
   }
 
@@ -433,7 +731,7 @@ export function AdminCertificacoes() {
             <div
               className={cn(
                 "h-full rounded-full transition-all duration-500",
-                certifications.length >= MAX_CERTS ? "bg-red-500" : "progress-fill"
+                certifications.length >= MAX_CERTS ? "bg-red-500" : "bg-blue-600"
               )}
               style={{ width: `${(certifications.length / MAX_CERTS) * 100}%` }}
             />
@@ -458,8 +756,9 @@ export function AdminCertificacoes() {
             {certifications.map((cert) => {
               const statusCfg = STATUS_CONFIG[cert.status];
               const StatusIcon = statusCfg.icon;
+              const temComoFunciona = cert.comoFunciona?.etapas && cert.comoFunciona.etapas.length > 0;
               return (
-                <Card key={cert.id} className="border-0 shadow-sm hover:shadow-md transition-all duration-200 card-hover overflow-hidden">
+                <Card key={cert.id} className="border-0 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden">
                   {/* Color bar */}
                   <div className={cn(
                     "h-1.5",
@@ -505,6 +804,19 @@ export function AdminCertificacoes() {
                     <p className="text-xs text-gray-500 leading-relaxed mb-4 line-clamp-2">
                       {cert.descricao || "Sem descrição"}
                     </p>
+
+                    {/* Como funciona badge */}
+                    <div className={cn(
+                      "flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg mb-4 w-fit",
+                      temComoFunciona
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-amber-50 text-amber-700"
+                    )}>
+                      <BookOpen className="w-3.5 h-3.5" />
+                      {temComoFunciona
+                        ? `Como funciona: ${cert.comoFunciona!.etapas.length} etapas`
+                        : "Como funciona: não configurado"}
+                    </div>
 
                     <div className="grid grid-cols-2 gap-2 mb-4">
                       <div className="bg-gray-50 rounded-xl p-2.5">
@@ -621,7 +933,7 @@ export function AdminCertificacoes() {
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Público-alvo</p>
                 <p className="text-sm text-gray-700">{preview.publicoAlvo || "—"}</p>
               </div>
-              {preview.competencias.length > 0 && (
+              {preview.competencias && preview.competencias.length > 0 && (
                 <div>
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Competências</p>
                   <div className="flex flex-wrap gap-2">
@@ -631,6 +943,22 @@ export function AdminCertificacoes() {
                   </div>
                 </div>
               )}
+              {/* Como funciona preview */}
+              <div>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Como funciona</p>
+                {preview.comoFunciona?.etapas && preview.comoFunciona.etapas.length > 0 ? (
+                  <div className="space-y-1.5">
+                    {preview.comoFunciona.etapas.map((e, i) => (
+                      <div key={i} className="flex items-center gap-2 text-xs text-gray-700">
+                        <span className="w-6 h-6 bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center font-bold shrink-0">{e.numero}</span>
+                        {e.titulo}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">Não configurado — acesse "Editar" para preencher.</p>
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <div className="bg-gray-50 rounded-xl p-3">
                   <p className="text-xs text-gray-400">Taxa Análise</p>

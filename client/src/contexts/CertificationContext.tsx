@@ -7,6 +7,27 @@ export type CaminhoAvaliacao = "A" | "B" | null;
 export type TipoCompra = "cert_cursos" | "cert_direta" | "apenas_cursos" | null;
 
 /**
+ * Estrutura do conteúdo "Como funciona" de cada certificação.
+ * Totalmente gerenciado pelo administrador via painel.
+ */
+export interface ComoFuncionaEtapa {
+  numero: string;   // ex: "01", "02"
+  titulo: string;
+  descricao: string;
+  nota?: string;    // caixa de destaque opcional abaixo da descrição
+}
+
+export interface ComoFuncionaContent {
+  titulo: string;
+  subtitulo: string;
+  etapas: ComoFuncionaEtapa[];
+  // Campos extras livres (investimento, inclusoes, observacoes etc.)
+  investimento?: string;
+  inclusoes?: string;
+  observacoes?: string;
+}
+
+/**
  * Modelo genérico de certificação.
  * Os nomes são definidos pelo administrador — não há nomes fixos no código.
  * O campo `numero` (1 a 10) é o identificador visual exibido ao candidato.
@@ -36,6 +57,8 @@ export interface Certification {
   cor: "blue" | "gold" | "green" | "purple" | "orange" | "red" | "teal";
   imagemUrl?: string;            // URL da imagem de capa da certificação
   editalUrl?: string;            // URL do PDF do edital
+  /** Conteúdo da página "Como funciona" — editável pelo admin */
+  comoFunciona?: ComoFuncionaContent;
   // Conteúdo do edital
   edital?: {
     dataAbertura?: string;
@@ -46,7 +69,6 @@ export interface Certification {
 }
 
 // ─── Dados iniciais (placeholder — admin substitui pelo painel) ─────────────────
-// 3 certificações de exemplo, numeradas. O admin pode adicionar até 10.
 
 export const CERTIFICATIONS_DEFAULT: Certification[] = [
   {
@@ -83,6 +105,45 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
     caminhoDefault: "B",
     status: "ativa",
     cor: "blue",
+    comoFunciona: {
+      titulo: "Como funciona a Certificação CCA",
+      subtitulo: "Conheça as etapas do processo de certificação Controller ANEFAC e saiba o que esperar em cada fase.",
+      etapas: [
+        {
+          numero: "01",
+          titulo: "Inscrição e Cadastro",
+          descricao: "O candidato realiza a inscrição online, preenche seus dados pessoais e profissionais e seleciona a certificação CCA.",
+        },
+        {
+          numero: "02",
+          titulo: "Envio de Documentos",
+          descricao: "Upload dos documentos exigidos: diploma de graduação, declaração de experiência e assinatura do Código de Conduta ANEFAC.",
+        },
+        {
+          numero: "03",
+          titulo: "Pagamento da Taxa de Análise",
+          descricao: "Pagamento da taxa de análise documental (R$ 350,00), que cobre todo o processo de avaliação até a entrevista.",
+        },
+        {
+          numero: "04",
+          titulo: "Análise Documental",
+          descricao: "O Comitê de Certificação ANEFAC analisa os documentos enviados em até 10 dias úteis. O candidato é notificado sobre o resultado.",
+          nota: "Caminho B: candidatos que não atingem os critérios documentais realizam prova antes da entrevista.",
+        },
+        {
+          numero: "05",
+          titulo: "Entrevista com o Comitê",
+          descricao: "Entrevista técnica e comportamental conduzida por membros do Comitê de Certificação ANEFAC para validação das competências.",
+        },
+        {
+          numero: "06",
+          titulo: "Emissão do Certificado",
+          descricao: "Após aprovação na entrevista, o candidato realiza o pagamento da taxa de emissão (R$ 250,00) e recebe o certificado CCA.",
+        },
+      ],
+      investimento: "Taxa de análise: R$ 350,00 | Taxa de emissão: R$ 250,00 (paga somente após aprovação)",
+      observacoes: "O processo completo leva em média 30 a 60 dias, dependendo da disponibilidade para entrevista e da análise documental.",
+    },
   },
   {
     id: "cca-plus",
@@ -116,6 +177,45 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
     caminhoDefault: "A",
     status: "ativa",
     cor: "gold",
+    comoFunciona: {
+      titulo: "Como funciona a Certificação CCA Plus",
+      subtitulo: "O processo CCA Plus é voltado a Controllers consolidados e exige comprovação de trajetória de alto nível.",
+      etapas: [
+        {
+          numero: "01",
+          titulo: "Inscrição e Cadastro",
+          descricao: "O candidato realiza a inscrição online, preenche seus dados profissionais e seleciona a certificação CCA Plus.",
+        },
+        {
+          numero: "02",
+          titulo: "Envio de Documentos",
+          descricao: "Upload dos documentos exigidos: diploma, declaração de 5 anos de experiência, 2 cartas de recomendação de executivos e Código de Conduta ANEFAC assinado.",
+        },
+        {
+          numero: "03",
+          titulo: "Pagamento da Taxa de Análise",
+          descricao: "Pagamento da taxa de análise documental (R$ 450,00), que cobre todo o processo de avaliação.",
+        },
+        {
+          numero: "04",
+          titulo: "Análise Documental",
+          descricao: "O Comitê de Certificação ANEFAC analisa os documentos enviados em até 10 dias úteis. Por se tratar do nível Plus, o processo segue diretamente para entrevista (Caminho A).",
+          nota: "Caminho A: candidatos aprovados na análise documental são convocados diretamente para entrevista.",
+        },
+        {
+          numero: "05",
+          titulo: "Entrevista com o Comitê",
+          descricao: "Entrevista aprofundada com membros seniores do Comitê de Certificação ANEFAC, com foco em trajetória, decisões estratégicas e governança.",
+        },
+        {
+          numero: "06",
+          titulo: "Emissão do Certificado",
+          descricao: "Após aprovação, o candidato realiza o pagamento da taxa de emissão (R$ 350,00) e recebe o certificado CCA Plus.",
+        },
+      ],
+      investimento: "Taxa de análise: R$ 450,00 | Taxa de emissão: R$ 350,00 (paga somente após aprovação)",
+      observacoes: "O processo completo leva em média 30 a 60 dias. Candidatos CCA Plus seguem o Caminho A (entrevista direta, sem prova).",
+    },
   },
 
   // ── Certificações de Liderança EcodoBem ──────────────────────────────────────
@@ -163,6 +263,46 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
     caminhoDefault: null,
     status: "ativa",
     cor: "blue",
+    comoFunciona: {
+      titulo: "Como funciona a Certificação de Liderança EcodoBem – Nível 1",
+      subtitulo: "Conheça a jornada formativa do Nível 1 — Fundamentos da Liderança — e entenda cada etapa do processo.",
+      etapas: [
+        {
+          numero: "01",
+          titulo: "Inscrição e Entrevista Diagnóstica",
+          descricao: "O candidato realiza a inscrição e passa por uma entrevista diagnóstica inicial para análise de perfil, experiência profissional e maturidade comportamental. A equipe define o nível de ingresso adequado.",
+        },
+        {
+          numero: "02",
+          titulo: "Início da Formação (6 meses)",
+          descricao: "O participante inicia a jornada formativa obrigatória de 6 meses correspondente ao Nível 1. A formação inclui aulas de desenvolvimento, webinares ao vivo, avaliações por conteúdo, mentoria e projetos práticos.",
+          nota: "A formação de 6 meses é obrigatória para todos os participantes, independentemente do nível indicado na entrevista.",
+        },
+        {
+          numero: "03",
+          titulo: "Atividades e Avaliações",
+          descricao: "Durante a jornada, o participante realiza atividades práticas, avaliações por conteúdo e projetos aplicados ao seu contexto profissional, com acompanhamento contínuo da evolução.",
+        },
+        {
+          numero: "04",
+          titulo: "Mentoria de Desenvolvimento",
+          descricao: "Sessões de mentoria individual ou em grupo para apoiar o desenvolvimento das competências do Nível 1 e preparar o participante para a prova final.",
+        },
+        {
+          numero: "05",
+          titulo: "Prova Final de Certificação",
+          descricao: "Após a conclusão da jornada formativa, o participante realiza a prova final de certificação. A prova somente pode ser realizada após a conclusão dos 6 meses de formação.",
+        },
+        {
+          numero: "06",
+          titulo: "Emissão do Certificado",
+          descricao: "Atingida a pontuação mínima na prova final, o participante recebe o Certificado de Liderança EcodoBem – Nível 1.",
+        },
+      ],
+      investimento: "6 parcelas de R$ 250,00 (Total: R$ 1.500,00)",
+      inclusoes: "Aulas de desenvolvimento · Webinares ao vivo · Avaliações por conteúdo · Mentoria de desenvolvimento · Projetos práticos · Acompanhamento da evolução · Preparação para a prova final",
+      observacoes: "A entrevista inicial define o nível de ingresso, mas não dispensa o participante da formação. A prova final somente pode ser realizada após a conclusão da jornada formativa.",
+    },
   },
   {
     id: "ecodobem-lideranca-n2",
@@ -207,6 +347,46 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
     caminhoDefault: null,
     status: "ativa",
     cor: "green",
+    comoFunciona: {
+      titulo: "Como funciona a Certificação de Liderança EcodoBem – Nível 2",
+      subtitulo: "Conheça a jornada formativa do Nível 2 — Liderança Essencial — e entenda cada etapa do processo.",
+      etapas: [
+        {
+          numero: "01",
+          titulo: "Inscrição e Entrevista Diagnóstica",
+          descricao: "O candidato realiza a inscrição e passa por uma entrevista diagnóstica para análise de experiência, repertório profissional e capacidade de condução de pessoas. A equipe define o nível de ingresso.",
+        },
+        {
+          numero: "02",
+          titulo: "Início da Formação (6 meses)",
+          descricao: "O participante inicia a jornada formativa obrigatória de 6 meses do Nível 2, com foco em liderança essencial: comunicação, organização coletiva, adaptabilidade e entrega de resultados.",
+          nota: "A formação de 6 meses é obrigatória para todos os participantes, independentemente do nível indicado na entrevista.",
+        },
+        {
+          numero: "03",
+          titulo: "Atividades e Avaliações",
+          descricao: "Atividades práticas, avaliações por conteúdo e projetos aplicados ao contexto profissional do participante, com acompanhamento contínuo da evolução.",
+        },
+        {
+          numero: "04",
+          titulo: "Mentoria de Desenvolvimento",
+          descricao: "Sessões de mentoria para apoiar o desenvolvimento das competências do Nível 2 e preparar o participante para a prova final.",
+        },
+        {
+          numero: "05",
+          titulo: "Prova Final de Certificação",
+          descricao: "Após a conclusão da jornada formativa, o participante realiza a prova final. A prova somente pode ser realizada após os 6 meses de formação.",
+        },
+        {
+          numero: "06",
+          titulo: "Emissão do Certificado",
+          descricao: "Atingida a pontuação mínima, o participante recebe o Certificado de Liderança EcodoBem – Nível 2.",
+        },
+      ],
+      investimento: "6 parcelas de R$ 250,00 (Total: R$ 1.500,00)",
+      inclusoes: "Aulas de desenvolvimento · Webinares ao vivo · Avaliações por conteúdo · Mentoria de desenvolvimento · Projetos práticos · Acompanhamento da evolução · Preparação para a prova final",
+      observacoes: "A entrevista inicial define o nível de ingresso, mas não dispensa o participante da formação.",
+    },
   },
   {
     id: "ecodobem-lideranca-n3",
@@ -257,6 +437,46 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
     caminhoDefault: null,
     status: "ativa",
     cor: "orange",
+    comoFunciona: {
+      titulo: "Como funciona a Certificação de Liderança EcodoBem – Nível 3",
+      subtitulo: "Conheça a jornada formativa do Nível 3 — Liderança Master — e entenda cada etapa do processo.",
+      etapas: [
+        {
+          numero: "01",
+          titulo: "Inscrição e Entrevista Diagnóstica",
+          descricao: "O candidato realiza a inscrição e passa por entrevista diagnóstica com análise de trajetória, experiência em liderança e repertório comportamental. A equipe define o nível de ingresso.",
+        },
+        {
+          numero: "02",
+          titulo: "Início da Formação (6 meses)",
+          descricao: "O participante inicia a jornada formativa obrigatória de 6 meses do Nível 3, com foco em gestão de pessoas, resolução de conflitos, influência, negociação e entrega de resultados.",
+          nota: "A formação de 6 meses é obrigatória para todos os participantes.",
+        },
+        {
+          numero: "03",
+          titulo: "Atividades e Avaliações",
+          descricao: "Atividades práticas, avaliações por conteúdo e projetos aplicados à gestão de equipes e resultados, com acompanhamento contínuo.",
+        },
+        {
+          numero: "04",
+          titulo: "Mentoria de Desenvolvimento",
+          descricao: "Sessões de mentoria para apoiar o desenvolvimento das competências do Nível 3 e preparar o participante para a prova final.",
+        },
+        {
+          numero: "05",
+          titulo: "Prova Final de Certificação",
+          descricao: "Após a conclusão da jornada formativa, o participante realiza a prova final. A prova somente pode ser realizada após os 6 meses de formação.",
+        },
+        {
+          numero: "06",
+          titulo: "Emissão do Certificado",
+          descricao: "Atingida a pontuação mínima, o participante recebe o Certificado de Liderança EcodoBem – Nível 3.",
+        },
+      ],
+      investimento: "6 parcelas de R$ 250,00 (Total: R$ 1.500,00)",
+      inclusoes: "Aulas de desenvolvimento · Webinares ao vivo · Avaliações por conteúdo · Mentoria de desenvolvimento · Projetos práticos · Acompanhamento da evolução · Preparação para a prova final",
+      observacoes: "A entrevista inicial define o nível de ingresso, mas não dispensa o participante da formação.",
+    },
   },
   {
     id: "ecodobem-lideranca-n4",
@@ -303,10 +523,50 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
     caminhoDefault: null,
     status: "ativa",
     cor: "purple",
+    comoFunciona: {
+      titulo: "Como funciona a Certificação de Liderança EcodoBem – Nível 4",
+      subtitulo: "Conheça a jornada formativa do Nível 4 — Liderança Estratégica do Futuro — e entenda cada etapa do processo.",
+      etapas: [
+        {
+          numero: "01",
+          titulo: "Inscrição e Entrevista Diagnóstica",
+          descricao: "O candidato realiza a inscrição e passa por entrevista diagnóstica com análise de experiência em liderança estratégica, visão sistêmica e atuação em cenários complexos.",
+        },
+        {
+          numero: "02",
+          titulo: "Início da Formação (6 meses)",
+          descricao: "O participante inicia a jornada formativa obrigatória de 6 meses do Nível 4, com foco em transformação organizacional, decisões estratégicas, gestão de mudanças e construção de futuro.",
+          nota: "A formação de 6 meses é obrigatória para todos os participantes.",
+        },
+        {
+          numero: "03",
+          titulo: "Atividades e Avaliações",
+          descricao: "Atividades práticas, avaliações por conteúdo e projetos de alto impacto estratégico, com acompanhamento contínuo.",
+        },
+        {
+          numero: "04",
+          titulo: "Mentoria de Desenvolvimento",
+          descricao: "Sessões de mentoria para apoiar o desenvolvimento das competências do Nível 4 e preparar o participante para a prova final.",
+        },
+        {
+          numero: "05",
+          titulo: "Prova Final de Certificação",
+          descricao: "Após a conclusão da jornada formativa, o participante realiza a prova final. A prova somente pode ser realizada após os 6 meses de formação.",
+        },
+        {
+          numero: "06",
+          titulo: "Emissão do Certificado",
+          descricao: "Atingida a pontuação mínima, o participante recebe o Certificado de Liderança EcodoBem – Nível 4.",
+        },
+      ],
+      investimento: "6 parcelas de R$ 250,00 (Total: R$ 1.500,00)",
+      inclusoes: "Aulas de desenvolvimento · Webinares ao vivo · Avaliações por conteúdo · Mentoria de desenvolvimento · Projetos práticos · Acompanhamento da evolução · Preparação para a prova final",
+      observacoes: "A entrevista inicial define o nível de ingresso, mas não dispensa o participante da formação.",
+    },
   },
 ];
 
-const STORAGE_KEY_CERTS = "anefac_certifications_v7";
+const STORAGE_KEY_CERTS = "anefac_certifications_v8";
 
 function loadCertifications(): Certification[] {
   try {
