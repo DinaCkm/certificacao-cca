@@ -196,21 +196,28 @@ export function ComoFuncionaCert() {
             )}
 
             {/* CTA */}
-            <div className="bg-white rounded-2xl border-2 shadow-sm p-6" style={{ borderColor: accent.badge }}>
-              <h3 className="font-bold text-gray-900 mb-2">Pronto para se inscrever?</h3>
-              <p className="text-gray-500 text-sm mb-5">
-                Inicie o processo agora e dê o próximo passo na sua carreira.
-              </p>
+            <div className="bg-white rounded-2xl border-2 shadow-sm p-6 space-y-3" style={{ borderColor: accent.badge }}>
+              {/* Botão preparação */}
+              <Link href="/cursos">
+                <a className="w-full flex items-center gap-3 bg-amber-400 hover:bg-amber-500 text-amber-900 font-bold py-3.5 px-4 rounded-xl transition-all text-sm">
+                  <BookOpen className="w-5 h-5 shrink-0" />
+                  <span>Quero me preparar antes de fazer a certificação</span>
+                </a>
+              </Link>
+
+              {/* Botão inscrição */}
               <Link href={`/certificacoes/${cert.id}`}>
                 <a
                   className="w-full flex items-center justify-center gap-2 text-white font-bold py-3.5 rounded-xl transition-all text-sm hover:opacity-90"
                   style={{ background: `linear-gradient(135deg, ${accent.bg} 0%, #2d5be3 100%)` }}
                 >
-                  Ver detalhes e inscrever-se
+                  Estou pronto, quero me certificar
                 </a>
               </Link>
+
+              {/* Voltar */}
               <Link href="/certificacoes">
-                <a className="w-full mt-3 flex items-center justify-center gap-2 border border-gray-200 text-gray-600 font-medium py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm">
+                <a className="w-full flex items-center justify-center gap-2 border border-gray-200 text-gray-600 font-medium py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm">
                   <ArrowLeft className="w-4 h-4" />
                   Ver todas as certificações
                 </a>
