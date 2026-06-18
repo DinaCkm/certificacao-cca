@@ -70,6 +70,9 @@ import { AdminCertificacoes } from "./pages/novo-fluxo/admin/AdminCertificacoes"
 import { AdminSiteConfig } from "./pages/novo-fluxo/admin/AdminSiteConfig";
 import { AdminInstitucional } from "./pages/novo-fluxo/admin/AdminInstitucional";
 import { InstitucionalProvider } from "./contexts/InstitucionalContext";
+import { CourseProvider } from "./contexts/CourseContext";
+import { Cursos } from "./pages/site/Cursos";
+import { AdminCursos } from "./pages/novo-fluxo/admin/AdminCursos";
 // ───────────────────────────────────────────────────────────────────────────
 
 function Router() {
@@ -80,6 +83,7 @@ function Router() {
       <Route path={"/certificacoes/:id"} component={CertificacaoDetalhe} />
       <Route path={"/como-funciona/:id"} component={ComoFuncionaCert} />
       <Route path={"/simulacao"} component={Simulacao} />
+      <Route path={"/cursos"} component={Cursos} />
       <Route path={"/home"} component={Home} />
       <Route path={"/select-certification-type"} component={SelectCertificationType} />
 
@@ -140,6 +144,7 @@ function Router() {
       <Route path={"/novo-fluxo/admin/certificacoes"} component={AdminCertificacoes} />
       <Route path={"/novo-fluxo/admin/site"} component={AdminSiteConfig} />
       <Route path={"/novo-fluxo/admin/institucional"} component={AdminInstitucional} />
+      <Route path={"/novo-fluxo/admin/cursos"} component={AdminCursos} />
       {/* ─────────────────────────────────────────────────────────────────────── */}
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
@@ -164,12 +169,14 @@ function App() {
     location === "/certificacoes" ||
     location.startsWith("/certificacoes/") ||
     location.startsWith("/como-funciona/") ||
-    location === "/simulacao";
+    location === "/simulacao" ||
+    location === "/cursos";
 
   return (
     <ErrorBoundary>
       <SiteConfigProvider>
       <InstitucionalProvider>
+      <CourseProvider>
       <CertificationProvider>
       <UserDataProvider>
         <ThemeProvider
@@ -189,6 +196,7 @@ function App() {
         </ThemeProvider>
       </UserDataProvider>
       </CertificationProvider>
+      </CourseProvider>
       </InstitucionalProvider>
       </SiteConfigProvider>
     </ErrorBoundary>

@@ -156,6 +156,7 @@ export function AdminDashboard() {
                     { label: "Relatório financeiro", href: "#", icon: BarChart3, color: "text-green-600" },
                     { label: "Configurar site", href: "/novo-fluxo/admin/site", icon: Globe, color: "text-indigo-600" },
                     { label: "Documentos & Comitê", href: "/novo-fluxo/admin/institucional", icon: BookOpen, color: "text-teal-600" },
+                    { label: "Cursos e Pacotes", href: "/novo-fluxo/admin/cursos", icon: BookOpen, color: "text-amber-600" },
                     { label: "Configurações", href: "#", icon: Settings, color: "text-gray-600" },
                   ].map(({ label, href, icon: Icon, color }) => (
                     <Link key={label} href={href}>

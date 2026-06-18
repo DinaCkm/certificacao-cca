@@ -17,12 +17,29 @@ export function Certificacoes() {
   const ativas = (certifications || []).filter((c) => c.status === "ativa" || c.status === "em_breve");
   const [expandida, setExpandida] = useState<number | null>(null);
 
-  // Lead capture popup
+  // Lead capture popup — verifica se já foi identificado nesta sessão
+  const jaIdentificado = () => !!sessionStorage.getItem("anefac_lead_nome");
+
   const [leadState, setLeadState] = useState<LeadState | null>(null);
   const [leadNome, setLeadNome] = useState("");
   const [leadEmail, setLeadEmail] = useState("");
 
+  const navegar = (certId: string, destino: LeadDestino) => {
+    const cert = (certifications || []).find((c) => c.id === certId);
+    if (destino === "cursos") {
+      navigate("/cursos");
+    } else if (destino === "certificar" && cert) {
+      selecionarCertificacao(cert);
+      navigate("/novo-fluxo/cadastro");
+    }
+  };
+
   const abrirPopup = (certId: string, destino: LeadDestino) => {
+    if (jaIdentificado()) {
+      // Já identificado — navega direto sem popup
+      navegar(certId, destino);
+      return;
+    }
     setLeadState({ certId, destino });
     setLeadNome("");
     setLeadEmail("");
@@ -33,6 +50,10 @@ export function Certificacoes() {
     const cert = (certifications || []).find((c) => c.id === leadState.certId);
 
     if (identificado && leadNome.trim() && leadEmail.trim()) {
+      // Salva na sessão para não pedir novamente
+      sessionStorage.setItem("anefac_lead_nome", leadNome.trim());
+      sessionStorage.setItem("anefac_lead_email", leadEmail.trim());
+      // Salva no histórico de leads
       const leads = JSON.parse(localStorage.getItem("anefac_leads") || "[]");
       leads.push({
         nome: leadNome.trim(),
@@ -46,14 +67,9 @@ export function Certificacoes() {
     }
 
     const destino = leadState.destino;
+    const certId = leadState.certId;
     setLeadState(null);
-
-    if (destino === "cursos") {
-      navigate("/cursos");
-    } else if (destino === "certificar" && cert) {
-      selecionarCertificacao(cert);
-      navigate("/novo-fluxo/cadastro");
-    }
+    navegar(certId, destino);
   };
 
   return (
