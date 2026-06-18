@@ -119,17 +119,13 @@ export function Home() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link href="/certificacoes">
-                  <a className="group inline-flex items-center gap-2 bg-yellow-400 text-blue-900 font-black px-8 py-4 rounded-2xl hover:bg-yellow-300 transition-all shadow-lg shadow-yellow-400/30 hover:shadow-yellow-400/50 text-base hover:scale-105">
-                    {config.hero.ctaPrimario}
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </a>
-                </Link>
-                <Link href="/como-funciona">
-                  <a className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-white font-semibold px-8 py-4 rounded-2xl hover:bg-white/20 transition-all backdrop-blur-sm text-base">
-                    {config.hero.ctaSecundario}
-                  </a>
-                </Link>
+                <button
+                  onClick={() => document.getElementById('secao-certificacoes')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="group inline-flex items-center gap-2 bg-yellow-400 text-blue-900 font-black px-8 py-4 rounded-2xl hover:bg-yellow-300 transition-all shadow-lg shadow-yellow-400/30 hover:shadow-yellow-400/50 text-base hover:scale-105"
+                >
+                  Conheça nossos programas
+                  <ChevronDown className="w-5 h-5 group-hover:translate-y-1 transition-transform" />
+                </button>
               </div>
 
               {/* Trust badges */}
@@ -196,12 +192,27 @@ export function Home() {
       {/* ══════════════════════════════════════════════════════════════════════
           CERTIFICAÇÕES — two category blocks
       ══════════════════════════════════════════════════════════════════════ */}
-      <section className="py-24 bg-white">
+      <section id="secao-certificacoes" className="py-24 bg-white">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
             <span className="inline-block bg-blue-50 text-blue-700 text-sm font-bold px-4 py-1.5 rounded-full mb-4">Nossas Certificações</span>
             <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">Programas de Certificação</h2>
             <p className="text-lg text-gray-500 max-w-2xl mx-auto">Escolha o programa que melhor se adapta ao seu momento profissional e objetivos de carreira.</p>
+            {/* CTAs — aparecem aqui, após o título da seção */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+              <Link href="/certificacoes">
+                <a className="group inline-flex items-center gap-2 bg-yellow-400 text-blue-900 font-black px-8 py-4 rounded-2xl hover:bg-yellow-300 transition-all shadow-lg shadow-yellow-400/30 hover:shadow-yellow-400/50 text-base hover:scale-105">
+                  {config.hero.ctaPrimario}
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </a>
+              </Link>
+              <Link href="/certificacoes">
+                <a className="inline-flex items-center gap-2 bg-blue-900 border border-blue-700 text-white font-semibold px-8 py-4 rounded-2xl hover:bg-blue-800 transition-all text-base">
+                  <BookOpen className="w-5 h-5" />
+                  {config.hero.ctaSecundario}
+                </a>
+              </Link>
+            </div>
           </div>
 
           {/* CCA Block */}
