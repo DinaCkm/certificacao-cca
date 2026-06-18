@@ -68,6 +68,8 @@ import { AdminValidacaoDocumental } from "./pages/novo-fluxo/admin/ValidacaoDocu
 import { AdminDashboard } from "./pages/novo-fluxo/admin/AdminDashboard";
 import { AdminCertificacoes } from "./pages/novo-fluxo/admin/AdminCertificacoes";
 import { AdminSiteConfig } from "./pages/novo-fluxo/admin/AdminSiteConfig";
+import { AdminInstitucional } from "./pages/novo-fluxo/admin/AdminInstitucional";
+import { InstitucionalProvider } from "./contexts/InstitucionalContext";
 // ───────────────────────────────────────────────────────────────────────────
 
 function Router() {
@@ -137,6 +139,7 @@ function Router() {
       <Route path={"/novo-fluxo/admin/validacao"} component={AdminValidacaoDocumental} />
       <Route path={"/novo-fluxo/admin/certificacoes"} component={AdminCertificacoes} />
       <Route path={"/novo-fluxo/admin/site"} component={AdminSiteConfig} />
+      <Route path={"/novo-fluxo/admin/institucional"} component={AdminInstitucional} />
       {/* ─────────────────────────────────────────────────────────────────────── */}
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
@@ -166,6 +169,7 @@ function App() {
   return (
     <ErrorBoundary>
       <SiteConfigProvider>
+      <InstitucionalProvider>
       <CertificationProvider>
       <UserDataProvider>
         <ThemeProvider
@@ -185,6 +189,7 @@ function App() {
         </ThemeProvider>
       </UserDataProvider>
       </CertificationProvider>
+      </InstitucionalProvider>
       </SiteConfigProvider>
     </ErrorBoundary>
   );

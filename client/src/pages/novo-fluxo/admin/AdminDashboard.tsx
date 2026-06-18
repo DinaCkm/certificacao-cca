@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useCertification } from "@/contexts/CertificationContext";
 import {
   Users, FileText, Award, DollarSign, CheckCircle, Clock,
-  XCircle, BarChart3, Settings, ChevronRight, AlertCircle, Globe
+  XCircle, BarChart3, Settings, ChevronRight, AlertCircle, Globe, BookOpen
 } from "lucide-react";
 
 const MOCK_CANDIDATOS = [
@@ -155,6 +155,7 @@ export function AdminDashboard() {
                     { label: "Certificações ativas", href: "/novo-fluxo/admin/certificacoes", icon: Award, color: "text-blue-600" },
                     { label: "Relatório financeiro", href: "#", icon: BarChart3, color: "text-green-600" },
                     { label: "Configurar site", href: "/novo-fluxo/admin/site", icon: Globe, color: "text-indigo-600" },
+                    { label: "Documentos & Comitê", href: "/novo-fluxo/admin/institucional", icon: BookOpen, color: "text-teal-600" },
                     { label: "Configurações", href: "#", icon: Settings, color: "text-gray-600" },
                   ].map(({ label, href, icon: Icon, color }) => (
                     <Link key={label} href={href}>
