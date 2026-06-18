@@ -125,8 +125,8 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
     nome: "Certificação de Liderança EcodoBem – Nível 1",
     subtitulo: "Fundamentos da Liderança",
     descricao:
-      "Certificação voltada à validação das competências fundamentais para profissionais que estão iniciando sua jornada de liderança ou se preparando para assumir responsabilidades de condução de pessoas, atividades ou pequenos projetos. Este nível reconhece a importância das bases tradicionais da boa liderança: disciplina, escuta, atenção, responsabilidade pessoal e capacidade de compreender a si mesmo antes de liderar os outros.",
-    descricaoBreve: "Competências básicas para liderar a si mesmo e preparar-se para liderar pessoas.",
+      "Certificação voltada à validação das competências fundamentais para profissionais que estão iniciando sua jornada de liderança ou se preparando para assumir responsabilidades de condução de pessoas, atividades ou pequenos projetos. Este nível reconhece a importância das bases tradicionais da boa liderança: disciplina, escuta, atenção, responsabilidade pessoal e capacidade de compreender a si mesmo antes de liderar os outros.\n\nA formação de 6 meses é obrigatória para todos os participantes, independentemente do nível indicado na entrevista diagnóstica. A entrevista inicial define o nível de ingresso, mas não dispensa o participante da formação. A prova final de certificação somente poderá ser realizada após a conclusão da jornada formativa correspondente ao nível indicado.\n\nInvestimento da formação: 6 parcelas de R$ 250,00 (Total: R$ 1.500,00).\n\nO que está incluído: aulas de desenvolvimento, webinares ao vivo, avaliações por conteúdo, mentoria de desenvolvimento, projetos práticos, acompanhamento da evolução e preparação para a prova final.",
+    descricaoBreve: "Competências básicas para liderar a si mesmo e preparar-se para liderar pessoas. Formação obrigatória de 6 meses + prova final.",
     publicoAlvo: "Profissionais em desenvolvimento, potenciais líderes, sucessores, analistas, especialistas, jovens talentos e colaboradores indicados para futuras posições de liderança.",
     competencias: [
       "Atenção",
@@ -139,16 +139,26 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
       "Raciocínio Lógico e Espacial"
     ],
     preRequisitos: [
-      "Entrevista diagnóstica inicial para análise de perfil, experiência profissional e maturidade comportamental",
-      "Formação obrigatória de 6 meses após confirmação do nível",
-      "Prova de certificação ao final da formação"
+      "Realizar entrevista diagnóstica inicial (análise de perfil, experiência profissional e maturidade comportamental)",
+      "Ter o nível de ingresso definido pela equipe responsável com base na entrevista",
+      "Concluir obrigatoriamente a formação de 6 meses correspondente ao nível indicado",
+      "Realizar as atividades e avaliações previstas durante a jornada",
+      "Desenvolver os projetos práticos e atingir a pontuação mínima na prova final de certificação"
     ],
     documentosExigidos: [
       "Documentos pessoais (RG/CPF)",
       "Comprovante de vínculo profissional ou histórico de experiência"
     ],
-    cursos: [],
-    taxaAnalise: 350,
+    cursos: [
+      "Aulas de desenvolvimento correspondentes ao Nível 1",
+      "Webinares ao vivo",
+      "Avaliações por conteúdo",
+      "Mentoria de desenvolvimento",
+      "Projetos práticos",
+      "Acompanhamento da evolução",
+      "Preparação para a prova final de certificação"
+    ],
+    taxaAnalise: 0,
     taxaEmissao: 250,
     caminhoDefault: null,
     status: "ativa",
@@ -160,8 +170,8 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
     nome: "Certificação de Liderança EcodoBem – Nível 2",
     subtitulo: "Liderança Essencial",
     descricao:
-      "Certificação destinada a profissionais que já demonstram maior prontidão para lidar com desafios de liderança, organização de rotinas, comunicação com equipes, adaptação a mudanças e entrega de resultados com equilíbrio emocional. Este nível reconhece o líder que começa a sair da execução individual para assumir uma atuação mais orientada à influência, à organização coletiva e ao acompanhamento de pessoas.",
-    descricaoBreve: "Competências essenciais para condução de pessoas, rotinas e entregas.",
+      "Certificação destinada a profissionais que já demonstram maior prontidão para lidar com desafios de liderança, organização de rotinas, comunicação com equipes, adaptação a mudanças e entrega de resultados com equilíbrio emocional. Este nível reconhece o líder que começa a sair da execução individual para assumir uma atuação mais orientada à influência, à organização coletiva e ao acompanhamento de pessoas.\n\nA formação de 6 meses é obrigatória para todos os participantes, independentemente do nível indicado na entrevista diagnóstica. A entrevista inicial define o nível de ingresso, mas não dispensa o participante da formação. A prova final de certificação somente poderá ser realizada após a conclusão da jornada formativa correspondente ao nível indicado.\n\nInvestimento da formação: 6 parcelas de R$ 250,00 (Total: R$ 1.500,00).\n\nO que está incluído: aulas de desenvolvimento, webinares ao vivo, avaliações por conteúdo, mentoria de desenvolvimento, projetos práticos, acompanhamento da evolução e preparação para a prova final.",
+    descricaoBreve: "Competências essenciais para condução de pessoas, rotinas e entregas. Formação obrigatória de 6 meses + prova final.",
     publicoAlvo: "Líderes iniciantes, supervisores, coordenadores em desenvolvimento, sucessores, profissionais que conduzem projetos ou responsáveis por pequenas equipes.",
     competencias: [
       "Adaptabilidade",
@@ -173,16 +183,26 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
       "Proatividade"
     ],
     preRequisitos: [
-      "Entrevista diagnóstica inicial para análise de experiência, repertório profissional e capacidade de condução de pessoas",
-      "Formação obrigatória de 6 meses após confirmação do nível",
-      "Prova de certificação ao final da formação"
+      "Realizar entrevista diagnóstica inicial (análise de experiência, repertório profissional e capacidade de condução de pessoas)",
+      "Ter o nível de ingresso definido pela equipe responsável com base na entrevista",
+      "Concluir obrigatoriamente a formação de 6 meses correspondente ao nível indicado",
+      "Realizar as atividades e avaliações previstas durante a jornada",
+      "Desenvolver os projetos práticos e atingir a pontuação mínima na prova final de certificação"
     ],
     documentosExigidos: [
       "Documentos pessoais (RG/CPF)",
       "Comprovante de vínculo profissional ou histórico de experiência em liderança"
     ],
-    cursos: [],
-    taxaAnalise: 350,
+    cursos: [
+      "Aulas de desenvolvimento correspondentes ao Nível 2",
+      "Webinares ao vivo",
+      "Avaliações por conteúdo",
+      "Mentoria de desenvolvimento",
+      "Projetos práticos",
+      "Acompanhamento da evolução",
+      "Preparação para a prova final de certificação"
+    ],
+    taxaAnalise: 0,
     taxaEmissao: 250,
     caminhoDefault: null,
     status: "ativa",
@@ -194,8 +214,8 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
     nome: "Certificação de Liderança EcodoBem – Nível 3",
     subtitulo: "Liderança Master",
     descricao:
-      "Certificação voltada a líderes que já exercem papel efetivo de gestão e precisam demonstrar maturidade na condução de pessoas, resolução de conflitos, influência, negociação, tomada de decisão e entrega de resultados. Este nível reconhece a liderança que já atua com maior responsabilidade sobre equipes, metas, processos e relações organizacionais.",
-    descricaoBreve: "Gestão de pessoas, resultados e relações organizacionais para líderes experientes.",
+      "Certificação voltada a líderes que já exercem papel efetivo de gestão e precisam demonstrar maturidade na condução de pessoas, resolução de conflitos, influência, negociação, tomada de decisão e entrega de resultados. Este nível reconhece a liderança que já atua com maior responsabilidade sobre equipes, metas, processos e relações organizacionais.\n\nA formação de 6 meses é obrigatória para todos os participantes, independentemente do nível indicado na entrevista diagnóstica. A entrevista inicial define o nível de ingresso, mas não dispensa o participante da formação. A prova final de certificação somente poderá ser realizada após a conclusão da jornada formativa correspondente ao nível indicado.\n\nInvestimento da formação: 6 parcelas de R$ 250,00 (Total: R$ 1.500,00).\n\nO que está incluído: aulas de desenvolvimento, webinares ao vivo, avaliações por conteúdo, mentoria de desenvolvimento, projetos práticos, acompanhamento da evolução e preparação para a prova final.",
+    descricaoBreve: "Gestão de pessoas, resultados e relações organizacionais para líderes experientes. Formação obrigatória de 6 meses + prova final.",
     publicoAlvo: "Gestores, coordenadores, supervisores experientes, gerentes, líderes de equipe e profissionais que respondem por metas, pessoas, indicadores ou projetos estratégicos.",
     competencias: [
       "Accountability",
@@ -213,16 +233,26 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
       "Visão Estratégica"
     ],
     preRequisitos: [
-      "Entrevista diagnóstica inicial para análise de trajetória, experiência em liderança e repertório comportamental",
-      "Formação obrigatória de 6 meses após confirmação do nível",
-      "Prova de certificação ao final da formação"
+      "Realizar entrevista diagnóstica inicial (análise de trajetória, experiência em liderança e repertório comportamental)",
+      "Ter o nível de ingresso definido pela equipe responsável com base na entrevista",
+      "Concluir obrigatoriamente a formação de 6 meses correspondente ao nível indicado",
+      "Realizar as atividades e avaliações previstas durante a jornada",
+      "Desenvolver os projetos práticos e atingir a pontuação mínima na prova final de certificação"
     ],
     documentosExigidos: [
       "Documentos pessoais (RG/CPF)",
       "Comprovante de experiência formal ou informal em gestão de pessoas"
     ],
-    cursos: [],
-    taxaAnalise: 350,
+    cursos: [
+      "Aulas de desenvolvimento correspondentes ao Nível 3",
+      "Webinares ao vivo",
+      "Avaliações por conteúdo",
+      "Mentoria de desenvolvimento",
+      "Projetos práticos",
+      "Acompanhamento da evolução",
+      "Preparação para a prova final de certificação"
+    ],
+    taxaAnalise: 0,
     taxaEmissao: 250,
     caminhoDefault: null,
     status: "ativa",
@@ -234,8 +264,8 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
     nome: "Certificação de Liderança EcodoBem – Nível 4",
     subtitulo: "Liderança Estratégica do Futuro",
     descricao:
-      "Certificação avançada destinada a líderes que atuam ou se preparam para atuar em posições de maior complexidade, com responsabilidade sobre decisões estratégicas, leitura de cenários, transformação organizacional, gestão de mudanças e construção de futuro. Este nível reconhece líderes capazes de unir experiência, visão sistêmica, responsabilidade institucional e capacidade de preparar pessoas e organizações para novos desafios.",
-    descricaoBreve: "Competências do futuro para transformação, sustentabilidade e alta liderança.",
+      "Certificação avançada destinada a líderes que atuam ou se preparam para atuar em posições de maior complexidade, com responsabilidade sobre decisões estratégicas, leitura de cenários, transformação organizacional, gestão de mudanças e construção de futuro. Este nível reconhece líderes capazes de unir experiência, visão sistêmica, responsabilidade institucional e capacidade de preparar pessoas e organizações para novos desafios.\n\nA formação de 6 meses é obrigatória para todos os participantes, independentemente do nível indicado na entrevista diagnóstica. A entrevista inicial define o nível de ingresso, mas não dispensa o participante da formação. A prova final de certificação somente poderá ser realizada após a conclusão da jornada formativa correspondente ao nível indicado.\n\nInvestimento da formação: 6 parcelas de R$ 250,00 (Total: R$ 1.500,00).\n\nO que está incluído: aulas de desenvolvimento, webinares ao vivo, avaliações por conteúdo, mentoria de desenvolvimento, projetos práticos, acompanhamento da evolução e preparação para a prova final.",
+    descricaoBreve: "Competências do futuro para transformação, sustentabilidade e alta liderança. Formação obrigatória de 6 meses + prova final.",
     publicoAlvo: "Gerentes, executivos, líderes estratégicos, sucessores de alta responsabilidade e profissionais em preparação para posições de direção ou transformação organizacional.",
     competencias: [
       "Mindset Visionário",
@@ -249,16 +279,26 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
       "Inteligência Emocional Tática"
     ],
     preRequisitos: [
-      "Entrevista diagnóstica inicial para análise de experiência em liderança, visão estratégica e atuação em cenários complexos",
-      "Formação obrigatória de 6 meses após confirmação do nível",
-      "Prova de certificação ao final da formação"
+      "Realizar entrevista diagnóstica inicial (análise de experiência em liderança, visão estratégica e atuação em cenários complexos)",
+      "Ter o nível de ingresso definido pela equipe responsável com base na entrevista",
+      "Concluir obrigatoriamente a formação de 6 meses correspondente ao nível indicado",
+      "Realizar as atividades e avaliações previstas durante a jornada",
+      "Desenvolver os projetos práticos e atingir a pontuação mínima na prova final de certificação"
     ],
     documentosExigidos: [
       "Documentos pessoais (RG/CPF)",
       "Histórico profissional demonstrando atuação estratégica ou em posições de alta responsabilidade"
     ],
-    cursos: [],
-    taxaAnalise: 350,
+    cursos: [
+      "Aulas de desenvolvimento correspondentes ao Nível 4",
+      "Webinares ao vivo",
+      "Avaliações por conteúdo",
+      "Mentoria de desenvolvimento",
+      "Projetos práticos",
+      "Acompanhamento da evolução",
+      "Preparação para a prova final de certificação"
+    ],
+    taxaAnalise: 0,
     taxaEmissao: 250,
     caminhoDefault: null,
     status: "ativa",
@@ -266,7 +306,7 @@ export const CERTIFICATIONS_DEFAULT: Certification[] = [
   },
 ];
 
-const STORAGE_KEY_CERTS = "anefac_certifications_v6";
+const STORAGE_KEY_CERTS = "anefac_certifications_v7";
 
 function loadCertifications(): Certification[] {
   try {
