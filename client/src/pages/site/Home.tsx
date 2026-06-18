@@ -115,29 +115,32 @@ export function Home() {
           </div>
 
           {/* Document buttons */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Documentos do Programa</h3>
-            <p className="text-sm text-gray-500 mb-6">Acesse os documentos oficiais do Programa de Certificação Profissional ANEFAC.</p>
-            <div className="flex flex-wrap gap-3">
+          <div className="rounded-2xl border-2 border-blue-100 shadow-md p-10 text-center" style={{ background: "linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%)" }}>
+            <div className="w-12 h-12 rounded-2xl bg-blue-700 flex items-center justify-center mx-auto mb-4">
+              <BookOpen className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="text-2xl font-black text-gray-900 mb-2">Documentos do Programa</h3>
+            <p className="text-gray-600 mb-8 max-w-lg mx-auto">Acesse os documentos oficiais do Programa de Certificação Profissional ANEFAC — Regulamento, Edital e Código de Conduta.</p>
+            <div className="flex flex-wrap gap-4 justify-center">
               <button
                 onClick={() => setModal("regulamento")}
-                className="inline-flex items-center gap-2 border border-gray-200 text-gray-700 font-medium px-5 py-2.5 rounded-xl text-sm hover:bg-gray-50 hover:border-blue-300 transition-colors"
+                className="inline-flex items-center gap-2.5 bg-white border-2 border-blue-200 text-blue-800 font-bold px-7 py-3.5 rounded-2xl text-sm hover:bg-blue-700 hover:text-white hover:border-blue-700 transition-all shadow-sm hover:shadow-md"
               >
-                <BookOpen className="w-4 h-4 text-blue-600" />
+                <BookOpen className="w-5 h-5" />
                 Regulamento
               </button>
               <button
                 onClick={() => setModal("edital")}
-                className="inline-flex items-center gap-2 border border-gray-200 text-gray-700 font-medium px-5 py-2.5 rounded-xl text-sm hover:bg-gray-50 hover:border-blue-300 transition-colors"
+                className="inline-flex items-center gap-2.5 bg-white border-2 border-blue-200 text-blue-800 font-bold px-7 py-3.5 rounded-2xl text-sm hover:bg-blue-700 hover:text-white hover:border-blue-700 transition-all shadow-sm hover:shadow-md"
               >
-                <FileText className="w-4 h-4 text-blue-600" />
+                <FileText className="w-5 h-5" />
                 Edital de Candidatura
               </button>
               <button
                 onClick={() => setModal("conduta")}
-                className="inline-flex items-center gap-2 border border-gray-200 text-gray-700 font-medium px-5 py-2.5 rounded-xl text-sm hover:bg-gray-50 hover:border-blue-300 transition-colors"
+                className="inline-flex items-center gap-2.5 bg-white border-2 border-blue-200 text-blue-800 font-bold px-7 py-3.5 rounded-2xl text-sm hover:bg-blue-700 hover:text-white hover:border-blue-700 transition-all shadow-sm hover:shadow-md"
               >
-                <Shield className="w-4 h-4 text-blue-600" />
+                <Shield className="w-5 h-5" />
                 Código de Conduta
               </button>
             </div>
