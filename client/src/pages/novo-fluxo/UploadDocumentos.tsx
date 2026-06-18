@@ -20,7 +20,7 @@ interface DocumentoUpload {
 
 export function UploadDocumentos() {
   const { processo, atualizarStatus, getCertificacaoAtual } = useCertification();
-  const { config: institucional } = useInstitucional();
+  const { institucional } = useInstitucional();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const certAtual = getCertificacaoAtual();
@@ -166,7 +166,7 @@ export function UploadDocumentos() {
                   {/* Botão de download para o Código de Conduta */}
                   {doc.nome.toLowerCase().includes("código de conduta") || doc.nome.toLowerCase().includes("codigo de conduta") ? (
                     <a
-                      href={institucional.codigoConduta.urlExterna || "/documentos/codigo-conduta-anefac.pdf"}
+                      href={institucional?.codigoConduta?.urlExterna || "/documentos/codigo-conduta-anefac.pdf"}
                       download
                       target="_blank"
                       rel="noopener noreferrer"
