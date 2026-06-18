@@ -1,13 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useParams, useLocation } from "wouter";
 import { Navbar } from "@/components/Navbar";
 import { useCertification } from "@/contexts/CertificationContext";
-import { ArrowRight, FileText, DollarSign, Clock, Users, CheckCircle, ExternalLink, ArrowLeft, BookOpen, Award } from "lucide-react";
+import { ArrowRight, FileText, DollarSign, Clock, Users, CheckCircle, ExternalLink, ArrowLeft, BookOpen, Award, X, User, Mail, Heart } from "lucide-react";
+
+type LeadDestino = "cursos" | "certificar" | null;
 
 export function CertificacaoDetalhe() {
   const params = useParams<{ id: string }>();
   const { certifications, selecionarCertificacao } = useCertification();
   const [, navigate] = useLocation();
+
+  const [leadDestino, setLeadDestino] = useState<LeadDestino>(null);
+  const [leadNome, setLeadNome] = useState("");
+  const [leadEmail, setLeadEmail] = useState("");
+
   const cert = (certifications || []).find((c) => c.id === params.id);
 
   if (!cert) {
@@ -27,6 +34,33 @@ export function CertificacaoDetalhe() {
   const handleInscrever = () => {
     selecionarCertificacao(cert);
     navigate("/novo-fluxo/cadastro");
+  };
+
+  // Salva lead (se preenchido) e navega para o destino
+  const prosseguir = (identificado: boolean) => {
+    if (identificado && leadNome.trim() && leadEmail.trim()) {
+      // Salva no localStorage para uso futuro
+      const leads = JSON.parse(localStorage.getItem("anefac_leads") || "[]");
+      leads.push({
+        nome: leadNome.trim(),
+        email: leadEmail.trim(),
+        certId: cert.id,
+        certNome: cert.nome,
+        destino: leadDestino,
+        data: new Date().toISOString(),
+      });
+      localStorage.setItem("anefac_leads", JSON.stringify(leads));
+    }
+
+    setLeadDestino(null);
+    setLeadNome("");
+    setLeadEmail("");
+
+    if (leadDestino === "cursos") {
+      navigate("/cursos");
+    } else if (leadDestino === "certificar") {
+      handleInscrever();
+    }
   };
 
   return (
@@ -162,16 +196,17 @@ export function CertificacaoDetalhe() {
               <h3 className="font-bold text-gray-900 mb-1">O que você deseja fazer?</h3>
 
               {/* Botão 1 — Preparação */}
-              <Link href="/cursos">
-                <a className="w-full flex items-center gap-3 bg-amber-400 hover:bg-amber-500 text-amber-900 font-bold py-3.5 px-4 rounded-xl transition-all text-sm">
-                  <BookOpen className="w-5 h-5 shrink-0" />
-                  <span>Quero me preparar para a Certificação</span>
-                </a>
-              </Link>
+              <button
+                onClick={() => setLeadDestino("cursos")}
+                className="w-full flex items-center gap-3 bg-amber-400 hover:bg-amber-500 text-amber-900 font-bold py-3.5 px-4 rounded-xl transition-all text-sm"
+              >
+                <BookOpen className="w-5 h-5 shrink-0" />
+                <span>Quero me preparar para a Certificação</span>
+              </button>
 
               {/* Botão 2 — Inscrição */}
               <button
-                onClick={handleInscrever}
+                onClick={() => setLeadDestino("certificar")}
                 className="w-full flex items-center gap-3 text-white font-bold py-3.5 px-4 rounded-xl transition-all text-sm"
                 style={{ background: "linear-gradient(135deg, #1e3a6e 0%, #2d5be3 100%)" }}
               >
@@ -210,6 +245,82 @@ export function CertificacaoDetalhe() {
         </div>
       </footer>
 
+      {/* Popup de captura de lead */}
+      {leadDestino && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(15,31,78,0.75)" }}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md">
+
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #1e3a6e 0%, #2d5be3 100%)" }}>
+                  <Heart className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-black text-gray-900 text-lg">Antes de continuar...</h2>
+                  <p className="text-gray-400 text-xs">Só um segundo!</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setLeadDestino(null)}
+                className="w-9 h-9 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+              >
+                <X className="w-4 h-4 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Mensagem amigável */}
+            <div className="px-6 pb-5">
+              <p className="text-gray-600 text-sm leading-relaxed">
+                Adoraríamos saber quem você é! Assim podemos te enviar informações relevantes e, caso precise de ajuda no caminho, nossa equipe poderá entrar em contato. 😊
+              </p>
+            </div>
+
+            {/* Formulário */}
+            <div className="px-6 space-y-3">
+              <div className="relative">
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Seu nome completo"
+                  value={leadNome}
+                  onChange={(e) => setLeadNome(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition"
+                />
+              </div>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="email"
+                  placeholder="Seu melhor e-mail"
+                  value={leadEmail}
+                  onChange={(e) => setLeadEmail(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition"
+                />
+              </div>
+            </div>
+
+            {/* Botões */}
+            <div className="p-6 space-y-2.5">
+              <button
+                onClick={() => prosseguir(true)}
+                disabled={!leadNome.trim() || !leadEmail.trim()}
+                className="w-full flex items-center justify-center gap-2 text-white font-bold py-3.5 rounded-xl transition-all text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ background: "linear-gradient(135deg, #1e3a6e 0%, #2d5be3 100%)" }}
+              >
+                Continuar
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => prosseguir(false)}
+                className="w-full text-gray-400 hover:text-gray-600 text-xs py-2 transition-colors"
+              >
+                Prefiro não me identificar agora, continuar mesmo assim
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
