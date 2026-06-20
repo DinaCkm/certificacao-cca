@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { api } from "@/lib/api";
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -677,8 +678,21 @@ export function CertificationProvider({ children }: { children: React.ReactNode 
     }
   });
 
+  // Persiste no localStorage (cache local) e sincroniza com o banco
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_PROCESSO, JSON.stringify(processo));
+
+    // Sincroniza com o banco se o candidato está autenticado e tem certificação selecionada
+    const token = localStorage.getItem("anefac_token");
+    if (token && processo.certificacaoId && processo.statusGeral !== "selecao") {
+      api.processo.sincronizar(processo).then((res: any) => {
+        if (res?.processo_id) {
+          localStorage.setItem("anefac_processo_id", String(res.processo_id));
+        }
+      }).catch((err: any) => {
+        console.warn("Sync processo:", err.message);
+      });
+    }
   }, [processo]);
 
   const getCertificacaoAtual = (): Certification | null =>

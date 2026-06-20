@@ -291,3 +291,121 @@ processoRouter.post("/agendar-entrevista", requireAuth, async (req: Request, res
 // Importação do emailService — adicionada após o arquivo principal
 // As chamadas de e-mail estão integradas diretamente na rota agendar-entrevista acima
 // via importação lazy para não bloquear a resposta
+
+// ── POST /api/processo/sincronizar ────────────────────────────────────────────
+// Recebe o estado completo do processo do frontend e persiste no banco
+// Chamado a cada mudança de status relevante
+
+processoRouter.post("/sincronizar", requireAuth, async (req: Request, res: Response) => {
+  const {
+    certificacaoId, statusGeral, candidatoNome, candidatoEmail,
+    candidatoCPF, candidatoTelefone, candidatoEmpresa, candidatoCargo,
+    caminhoAvaliacao, tentativasProva, pagamento1Realizado,
+    pagamento2Realizado, aprovadoEntrevista, formacao
+  } = req.body;
+
+  try {
+    // Busca processo existente do candidato
+    const [existing] = await db.execute(
+      `SELECT id FROM candidato_processos
+       WHERE user_id = ? AND status_geral NOT IN ('concluido','encerrado')
+       ORDER BY iniciado_em DESC LIMIT 1`,
+      [req.user!.userId]
+    ) as any;
+
+    if (existing.length > 0) {
+      // Atualiza processo existente
+      await db.execute(
+        `UPDATE candidato_processos SET
+          status_geral = ?, candidato_nome = ?, candidato_email = ?,
+          candidato_cpf = ?, candidato_telefone = ?, formacao = ?,
+          caminho_avaliacao = ?, tentativas_prova = ?,
+          pagamento1_realizado = ?, pagamento2_realizado = ?,
+          aprovado_entrevista = ?, updated_at = NOW()
+         WHERE id = ?`,
+        [statusGeral, candidatoNome, candidatoEmail,
+         candidatoCPF, candidatoTelefone, candidatoCargo,
+         caminhoAvaliacao || null, tentativasProva || 0,
+         pagamento1Realizado ? 1 : 0, pagamento2Realizado ? 1 : 0,
+         aprovadoEntrevista === null ? null : (aprovadoEntrevista ? 1 : 0),
+         existing[0].id]
+      );
+      return res.json({ processo_id: existing[0].id, status: statusGeral });
+    } else {
+      // Busca o id da certificação pelo slug
+      const [certs] = await db.execute(
+        "SELECT id FROM certification_types WHERE slug = ?",
+        [certificacaoId]
+      ) as any;
+
+      if (certs.length === 0) {
+        return res.status(400).json({ error: "Certificação não encontrada" });
+      }
+
+      // Cria novo processo
+      const [result] = await db.execute(
+        `INSERT INTO candidato_processos
+          (user_id, certification_type_id, status_geral, candidato_nome,
+           candidato_email, candidato_cpf, candidato_telefone, formacao,
+           caminho_avaliacao, tentativas_prova, pagamento1_realizado,
+           pagamento2_realizado, aprovado_entrevista)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [req.user!.userId, certs[0].id, statusGeral, candidatoNome,
+         candidatoEmail, candidatoCPF, candidatoTelefone, candidatoCargo,
+         caminhoAvaliacao || null, tentativasProva || 0,
+         pagamento1Realizado ? 1 : 0, pagamento2Realizado ? 1 : 0,
+         aprovadoEntrevista === null ? null : (aprovadoEntrevista ? 1 : 0)]
+      ) as any;
+
+      // Salva o processo_id no localStorage para uso no agendamento
+      return res.json({ processo_id: result.insertId, status: statusGeral });
+    }
+  } catch (err) {
+    console.error("Erro ao sincronizar processo:", err);
+    return res.status(500).json({ error: "Erro ao sincronizar processo" });
+  }
+});
+
+// ── GET /api/processo/retomar ─────────────────────────────────────────────────
+// Retorna o processo ativo do candidato para restaurar o estado ao fazer login
+
+processoRouter.get("/retomar", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const [rows] = await db.execute(
+      `SELECT p.*, ct.slug as certificacao_id, ct.nome as certificacao_nome,
+              ct.numero as certificacao_numero, ct.taxa_analise, ct.taxa_emissao
+       FROM candidato_processos p
+       JOIN certification_types ct ON ct.id = p.certification_type_id
+       WHERE p.user_id = ? AND p.status_geral NOT IN ('concluido','encerrado')
+       ORDER BY p.iniciado_em DESC LIMIT 1`,
+      [req.user!.userId]
+    ) as any;
+
+    if (rows.length === 0) return res.json({ processo: null });
+
+    const p = rows[0];
+    return res.json({
+      processo: {
+        processo_id: p.id,
+        certificacaoId: p.certificacao_id,
+        certificacaoNome: p.certificacao_nome,
+        certificacaoNumero: p.certificacao_numero,
+        taxaAnalise: p.taxa_analise,
+        taxaEmissao: p.taxa_emissao,
+        statusGeral: p.status_geral,
+        candidatoNome: p.candidato_nome,
+        candidatoEmail: p.candidato_email,
+        candidatoCPF: p.candidato_cpf,
+        candidatoTelefone: p.candidato_telefone,
+        caminhoAvaliacao: p.caminho_avaliacao,
+        tentativasProva: p.tentativas_prova,
+        pagamento1Realizado: !!p.pagamento1_realizado,
+        pagamento2Realizado: !!p.pagamento2_realizado,
+        aprovadoEntrevista: p.aprovado_entrevista === null ? null : !!p.aprovado_entrevista,
+      }
+    });
+  } catch (err) {
+    console.error("Erro ao retomar processo:", err);
+    return res.status(500).json({ error: "Erro ao retomar processo" });
+  }
+});

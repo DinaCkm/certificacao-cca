@@ -138,3 +138,11 @@ Object.assign(api.processo, {
   agendarEntrevista: (slot_id: number, processo_id: number) =>
     request<{ agendamento_id: number; data_hora: string }>("POST", "/processo/agendar-entrevista", { slot_id, processo_id }),
 });
+
+// Fase 3 — sincronização do processo com o banco
+Object.assign(api.processo, {
+  sincronizar: (processo: any) =>
+    request<{ processo_id: number; status: string }>("POST", "/processo/sincronizar", processo),
+  retomar: () =>
+    request<{ processo: any | null }>("GET", "/processo/retomar"),
+});
