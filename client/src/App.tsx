@@ -65,6 +65,8 @@ import { PagamentoEmissao } from "./pages/novo-fluxo/PagamentoEmissao";
 import { EmissaoCertificado } from "./pages/novo-fluxo/EmissaoCertificado";
 import { ProcessoEncerrado } from "./pages/novo-fluxo/ProcessoEncerrado";
 import { AdminValidacaoDocumental } from "./pages/novo-fluxo/admin/ValidacaoDocumental";
+import { AdminLogin } from "./pages/novo-fluxo/admin/AdminLogin";
+import { AdminRoute } from "./components/AdminRoute";
 import { AdminDashboard } from "./pages/novo-fluxo/admin/AdminDashboard";
 import { AdminCertificacoes } from "./pages/novo-fluxo/admin/AdminCertificacoes";
 import { AdminSiteConfig } from "./pages/novo-fluxo/admin/AdminSiteConfig";
@@ -139,12 +141,13 @@ function Router() {
       <Route path={"/novo-fluxo/pagamento-emissao"} component={PagamentoEmissao} />
       <Route path={"/novo-fluxo/emissao-certificado"} component={EmissaoCertificado} />
       <Route path={"/novo-fluxo/processo-encerrado"} component={ProcessoEncerrado} />
-      <Route path={"/novo-fluxo/admin"} component={AdminDashboard} />
-      <Route path={"/novo-fluxo/admin/validacao"} component={AdminValidacaoDocumental} />
-      <Route path={"/novo-fluxo/admin/certificacoes"} component={AdminCertificacoes} />
-      <Route path={"/novo-fluxo/admin/site"} component={AdminSiteConfig} />
-      <Route path={"/novo-fluxo/admin/institucional"} component={AdminInstitucional} />
-      <Route path={"/novo-fluxo/admin/cursos"} component={AdminCursos} />
+      <Route path={"/novo-fluxo/admin/login"} component={AdminLogin} />
+      <Route path={"/novo-fluxo/admin"} component={() => <AdminRoute component={AdminDashboard} />} />
+      <Route path={"/novo-fluxo/admin/validacao"} component={() => <AdminRoute component={AdminValidacaoDocumental} />} />
+      <Route path={"/novo-fluxo/admin/certificacoes"} component={() => <AdminRoute component={AdminCertificacoes} />} />
+      <Route path={"/novo-fluxo/admin/site"} component={() => <AdminRoute component={AdminSiteConfig} />} />
+      <Route path={"/novo-fluxo/admin/institucional"} component={() => <AdminRoute component={AdminInstitucional} />} />
+      <Route path={"/novo-fluxo/admin/cursos"} component={() => <AdminRoute component={AdminCursos} />} />
       {/* ─────────────────────────────────────────────────────────────────────── */}
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
