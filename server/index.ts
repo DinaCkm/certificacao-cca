@@ -3,6 +3,7 @@ import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
 import { testConnection } from "./db/connection.js";
+import { iniciarVerificadorDiario } from "./services/schedulerService.js";
 import { authRouter } from "./routes/auth.js";
 import { processoRouter } from "./routes/processo.js";
 import { adminRouter } from "./routes/admin.js";
@@ -58,6 +59,9 @@ async function startServer() {
 
   // ── Start ───────────────────────────────────────────────────────────────────
   const port = process.env.PORT || 3000;
+
+  // Inicia verificador diário de slots
+  iniciarVerificadorDiario();
 
   server.listen(port, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${port}/`);

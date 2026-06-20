@@ -1,3 +1,5 @@
+import { enviarConfirmacaoEntrevista, enviarAvisoEntrevistador } from "../services/emailService.js";
+import { verificarSlotsEAlertarSeNecessario } from "../services/schedulerService.js";
 import { Router, Request, Response } from "express";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { db } from "../db/connection.js";
@@ -285,3 +287,7 @@ processoRouter.post("/agendar-entrevista", requireAuth, async (req: Request, res
     return res.status(500).json({ error: "Erro ao agendar entrevista" });
   }
 });
+
+// Importação do emailService — adicionada após o arquivo principal
+// As chamadas de e-mail estão integradas diretamente na rota agendar-entrevista acima
+// via importação lazy para não bloquear a resposta
