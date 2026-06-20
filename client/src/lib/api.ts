@@ -101,6 +101,9 @@ export const api = {
     criarUsuario: (body: any) => request<{ id: number; message: string }>("POST", "/admin/usuarios", body),
     editarUsuario: (id: number, body: any) => request<{ message: string }>("PUT", `/admin/usuarios/${id}`, body),
     listarRoles: () => request<{ roles: any[] }>("GET", "/admin/roles"),
+    listarSlots: () => request<{ slots: any[] }>("GET", "/admin/slots"),
+    criarSlot: (body: { data_hora: string; duracao_minutos?: number }) => request<{ id: number }>("POST", "/admin/slots", body),
+    removerSlot: (id: number) => request<{ message: string }>("DELETE", `/admin/slots/${id}`),
   },
 };
 
@@ -120,3 +123,18 @@ export const adminApi = {
   listarRoles: () =>
     request<{ roles: any[] }>("GET", "/admin/roles"),
 };
+
+// Slots — adicionados ao objeto api via extensão
+Object.assign(api.admin, {
+  listarSlots: () => request<{ slots: any[] }>("GET", "/admin/slots"),
+  criarSlot: (body: { data_hora: string; duracao_minutos?: number }) =>
+    request<{ id: number }>("POST", "/admin/slots", body),
+  removerSlot: (id: number) =>
+    request<{ message: string }>("DELETE", `/admin/slots/${id}`),
+});
+
+Object.assign(api.processo, {
+  slotsDisponiveis: () => request<{ slots: any[] }>("GET", "/processo/slots-disponiveis"),
+  agendarEntrevista: (slot_id: number, processo_id: number) =>
+    request<{ agendamento_id: number; data_hora: string }>("POST", "/processo/agendar-entrevista", { slot_id, processo_id }),
+});

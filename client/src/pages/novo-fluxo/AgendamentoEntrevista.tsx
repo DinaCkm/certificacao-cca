@@ -4,64 +4,86 @@ import { FluxoLayout } from "@/components/FluxoLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCertification } from "@/contexts/CertificationContext";
-import { Calendar, Clock, Video, CheckCircle, Info } from "lucide-react";
+import { Calendar, Clock, Video, CheckCircle, Info, AlertCircle, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 
-const HORARIOS = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
+interface Slot {
+  id: number;
+  data_hora: string;
+  duracao_minutos: number;
+  entrevistador_nome: string;
+}
 
-function getDatasDisponiveis() {
-  const datas: { data: string; label: string; diaSemana: string }[] = [];
-  const hoje = new Date();
-  let count = 0;
-  let i = 1;
-  while (count < 5) {
-    const d = new Date(hoje);
-    d.setDate(hoje.getDate() + i);
-    const diaSemana = d.getDay();
-    if (diaSemana !== 0 && diaSemana !== 6) {
-      datas.push({
-        data: d.toISOString().split("T")[0],
-        label: d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
-        diaSemana: d.toLocaleDateString("pt-BR", { weekday: "short" }),
-      });
-      count++;
-    }
-    i++;
-  }
-  return datas;
+function formatDataHora(dataHora: string) {
+  const d = new Date(dataHora);
+  return {
+    diaSemana: d.toLocaleDateString("pt-BR", { weekday: "long" }),
+    dia: d.toLocaleDateString("pt-BR", { day: "2-digit", month: "long" }),
+    hora: d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+    completo: d.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" }),
+  };
 }
 
 export function AgendamentoEntrevista() {
-  const { processo, atualizarStatus, getCertificacaoAtual } = useCertification();
+  const { processo, getCertificacaoAtual } = useCertification();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const certAtual = getCertificacaoAtual();
 
-  const [dataSelecionada, setDataSelecionada] = useState<string | null>(null);
-  const [horarioSelecionado, setHorarioSelecionado] = useState<string | null>(null);
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [slotSelecionado, setSlotSelecionado] = useState<Slot | null>(null);
+  const [confirmando, setConfirmando] = useState(false);
   const [confirmado, setConfirmado] = useState(false);
-
-  const datas = getDatasDisponiveis();
+  const [agendamento, setAgendamento] = useState<{ data_hora: string } | null>(null);
 
   useEffect(() => {
     if (!processo.certificacaoId) navigate("/novo-fluxo");
-  }, [processo.certificacaoId, navigate]);
+    else carregarSlots();
+  }, [processo.certificacaoId]);
 
-  const handleConfirmar = () => {
-    if (!dataSelecionada || !horarioSelecionado) {
-      toast({ title: "Selecione data e horário", variant: "destructive" });
+  async function carregarSlots() {
+    setCarregando(true);
+    try {
+      const { slots } = await api.processo.slotsDisponiveis();
+      setSlots(slots);
+    } catch (err: any) {
+      toast({ title: "Erro ao carregar horários disponíveis", variant: "destructive" });
+    } finally {
+      setCarregando(false);
+    }
+  }
+
+  async function handleConfirmar() {
+    if (!slotSelecionado) {
+      toast({ title: "Selecione um horário", variant: "destructive" });
       return;
     }
-    localStorage.setItem("anefac_entrevista_agendada", JSON.stringify({ data: dataSelecionada, horario: horarioSelecionado }));
-    atualizarStatus("entrevista");
-    setConfirmado(true);
-  };
+    const processoId = localStorage.getItem("anefac_processo_id");
+    if (!processoId) {
+      toast({ title: "Erro: processo não identificado. Faça login novamente.", variant: "destructive" });
+      return;
+    }
+    setConfirmando(true);
+    try {
+      const result = await api.processo.agendarEntrevista(slotSelecionado.id, parseInt(processoId));
+      setAgendamento({ data_hora: result.data_hora });
+      setConfirmado(true);
+    } catch (err: any) {
+      toast({ title: err.message || "Erro ao agendar", variant: "destructive" });
+      carregarSlots();
+      setSlotSelecionado(null);
+    } finally {
+      setConfirmando(false);
+    }
+  }
 
   if (!certAtual) return null;
 
-  if (confirmado) {
-    const dataFormatada = new Date(dataSelecionada + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" });
+  if (confirmado && agendamento) {
+    const fmt = formatDataHora(agendamento.data_hora);
     return (
       <FluxoLayout currentStep={5} title="Entrevista Agendada!">
         <div className="max-w-xl mx-auto">
@@ -73,16 +95,20 @@ export function AgendamentoEntrevista() {
               <div className="bg-white rounded-xl border border-green-200 p-5 mb-6 text-left space-y-3">
                 <div className="flex items-center gap-3">
                   <Calendar className="w-4 h-4 text-green-600" />
-                  <span className="text-sm font-medium text-foreground capitalize">{dataFormatada}</span>
+                  <span className="text-sm font-medium capitalize">{fmt.completo}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Clock className="w-4 h-4 text-green-600" />
-                  <span className="text-sm font-medium text-foreground">{horarioSelecionado} (horário de Brasília)</span>
+                  <span className="text-sm font-medium">{fmt.hora} (horário de Brasília)</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Video className="w-4 h-4 text-green-600" />
-                  <span className="text-sm font-medium text-foreground">Videoconferência — link enviado por e-mail</span>
+                  <span className="text-sm font-medium">Videoconferência — link enviado por e-mail</span>
                 </div>
+              </div>
+              <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3 text-left mb-5">
+                <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                <p className="text-xs text-amber-800">O agendamento é definitivo. Caso precise cancelar, entre em contato com a ANEFAC.</p>
               </div>
               <Button className="w-full bg-blue-900 hover:bg-blue-800" onClick={() => navigate("/novo-fluxo/sala-entrevista")}>
                 Acessar sala de entrevista →
@@ -95,98 +121,86 @@ export function AgendamentoEntrevista() {
   }
 
   return (
-    <FluxoLayout
-      currentStep={5}
-      title="Agendamento de Entrevista"
-      subtitle="Escolha a data e o horário para sua entrevista técnica. A entrevista será realizada por videoconferência."
-    >
-      <div className="max-w-2xl mx-auto space-y-6">
-        {/* Info */}
+    <FluxoLayout currentStep={5} title="Agendamento de Entrevista" subtitle="Escolha a data e o horário para sua entrevista técnica. A entrevista será realizada por videoconferência.">
+      <div className="max-w-2xl mx-auto space-y-5">
         <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
           <Info className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
           <div className="text-xs text-blue-800">
             <p className="font-semibold mb-1">Sobre a entrevista técnica</p>
-            <p>A entrevista tem duração de aproximadamente 45 a 60 minutos. Será conduzida por um avaliador especialista em {certAtual.nome}. A decisão da entrevista é final — não há possibilidade de recurso ou nova tentativa.</p>
+            <p>Duração de 45 a 60 minutos, conduzida por especialista em {certAtual.nome}. A decisão é final e o agendamento é definitivo após confirmação.</p>
           </div>
         </div>
 
-        {/* Date Selection */}
         <Card>
           <CardContent className="p-6">
-            <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-blue-700" />
-              Selecione a data
-            </h3>
-            <div className="grid grid-cols-5 gap-2">
-              {datas.map((d) => (
-                <button
-                  key={d.data}
-                  onClick={() => setDataSelecionada(d.data)}
-                  className={cn(
-                    "flex flex-col items-center p-3 rounded-xl border-2 transition-all text-xs",
-                    dataSelecionada === d.data
-                      ? "border-blue-900 bg-blue-50 text-blue-900"
-                      : "border-border hover:border-blue-300 text-foreground"
-                  )}
-                >
-                  <span className="text-muted-foreground capitalize">{d.diaSemana}</span>
-                  <span className="font-bold text-base mt-1">{d.label.split(" ")[0]}</span>
-                  <span className="capitalize">{d.label.split(" ")[1]}</span>
-                </button>
-              ))}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-blue-700" /> Horários disponíveis
+              </h3>
+              <button onClick={carregarSlots} className="text-xs text-blue-700 flex items-center gap-1 hover:underline">
+                <RefreshCw className="w-3 h-3" /> Atualizar
+              </button>
             </div>
+
+            {carregando ? (
+              <div className="py-10 text-center text-gray-400">
+                <div className="w-6 h-6 border-4 border-blue-900 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-sm">Buscando horários disponíveis...</p>
+              </div>
+            ) : slots.length === 0 ? (
+              <div className="py-10 text-center">
+                <AlertCircle className="w-10 h-10 text-amber-400 mx-auto mb-3" />
+                <p className="text-sm font-medium text-gray-700">Nenhum horário disponível no momento</p>
+                <p className="text-xs text-gray-400 mt-1">Nossa equipe está cadastrando novos horários. Aguarde contato por e-mail.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {slots.map((slot) => {
+                  const fmt = formatDataHora(slot.data_hora);
+                  const selecionado = slotSelecionado?.id === slot.id;
+                  return (
+                    <button key={slot.id} onClick={() => setSlotSelecionado(slot)}
+                      className={cn("w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all text-left",
+                        selecionado ? "border-blue-900 bg-blue-50" : "border-border hover:border-blue-300")}>
+                      <div className="flex items-center gap-4">
+                        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold",
+                          selecionado ? "bg-blue-900 text-white" : "bg-gray-100 text-gray-700")}>
+                          {new Date(slot.data_hora).getDate()}
+                        </div>
+                        <div>
+                          <p className={cn("text-sm font-semibold capitalize", selecionado ? "text-blue-900" : "text-foreground")}>
+                            {fmt.diaSemana}, {fmt.dia}
+                          </p>
+                          <p className={cn("text-xs flex items-center gap-1", selecionado ? "text-blue-700" : "text-muted-foreground")}>
+                            <Clock className="w-3 h-3" />{fmt.hora} · {slot.duracao_minutos} min
+                          </p>
+                        </div>
+                      </div>
+                      {selecionado && <CheckCircle className="w-5 h-5 text-blue-900 shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Time Selection */}
-        {dataSelecionada && (
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-blue-700" />
-                Selecione o horário
-              </h3>
-              <div className="grid grid-cols-4 gap-2">
-                {HORARIOS.map((h) => (
-                  <button
-                    key={h}
-                    onClick={() => setHorarioSelecionado(h)}
-                    className={cn(
-                      "p-3 rounded-xl border-2 transition-all text-sm font-medium",
-                      horarioSelecionado === h
-                        ? "border-blue-900 bg-blue-50 text-blue-900"
-                        : "border-border hover:border-blue-300 text-foreground"
-                    )}
-                  >
-                    {h}
-                  </button>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Summary */}
-        {dataSelecionada && horarioSelecionado && (
+        {slotSelecionado && (
           <Card className="border-blue-200 bg-blue-50">
             <CardContent className="p-5">
-              <p className="text-sm font-semibold text-blue-900 mb-2">Resumo do agendamento:</p>
+              <p className="text-sm font-semibold text-blue-900 mb-2">Resumo:</p>
               <div className="space-y-1 text-sm text-blue-800">
-                <p>📅 {new Date(dataSelecionada + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}</p>
-                <p>🕐 {horarioSelecionado} (horário de Brasília)</p>
-                <p>🎥 Videoconferência</p>
+                <p>📅 {formatDataHora(slotSelecionado.data_hora).completo}</p>
+                <p>🕐 {formatDataHora(slotSelecionado.data_hora).hora} (horário de Brasília)</p>
+                <p>⏱ {slotSelecionado.duracao_minutos} minutos · 🎥 Videoconferência</p>
               </div>
             </CardContent>
           </Card>
         )}
 
-        <Button
-          className="w-full bg-blue-900 hover:bg-blue-800"
-          size="lg"
-          onClick={handleConfirmar}
-          disabled={!dataSelecionada || !horarioSelecionado}
-        >
-          Confirmar Agendamento →
+        <Button className="w-full bg-blue-900 hover:bg-blue-800" size="lg"
+          onClick={handleConfirmar} disabled={!slotSelecionado || confirmando || slots.length === 0}>
+          {confirmando ? "Confirmando..." : "Confirmar Agendamento →"}
         </Button>
       </div>
     </FluxoLayout>

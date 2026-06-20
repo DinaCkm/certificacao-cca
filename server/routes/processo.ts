@@ -187,3 +187,101 @@ processoRouter.post(
     }
   }
 );
+
+// ── GET /api/processo/slots-disponiveis ───────────────────────────────────────
+// Retorna todos os slots disponíveis para o candidato escolher (mín. 7 dias)
+
+processoRouter.get("/slots-disponiveis", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const minData = new Date();
+    minData.setDate(minData.getDate() + 7);
+
+    const [rows] = await db.execute(
+      `SELECT s.id, s.data_hora, s.duracao_minutos,
+              u.full_name as entrevistador_nome
+       FROM slots_entrevista s
+       JOIN users u ON u.id = s.entrevistador_id
+       WHERE s.ocupado = FALSE AND s.data_hora >= ?
+       ORDER BY s.data_hora ASC`,
+      [minData.toISOString().slice(0, 19).replace('T', ' ')]
+    ) as any;
+
+    return res.json({ slots: rows });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Erro ao buscar slots" });
+  }
+});
+
+// ── POST /api/processo/agendar-entrevista ─────────────────────────────────────
+// Candidato escolhe um slot e confirma o agendamento
+
+processoRouter.post("/agendar-entrevista", requireAuth, async (req: Request, res: Response) => {
+  const { slot_id, processo_id } = req.body;
+
+  if (!slot_id || !processo_id) {
+    return res.status(400).json({ error: "slot_id e processo_id são obrigatórios" });
+  }
+
+  try {
+    // Verifica se slot ainda está disponível
+    const [slots] = await db.execute(
+      "SELECT * FROM slots_entrevista WHERE id = ? AND ocupado = FALSE",
+      [slot_id]
+    ) as any;
+
+    if (slots.length === 0) {
+      return res.status(409).json({ error: "Este horário já foi reservado. Escolha outro." });
+    }
+
+    const slot = slots[0];
+
+    // Verifica que o processo pertence ao candidato
+    const [processos] = await db.execute(
+      "SELECT * FROM candidato_processos WHERE id = ? AND user_id = ?",
+      [processo_id, req.user!.userId]
+    ) as any;
+
+    if (processos.length === 0) {
+      return res.status(404).json({ error: "Processo não encontrado" });
+    }
+
+    // Cria o agendamento
+    const [result] = await db.execute(
+      `INSERT INTO agendamentos_entrevista
+        (processo_id, user_id, entrevistador_id, data_agendada, hora_agendada, datetime_agendado, status)
+       VALUES (?, ?, ?, DATE(?), TIME(?), ?, 'confirmado')`,
+      [processo_id, req.user!.userId, slot.entrevistador_id,
+       slot.data_hora, slot.data_hora, slot.data_hora]
+    ) as any;
+
+    // Bloqueia o slot
+    await db.execute(
+      "UPDATE slots_entrevista SET ocupado = TRUE, processo_id = ? WHERE id = ?",
+      [processo_id, slot_id]
+    );
+
+    // Avança o processo para status entrevista
+    await db.execute(
+      "UPDATE candidato_processos SET status_geral = 'entrevista', updated_at = NOW() WHERE id = ?",
+      [processo_id]
+    );
+
+    // Audit log
+    await db.execute(
+      `INSERT INTO audit_log (user_id, processo_id, acao, entidade, entidade_id, descricao, resultado)
+       VALUES (?, ?, 'entrevista_agendada', 'agendamentos_entrevista', ?, ?, 'sucesso')`,
+      [req.user!.userId, processo_id, result.insertId,
+       `Entrevista agendada para ${slot.data_hora}`]
+    );
+
+    return res.status(201).json({
+      agendamento_id: result.insertId,
+      data_hora: slot.data_hora,
+      message: "Entrevista agendada com sucesso"
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Erro ao agendar entrevista" });
+  }
+});

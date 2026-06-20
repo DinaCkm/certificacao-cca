@@ -173,3 +173,88 @@ adminRouter.get(
     }
   }
 );
+
+// ── Slots de entrevista ───────────────────────────────────────────────────────
+
+// GET /api/admin/slots — lista slots (admin/entrevistador)
+adminRouter.get(
+  "/slots",
+  requireRole("administrador", "entrevistador", "gestor_n1"),
+  async (req: Request, res: Response) => {
+    try {
+      const [rows] = await db.execute(
+        `SELECT s.id, s.data_hora, s.duracao_minutos, s.ocupado, s.criado_em,
+                u.full_name as entrevistador_nome, u.email as entrevistador_email
+         FROM slots_entrevista s
+         JOIN users u ON u.id = s.entrevistador_id
+         WHERE s.data_hora >= NOW()
+         ORDER BY s.data_hora ASC`
+      ) as any;
+      return res.json({ slots: rows });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao listar slots" });
+    }
+  }
+);
+
+// POST /api/admin/slots — cria slot (admin/entrevistador)
+adminRouter.post(
+  "/slots",
+  requireRole("administrador", "entrevistador", "gestor_n1"),
+  async (req: Request, res: Response) => {
+    const { data_hora, duracao_minutos } = req.body;
+
+    if (!data_hora) {
+      return res.status(400).json({ error: "data_hora é obrigatória" });
+    }
+
+    try {
+      // Verifica se é no mínimo 7 dias a partir de hoje
+      const dataSlot = new Date(data_hora);
+      const minData = new Date();
+      minData.setDate(minData.getDate() + 7);
+
+      if (dataSlot < minData) {
+        return res.status(400).json({ error: "Slots devem ter no mínimo 7 dias de antecedência" });
+      }
+
+      // Entrevistador só pode criar slots para si mesmo
+      // Admin pode criar para qualquer entrevistador
+      const entrevistador_id = req.user!.userId;
+
+      const [result] = await db.execute(
+        `INSERT INTO slots_entrevista (entrevistador_id, data_hora, duracao_minutos)
+         VALUES (?, ?, ?)`,
+        [entrevistador_id, data_hora, duracao_minutos || 60]
+      ) as any;
+
+      return res.status(201).json({ id: result.insertId, message: "Slot criado com sucesso" });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao criar slot" });
+    }
+  }
+);
+
+// DELETE /api/admin/slots/:id — remove slot (apenas se não ocupado)
+adminRouter.delete(
+  "/slots/:id",
+  requireRole("administrador", "entrevistador", "gestor_n1"),
+  async (req: Request, res: Response) => {
+    const slotId = parseInt(req.params.id);
+    try {
+      const [rows] = await db.execute(
+        "SELECT id, ocupado FROM slots_entrevista WHERE id = ?", [slotId]
+      ) as any;
+
+      if (rows.length === 0) return res.status(404).json({ error: "Slot não encontrado" });
+      if (rows[0].ocupado) return res.status(400).json({ error: "Slot já agendado — não pode ser removido" });
+
+      await db.execute("DELETE FROM slots_entrevista WHERE id = ?", [slotId]);
+      return res.json({ message: "Slot removido com sucesso" });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao remover slot" });
+    }
+  }
+);
