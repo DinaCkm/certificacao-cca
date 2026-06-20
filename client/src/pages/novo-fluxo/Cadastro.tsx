@@ -6,13 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCertification } from "@/contexts/CertificationContext";
-import { AlertCircle, User, Mail, Phone, Building, GraduationCap, Briefcase } from "lucide-react";
+import { AlertCircle, User, Mail, Phone, Building, GraduationCap, Briefcase, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { api, setToken } from "@/lib/api";
 
 interface FormData {
   nome: string;
   cpf: string;
   email: string;
+  senha: string;
   telefone: string;
   dataNascimento: string;
   empresa: string;
@@ -49,6 +51,7 @@ export function Cadastro() {
     nome: "",
     cpf: "",
     email: "",
+    senha: "",
     telefone: "",
     dataNascimento: "",
     empresa: "",
@@ -59,12 +62,10 @@ export function Cadastro() {
   });
 
   const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [enviando, setEnviando] = useState(false);
 
-  // Redirect if no certification selected
   useEffect(() => {
-    if (!processo.certificacaoId) {
-      navigate("/novo-fluxo");
-    }
+    if (!processo.certificacaoId) navigate("/novo-fluxo");
   }, [processo.certificacaoId, navigate]);
 
   const handleChange = (field: keyof FormData, value: string) => {
@@ -80,6 +81,7 @@ export function Cadastro() {
     if (!form.nome.trim()) newErrors.nome = "Nome é obrigatório";
     if (!form.cpf || form.cpf.length < 14) newErrors.cpf = "CPF inválido";
     if (!form.email || !form.email.includes("@")) newErrors.email = "E-mail inválido";
+    if (!form.senha || form.senha.length < 8) newErrors.senha = "Senha deve ter no mínimo 8 caracteres";
     if (!form.telefone || form.telefone.length < 14) newErrors.telefone = "Telefone inválido";
     if (!form.empresa.trim()) newErrors.empresa = "Empresa é obrigatória";
     if (!form.cargo.trim()) newErrors.cargo = "Cargo é obrigatório";
@@ -89,15 +91,64 @@ export function Cadastro() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validate()) {
       toast({ title: "Preencha todos os campos obrigatórios", variant: "destructive" });
       return;
     }
-    localStorage.setItem("anefac_candidato_dados", JSON.stringify(form));
-    atualizarCandidato({ candidatoNome: form.nome, candidatoEmail: form.email, candidatoCPF: form.cpf, candidatoTelefone: form.telefone, candidatoEmpresa: form.empresa, candidatoCargo: form.cargo });
-    atualizarStatus("pagamento_analise");
-    navigate("/novo-fluxo/pagamento-analise");
+
+    setEnviando(true);
+    try {
+      // 1. Registra o candidato no banco
+      const { token, userId } = await api.auth.register({
+        email: form.email,
+        password: form.senha,
+        full_name: form.nome,
+        cpf: form.cpf.replace(/\D/g, ""),
+        phone: form.telefone,
+      });
+
+      // 2. Salva o token de autenticação
+      setToken(token);
+
+      // 3. Atualiza o contexto local (para manter compatibilidade com o fluxo atual)
+      atualizarCandidato({
+        candidatoNome: form.nome,
+        candidatoEmail: form.email,
+        candidatoCPF: form.cpf,
+        candidatoTelefone: form.telefone,
+        candidatoEmpresa: form.empresa,
+        candidatoCargo: form.cargo,
+      });
+      atualizarStatus("pagamento_analise");
+
+      // 4. Salva dados complementares localmente (empresa, cargo, formação)
+      // Estes campos serão migrados para o banco na Fase 3
+      localStorage.setItem("anefac_candidato_dados", JSON.stringify({
+        ...form,
+        userId,
+      }));
+
+      toast({
+        title: "Cadastro realizado com sucesso!",
+        description: "Seus dados foram salvos. Prossiga para o pagamento.",
+      });
+
+      navigate("/novo-fluxo/pagamento-analise");
+    } catch (err: any) {
+      const msg = err.message || "Erro ao realizar cadastro";
+      if (msg.includes("já cadastrado")) {
+        toast({
+          title: "E-mail ou CPF já cadastrado",
+          description: "Tente fazer login ou use outros dados.",
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Erro no cadastro", description: msg, variant: "destructive" });
+      }
+    } finally {
+      setEnviando(false);
+    }
   };
 
   if (!certAtual) return null;
@@ -132,57 +183,36 @@ export function Cadastro() {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
                   <Label htmlFor="nome">Nome completo *</Label>
-                  <Input
-                    id="nome"
-                    value={form.nome}
-                    onChange={(e) => handleChange("nome", e.target.value)}
-                    placeholder="Seu nome completo"
-                    className={errors.nome ? "border-red-400" : ""}
-                  />
+                  <Input id="nome" value={form.nome} onChange={(e) => handleChange("nome", e.target.value)} placeholder="Seu nome completo" className={errors.nome ? "border-red-400" : ""} />
                   {errors.nome && <p className="text-xs text-red-500 mt-1">{errors.nome}</p>}
                 </div>
                 <div>
                   <Label htmlFor="cpf">CPF *</Label>
-                  <Input
-                    id="cpf"
-                    value={form.cpf}
-                    onChange={(e) => handleChange("cpf", e.target.value)}
-                    placeholder="000.000.000-00"
-                    className={errors.cpf ? "border-red-400" : ""}
-                  />
+                  <Input id="cpf" value={form.cpf} onChange={(e) => handleChange("cpf", e.target.value)} placeholder="000.000.000-00" className={errors.cpf ? "border-red-400" : ""} />
                   {errors.cpf && <p className="text-xs text-red-500 mt-1">{errors.cpf}</p>}
                 </div>
                 <div>
                   <Label htmlFor="dataNascimento">Data de nascimento</Label>
-                  <Input
-                    id="dataNascimento"
-                    type="date"
-                    value={form.dataNascimento}
-                    onChange={(e) => handleChange("dataNascimento", e.target.value)}
-                  />
+                  <Input id="dataNascimento" type="date" value={form.dataNascimento} onChange={(e) => handleChange("dataNascimento", e.target.value)} />
                 </div>
                 <div>
                   <Label htmlFor="email">E-mail *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => handleChange("email", e.target.value)}
-                    placeholder="seu@email.com"
-                    className={errors.email ? "border-red-400" : ""}
-                  />
+                  <Input id="email" type="email" value={form.email} onChange={(e) => handleChange("email", e.target.value)} placeholder="seu@email.com" className={errors.email ? "border-red-400" : ""} />
                   {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
                 </div>
                 <div>
                   <Label htmlFor="telefone">Telefone *</Label>
-                  <Input
-                    id="telefone"
-                    value={form.telefone}
-                    onChange={(e) => handleChange("telefone", e.target.value)}
-                    placeholder="(11) 99999-9999"
-                    className={errors.telefone ? "border-red-400" : ""}
-                  />
+                  <Input id="telefone" value={form.telefone} onChange={(e) => handleChange("telefone", e.target.value)} placeholder="(11) 99999-9999" className={errors.telefone ? "border-red-400" : ""} />
                   {errors.telefone && <p className="text-xs text-red-500 mt-1">{errors.telefone}</p>}
+                </div>
+                <div className="sm:col-span-2">
+                  <Label htmlFor="senha">Senha de acesso *</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input id="senha" type="password" value={form.senha} onChange={(e) => handleChange("senha", e.target.value)} placeholder="Mínimo 8 caracteres" className={`pl-9 ${errors.senha ? "border-red-400" : ""}`} />
+                  </div>
+                  {errors.senha && <p className="text-xs text-red-500 mt-1">{errors.senha}</p>}
+                  <p className="text-xs text-muted-foreground mt-1">Você usará esta senha para acompanhar seu processo.</p>
                 </div>
               </div>
             </CardContent>
@@ -198,48 +228,22 @@ export function Cadastro() {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="empresa">Empresa atual *</Label>
-                  <Input
-                    id="empresa"
-                    value={form.empresa}
-                    onChange={(e) => handleChange("empresa", e.target.value)}
-                    placeholder="Nome da empresa"
-                    className={errors.empresa ? "border-red-400" : ""}
-                  />
+                  <Input id="empresa" value={form.empresa} onChange={(e) => handleChange("empresa", e.target.value)} placeholder="Nome da empresa" className={errors.empresa ? "border-red-400" : ""} />
                   {errors.empresa && <p className="text-xs text-red-500 mt-1">{errors.empresa}</p>}
                 </div>
                 <div>
                   <Label htmlFor="cargo">Cargo atual *</Label>
-                  <Input
-                    id="cargo"
-                    value={form.cargo}
-                    onChange={(e) => handleChange("cargo", e.target.value)}
-                    placeholder="Ex: Controller, CFO..."
-                    className={errors.cargo ? "border-red-400" : ""}
-                  />
+                  <Input id="cargo" value={form.cargo} onChange={(e) => handleChange("cargo", e.target.value)} placeholder="Ex: Controller, CFO..." className={errors.cargo ? "border-red-400" : ""} />
                   {errors.cargo && <p className="text-xs text-red-500 mt-1">{errors.cargo}</p>}
                 </div>
                 <div>
                   <Label htmlFor="anosExperiencia">Anos de experiência na área *</Label>
-                  <Input
-                    id="anosExperiencia"
-                    type="number"
-                    min="0"
-                    max="50"
-                    value={form.anosExperiencia}
-                    onChange={(e) => handleChange("anosExperiencia", e.target.value)}
-                    placeholder="Ex: 5"
-                    className={errors.anosExperiencia ? "border-red-400" : ""}
-                  />
+                  <Input id="anosExperiencia" type="number" min="0" max="50" value={form.anosExperiencia} onChange={(e) => handleChange("anosExperiencia", e.target.value)} placeholder="Ex: 5" className={errors.anosExperiencia ? "border-red-400" : ""} />
                   {errors.anosExperiencia && <p className="text-xs text-red-500 mt-1">{errors.anosExperiencia}</p>}
                 </div>
                 <div>
                   <Label htmlFor="linkedin">LinkedIn (opcional)</Label>
-                  <Input
-                    id="linkedin"
-                    value={form.linkedin}
-                    onChange={(e) => handleChange("linkedin", e.target.value)}
-                    placeholder="linkedin.com/in/seuperfil"
-                  />
+                  <Input id="linkedin" value={form.linkedin} onChange={(e) => handleChange("linkedin", e.target.value)} placeholder="linkedin.com/in/seuperfil" />
                 </div>
               </div>
             </CardContent>
@@ -254,13 +258,7 @@ export function Cadastro() {
               </div>
               <div>
                 <Label htmlFor="formacao">Graduação / Pós-graduação *</Label>
-                <Input
-                  id="formacao"
-                  value={form.formacao}
-                  onChange={(e) => handleChange("formacao", e.target.value)}
-                  placeholder="Ex: Ciências Contábeis — Universidade XYZ (2015)"
-                  className={errors.formacao ? "border-red-400" : ""}
-                />
+                <Input id="formacao" value={form.formacao} onChange={(e) => handleChange("formacao", e.target.value)} placeholder="Ex: Ciências Contábeis — Universidade XYZ (2015)" className={errors.formacao ? "border-red-400" : ""} />
                 {errors.formacao && <p className="text-xs text-red-500 mt-1">{errors.formacao}</p>}
               </div>
             </CardContent>
@@ -286,9 +284,7 @@ export function Cadastro() {
           <Card>
             <CardContent className="p-5">
               <h3 className="font-semibold text-foreground mb-3 text-sm">Próxima etapa</h3>
-              <p className="text-xs text-muted-foreground mb-3">
-                Após o cadastro, você realizará o pagamento da taxa de análise documental:
-              </p>
+              <p className="text-xs text-muted-foreground mb-3">Após o cadastro, você realizará o pagamento da taxa de análise documental:</p>
               <ul className="space-y-1.5">
                 {certAtual.documentosExigidos.slice(0, 3).map((doc) => (
                   <li key={doc} className="flex items-start gap-2 text-xs text-muted-foreground">
@@ -297,9 +293,7 @@ export function Cadastro() {
                   </li>
                 ))}
                 {certAtual.documentosExigidos.length > 3 && (
-                  <li className="text-xs text-muted-foreground pl-3">
-                    +{certAtual.documentosExigidos.length - 3} documentos adicionais
-                  </li>
+                  <li className="text-xs text-muted-foreground pl-3">+{certAtual.documentosExigidos.length - 3} documentos adicionais</li>
                 )}
               </ul>
             </CardContent>
@@ -307,20 +301,18 @@ export function Cadastro() {
 
           <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3">
             <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-            <p className="text-xs text-amber-800">
-              Seus dados serão utilizados exclusivamente para o processo de certificação ANEFAC.
-            </p>
+            <p className="text-xs text-amber-800">Seus dados serão utilizados exclusivamente para o processo de certificação ANEFAC e armazenados com segurança.</p>
           </div>
         </div>
       </div>
 
       {/* Footer Actions */}
       <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-border">
-        <Button variant="outline" onClick={() => navigate("/novo-fluxo")}>
+        <Button variant="outline" onClick={() => navigate("/novo-fluxo")} disabled={enviando}>
           Voltar
         </Button>
-        <Button className="bg-blue-900 hover:bg-blue-800 min-w-[200px]" onClick={handleSubmit}>
-          Salvar e continuar →
+        <Button className="bg-blue-900 hover:bg-blue-800 min-w-[200px]" onClick={handleSubmit} disabled={enviando}>
+          {enviando ? "Salvando..." : "Salvar e continuar →"}
         </Button>
       </div>
     </FluxoLayout>
