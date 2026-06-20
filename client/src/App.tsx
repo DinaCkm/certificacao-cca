@@ -52,6 +52,7 @@ import { Simulacao } from "./pages/site/Simulacao";
 import { CertificacaoDetalhe } from "./pages/site/CertificacaoDetalhe";
 import LandingPage from "./pages/LandingPage";
 import { SelecionarCertificacao } from "./pages/novo-fluxo/SelecionarCertificacao";
+import { AreaCandidato } from "./pages/novo-fluxo/AreaCandidato";
 import { Cadastro } from "./pages/novo-fluxo/Cadastro";
 import { UploadDocumentos } from "./pages/novo-fluxo/UploadDocumentos";
 import { PagamentoAnalise } from "./pages/novo-fluxo/PagamentoAnalise";
@@ -129,7 +130,8 @@ function Router() {
       <Route path={"/interview-result"} component={InterviewResult} />
 
       {/* ── Novo Fluxo ANEFAC ─────────────────────────────────────────────── */}
-      <Route path={"/novo-fluxo"} component={SiteHome} />
+      <Route path={"/novo-fluxo"} component={AreaCandidato} />
+      <Route path={"/novo-fluxo/selecionar"} component={SelecionarCertificacao} />
       <Route path={"/novo-fluxo/cadastro"} component={Cadastro} />
       <Route path={"/novo-fluxo/upload-documentos"} component={UploadDocumentos} />
       <Route path={"/novo-fluxo/pagamento-analise"} component={PagamentoAnalise} />
