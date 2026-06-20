@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import { testConnection } from "./db/connection.js";
 import { authRouter } from "./routes/auth.js";
 import { processoRouter } from "./routes/processo.js";
+import { adminRouter } from "./routes/admin.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,6 +33,7 @@ async function startServer() {
   // ── API Routes ──────────────────────────────────────────────────────────────
   app.use("/api/auth", authRouter);
   app.use("/api/processo", processoRouter);
+  app.use("/api/admin", adminRouter);
 
   // Health check
   app.get("/api/health", (_req, res) => {

@@ -95,4 +95,28 @@ export const api = {
   },
 
   health: () => request<{ status: string }>("GET", "/health"),
+
+  admin: {
+    listarUsuarios: () => request<{ usuarios: any[] }>("GET", "/admin/usuarios"),
+    criarUsuario: (body: any) => request<{ id: number; message: string }>("POST", "/admin/usuarios", body),
+    editarUsuario: (id: number, body: any) => request<{ message: string }>("PUT", `/admin/usuarios/${id}`, body),
+    listarRoles: () => request<{ roles: any[] }>("GET", "/admin/roles"),
+  },
+};
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+// Adicionado ao objeto api existente via extensão do módulo
+
+export const adminApi = {
+  listarUsuarios: () =>
+    request<{ usuarios: any[] }>("GET", "/admin/usuarios"),
+
+  criarUsuario: (body: { email: string; senha: string; full_name: string; role_code: string }) =>
+    request<{ id: number; message: string }>("POST", "/admin/usuarios", body),
+
+  editarUsuario: (id: number, body: { full_name?: string; role_code?: string; is_active?: boolean; senha?: string }) =>
+    request<{ message: string }>("PUT", `/admin/usuarios/${id}`, body),
+
+  listarRoles: () =>
+    request<{ roles: any[] }>("GET", "/admin/roles"),
 };
