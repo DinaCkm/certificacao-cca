@@ -261,7 +261,8 @@ adminRouter.delete(
 
 // ── Carrossel de imagens ──────────────────────────────────────────────────────
 
-// GET /api/admin/carrossel — público (para exibir na entrada)
+// GET /api/admin/carrossel/publico — SEM autenticação (exibido na página de entrada)
+// Esta rota é registrada ANTES do middleware requireAuth no server/index.ts
 adminRouter.get("/carrossel/publico", async (_req, res) => {
   try {
     const [rows] = await db.execute(

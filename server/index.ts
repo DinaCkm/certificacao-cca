@@ -34,6 +34,20 @@ async function startServer() {
   // ── API Routes ──────────────────────────────────────────────────────────────
   app.use("/api/auth", authRouter);
   app.use("/api/processo", processoRouter);
+
+  // Rota pública do carrossel — sem autenticação
+  app.get("/api/admin/carrossel/publico", async (_req, res) => {
+    try {
+      const { db } = await import("./db/connection.js");
+      const [rows] = await db.execute(
+        "SELECT id, titulo, subtitulo, url_imagem, ordem FROM carrossel_imagens WHERE ativo = TRUE ORDER BY ordem ASC LIMIT 5"
+      ) as any;
+      return res.json({ imagens: rows });
+    } catch (err) {
+      return res.json({ imagens: [] });
+    }
+  });
+
   app.use("/api/admin", adminRouter);
 
   // Health check
