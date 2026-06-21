@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCertification } from "@/contexts/CertificationContext";
-import { AlertCircle, User, Mail, Phone, Building, GraduationCap, Briefcase, Lock } from "lucide-react";
+import { AlertCircle, User, Mail, Phone, Building, GraduationCap, Briefcase, Lock, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { api, setToken } from "@/lib/api";
 
@@ -22,6 +22,7 @@ interface FormData {
   formacao: string;
   anosExperiencia: string;
   linkedin: string;
+  confirmarSenha: string;
 }
 
 function formatCPF(value: string) {
@@ -61,10 +62,15 @@ export function Cadastro() {
     formacao: "",
     anosExperiencia: "",
     linkedin: "",
+    confirmarSenha: "",
   });
 
   const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [mostrarConfirmar, setMostrarConfirmar] = useState(false);
   const [enviando, setEnviando] = useState(false);
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [mostrarConfirmar, setMostrarConfirmar] = useState(false);
 
   useEffect(() => {
     if (!processo.certificacaoId) navigate("/novo-fluxo");
@@ -84,6 +90,10 @@ export function Cadastro() {
     if (!form.cpf || form.cpf.length < 14) newErrors.cpf = "CPF inválido";
     if (!form.email || !form.email.includes("@")) newErrors.email = "E-mail inválido";
     if (!form.senha || form.senha.length < 8) newErrors.senha = "Senha deve ter no mínimo 8 caracteres";
+    if (!form.confirmarSenha) newErrors.confirmarSenha = "Confirme sua senha";
+    else if (form.senha !== form.confirmarSenha) newErrors.confirmarSenha = "As senhas não coincidem";
+    if (!form.confirmarSenha) newErrors.confirmarSenha = "Confirme sua senha";
+    else if (form.senha !== form.confirmarSenha) newErrors.confirmarSenha = "As senhas não conferem";
     if (!form.telefone || form.telefone.length < 14) newErrors.telefone = "Telefone inválido";
     if (!form.empresa.trim()) newErrors.empresa = "Empresa é obrigatória";
     if (!form.cargo.trim()) newErrors.cargo = "Cargo é obrigatório";
@@ -210,13 +220,27 @@ export function Cadastro() {
                   <Input id="telefone" value={form.telefone} onChange={(e) => handleChange("telefone", e.target.value)} placeholder="(11) 99999-9999" className={errors.telefone ? "border-red-400" : ""} />
                   {errors.telefone && <p className="text-xs text-red-500 mt-1">{errors.telefone}</p>}
                 </div>
-                <div className="sm:col-span-2">
+                <div>
                   <Label htmlFor="senha">Senha de acesso *</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input id="senha" type="password" value={form.senha} onChange={(e) => handleChange("senha", e.target.value)} placeholder="Mínimo 8 caracteres" className={`pl-9 ${errors.senha ? "border-red-400" : ""}`} />
+                    <Input id="senha" type={mostrarSenha ? "text" : "password"} value={form.senha} onChange={(e) => handleChange("senha", e.target.value)} placeholder="Mínimo 8 caracteres" className={`pl-9 pr-10 ${errors.senha ? "border-red-400" : ""}`} />
+                    <button type="button" onClick={() => setMostrarSenha(!mostrarSenha)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {mostrarSenha ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
                   {errors.senha && <p className="text-xs text-red-500 mt-1">{errors.senha}</p>}
+                </div>
+                <div>
+                  <Label htmlFor="confirmarSenha">Confirmar senha *</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input id="confirmarSenha" type={mostrarConfirmar ? "text" : "password"} value={form.confirmarSenha} onChange={(e) => handleChange("confirmarSenha", e.target.value)} placeholder="Repita a senha" className={`pl-9 pr-10 ${errors.confirmarSenha ? "border-red-400" : ""}`} />
+                    <button type="button" onClick={() => setMostrarConfirmar(!mostrarConfirmar)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {mostrarConfirmar ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {errors.confirmarSenha && <p className="text-xs text-red-500 mt-1">{errors.confirmarSenha}</p>}
                   <p className="text-xs text-muted-foreground mt-1">Você usará esta senha para acompanhar seu processo.</p>
                 </div>
               </div>

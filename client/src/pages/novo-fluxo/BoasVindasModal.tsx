@@ -26,6 +26,7 @@ export function BoasVindasModal({ open, onClose, onSuccess }: BoasVindasModalPro
   const [cpf, setCpf] = useState("");
   const [senha, setSenha] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [confirmarSenha, setConfirmarSenha] = useState("");
   const [verificando, setVerificando] = useState(false);
   const [erro, setErro] = useState("");
 
@@ -37,6 +38,7 @@ export function BoasVindasModal({ open, onClose, onSuccess }: BoasVindasModalPro
     if (!email || !email.includes("@")) { setErro("Por favor, informe um e-mail válido."); return; }
     if (cpf.replace(/\D/g, "").length !== 11) { setErro("Por favor, informe um CPF válido."); return; }
     if (!senha || senha.length < 8) { setErro("A senha deve ter no mínimo 8 caracteres."); return; }
+    if (senha !== confirmarSenha) { setErro("As senhas não conferem."); return; }
 
     setVerificando(true);
     try {
@@ -127,6 +129,18 @@ export function BoasVindasModal({ open, onClose, onSuccess }: BoasVindasModalPro
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                 {mostrarSenha ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
+            </div>
+          </div>
+          <div>
+            <Label>Confirmar senha</Label>
+            <div className="relative">
+              <Input
+                type={mostrarSenha ? "text" : "password"}
+                value={confirmarSenha}
+                onChange={e => { setConfirmarSenha(e.target.value); setErro(""); }}
+                placeholder="Repita a senha"
+                className="pr-10"
+              />
             </div>
             <p className="text-xs text-gray-400 mt-1">Você usará esta senha para acompanhar seu processo.</p>
           </div>
