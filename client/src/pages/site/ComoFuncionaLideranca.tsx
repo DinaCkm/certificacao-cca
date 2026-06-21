@@ -86,12 +86,20 @@ const NIVEIS = [
 export function ComoFuncionaLideranca() {
   return (
     <div className="min-h-screen" style={{ background: "linear-gradient(180deg, #050a28 0%, #0a1f5e 45%, #1565c0 75%, #1976d2 100%)" }}>
+
+      {/* Grid decorativo */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <svg className="w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
+          <defs><pattern id="grid2" width="60" height="60" patternUnits="userSpaceOnUse"><path d="M 60 0 L 0 0 0 60" fill="none" stroke="#4fc3f7" strokeWidth="0.5"/></pattern></defs>
+          <rect width="100%" height="100%" fill="url(#grid2)" />
+        </svg>
+      </div>
       
 
       {/* Header */}
       <div className="pt-8" style={{ background: "linear-gradient(135deg, #1a3a2a 0%, #2d6a4f 100%)" }}>
         <div className="max-w-4xl mx-auto px-6 py-16 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 text-green-200 text-sm font-semibold px-4 py-2 rounded-full mb-6">
+          <div className="inline-flex items-center gap-2 /10 text-green-200 text-sm font-semibold px-4 py-2 rounded-full mb-6">
             <Award className="w-4 h-4" />
             Certificação de Liderança EcodoBem
           </div>
@@ -122,7 +130,7 @@ export function ComoFuncionaLideranca() {
         </div>
 
         {/* Steps */}
-        <h2 className="text-2xl font-black text-gray-900 mb-8">Fluxo obrigatório para todos os níveis</h2>
+        <h2 className="text-2xl font-black text-white mb-8">Fluxo obrigatório para todos os níveis</h2>
         <div className="relative">
           <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gray-200 hidden md:block" />
           <div className="space-y-8">
@@ -133,7 +141,7 @@ export function ComoFuncionaLideranca() {
                   <div className={`relative z-10 w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 ${etapa.cor} shadow-sm`}>
                     <Icon className="w-7 h-7" />
                   </div>
-                  <div className={`flex-1 bg-white rounded-2xl p-6 shadow-sm border ${etapa.destaque ? "border-green-200" : "border-gray-100"}`}>
+                  <div className={`flex-1 bg-white rounded-2xl p-6 shadow-sm border ${etapa.destaque ? "border-green-200" : "border-white/10"}`}>
                     <div className="flex items-center gap-3 mb-2">
                       <span className="text-xs font-bold text-blue-400 tracking-widest">ETAPA {etapa.numero}</span>
                       {etapa.destaque && (
@@ -142,7 +150,7 @@ export function ComoFuncionaLideranca() {
                         </span>
                       )}
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">{etapa.titulo}</h3>
+                    <h3 className="text-lg font-bold text-white mb-2">{etapa.titulo}</h3>
                     <p className="text-blue-200 text-sm leading-relaxed">{etapa.descricao}</p>
                     {etapa.nota && (
                       <div className="mt-3 flex items-center gap-2 bg-green-50 border border-green-100 rounded-lg px-3 py-2">
@@ -158,8 +166,8 @@ export function ComoFuncionaLideranca() {
         </div>
 
         {/* Investimento */}
-        <div className="mt-16 bg-white rounded-2xl border border-white/10" style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(8px)" }} className=" overflow-hidden">
-          <div className="px-8 py-6 border-b border-gray-100 flex items-center gap-3">
+        <div className="mt-16  rounded-2xl border border-white/10" style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(8px)" }} className=" overflow-hidden">
+          <div className="px-8 py-6 border-b border-white/10 flex items-center gap-3">
             <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
               <DollarSign className="w-5 h-5 text-green-700" />
             </div>
@@ -196,7 +204,7 @@ export function ComoFuncionaLideranca() {
                 "Acompanhamento da evolução",
                 "Preparação para a prova final de certificação",
               ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2 text-sm text-gray-700">
+                <div key={i} className="flex items-center gap-2 text-sm text-blue-200">
                   <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
                   {item}
                 </div>
@@ -207,7 +215,7 @@ export function ComoFuncionaLideranca() {
 
         {/* Níveis */}
         <div className="mt-16">
-          <h2 className="text-2xl font-black text-gray-900 mb-2">Os 4 Níveis da Certificação</h2>
+          <h2 className="text-2xl font-black text-white mb-2">Os 4 Níveis da Certificação</h2>
           <p className="text-blue-300 text-sm mb-8">O nível de ingresso é definido pela entrevista diagnóstica com base no seu perfil profissional.</p>
           <div className="grid sm:grid-cols-2 gap-4">
             {NIVEIS.map((n, i) => (
@@ -220,7 +228,7 @@ export function ComoFuncionaLideranca() {
                   <p className="text-xs text-blue-300 mb-3 leading-relaxed">{n.publico}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {n.competencias.map((c, j) => (
-                      <span key={j} className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">{c}</span>
+                      <span key={j} className="text-xs bg-gray-100 text-blue-200 px-2 py-0.5 rounded-full">{c}</span>
                     ))}
                   </div>
                 </div>
@@ -232,7 +240,7 @@ export function ComoFuncionaLideranca() {
         {/* Botões de navegação */}
         <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/novo-fluxo/certificacoes">
-            <a className="inline-flex items-center gap-2 border-2 border-gray-200 text-gray-700 font-semibold px-8 py-4 rounded-xl hover:border-green-400 hover:text-green-700 transition-all text-base">
+            <a className="inline-flex items-center gap-2 border-2 border-white/10 text-blue-200 font-semibold px-8 py-4 rounded-xl hover:border-green-400 hover:text-green-700 transition-all text-base">
               <ArrowLeft className="w-5 h-5" />
               Voltar para Certificações
             </a>
