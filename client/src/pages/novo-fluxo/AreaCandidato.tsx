@@ -5,17 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCertification } from "@/contexts/CertificationContext";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { BoasVindasModal } from "@/pages/novo-fluxo/BoasVindasModal";
 import {
   Award, LogIn, ChevronRight, BookOpen, CheckCircle,
   Clock, FileText, CreditCard, Users, X, AlertCircle,
-  ChevronLeft, ChevronRight as ChevronRightIcon
+  ChevronLeft
 } from "lucide-react";
 
-// ── Status labels ─────────────────────────────────────────────────────────────
 const STATUS_LABEL: Record<string, { label: string; cor: string; icone: React.ReactNode }> = {
   cadastro:    { label: "Cadastro em andamento",     cor: "text-blue-700 bg-blue-50 border-blue-200",      icone: <Users className="w-4 h-4" /> },
   pagamento1:  { label: "Aguardando Pagamento 1",    cor: "text-orange-700 bg-orange-50 border-orange-200", icone: <CreditCard className="w-4 h-4" /> },
@@ -38,7 +36,6 @@ const STATUS_ROTA: Record<string, string> = {
   emissao: "/novo-fluxo/emissao-certificado", concluido: "/novo-fluxo/emissao-certificado",
 };
 
-// ── Carrossel ─────────────────────────────────────────────────────────────────
 interface CarrosselImagem { id: number; titulo: string; subtitulo: string; url_imagem: string; }
 
 function Carrossel({ imagens }: { imagens: CarrosselImagem[] }) {
@@ -51,54 +48,47 @@ function Carrossel({ imagens }: { imagens: CarrosselImagem[] }) {
     return () => clearInterval(timerRef.current);
   }, [imagens.length]);
 
-  const ir = (idx: number) => {
-    clearInterval(timerRef.current);
-    setAtual(idx);
-  };
+  const ir = (idx: number) => { clearInterval(timerRef.current); setAtual(idx); };
 
   if (imagens.length === 0) {
-    // Placeholder quando não há imagens
     return (
-      <div className="relative w-full h-64 sm:h-80 bg-gradient-to-br from-blue-900 to-blue-700 rounded-2xl overflow-hidden flex items-center justify-center">
-        <div className="text-center text-white/60">
-          <Award className="w-16 h-16 mx-auto mb-3 opacity-40" />
-          <p className="text-sm">Profissionais de sucesso ANEFAC</p>
+      <div className="relative w-full h-full flex items-center justify-center">
+        <div className="text-center text-white/30">
+          <Award className="w-24 h-24 mx-auto mb-4 opacity-20" />
+          <p className="text-sm opacity-40">Profissionais de sucesso ANEFAC</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-64 sm:h-80 rounded-2xl overflow-hidden shadow-xl">
+    <div className="relative w-full h-full">
       {imagens.map((img, idx) => (
-        <div key={img.id}
-          className={`absolute inset-0 transition-opacity duration-700 ${idx === atual ? "opacity-100" : "opacity-0"}`}>
+        <div key={img.id} className={`absolute inset-0 transition-opacity duration-1000 ${idx === atual ? "opacity-100" : "opacity-0"}`}>
           <img src={img.url_imagem} alt={img.titulo || ""} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(5,10,40,0.85) 0%, rgba(5,10,40,0.4) 50%, rgba(5,10,40,0.1) 100%)" }} />
           {(img.titulo || img.subtitulo) && (
-            <div className="absolute bottom-4 left-4 right-4 text-white">
-              {img.titulo && <p className="font-bold text-lg leading-tight drop-shadow">{img.titulo}</p>}
-              {img.subtitulo && <p className="text-sm text-white/80 mt-0.5 drop-shadow">{img.subtitulo}</p>}
+            <div className="absolute bottom-8 left-8 right-1/2 text-white">
+              {img.titulo && <p className="font-bold text-2xl leading-tight drop-shadow-lg">{img.titulo}</p>}
+              {img.subtitulo && <p className="text-sm text-white/80 mt-1 drop-shadow">{img.subtitulo}</p>}
             </div>
           )}
         </div>
       ))}
-
-      {/* Controles */}
       {imagens.length > 1 && (
         <>
           <button onClick={() => ir((atual - 1 + imagens.length) % imagens.length)}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 hover:bg-black/60 text-white rounded-full flex items-center justify-center transition-colors">
-            <ChevronLeft className="w-4 h-4" />
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/10 hover:bg-white/25 backdrop-blur-sm text-white rounded-full flex items-center justify-center transition-all border border-white/20">
+            <ChevronLeft className="w-5 h-5" />
           </button>
           <button onClick={() => ir((atual + 1) % imagens.length)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 hover:bg-black/60 text-white rounded-full flex items-center justify-center transition-colors">
-            <ChevronRightIcon className="w-4 h-4" />
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/10 hover:bg-white/25 backdrop-blur-sm text-white rounded-full flex items-center justify-center transition-all border border-white/20">
+            <ChevronRight className="w-5 h-5" />
           </button>
-          <div className="absolute bottom-2 right-4 flex gap-1.5">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
             {imagens.map((_, idx) => (
               <button key={idx} onClick={() => ir(idx)}
-                className={`w-2 h-2 rounded-full transition-all ${idx === atual ? "bg-white scale-125" : "bg-white/50"}`} />
+                className={`transition-all rounded-full ${idx === atual ? "w-6 h-2 bg-white" : "w-2 h-2 bg-white/40"}`} />
             ))}
           </div>
         </>
@@ -107,25 +97,18 @@ function Carrossel({ imagens }: { imagens: CarrosselImagem[] }) {
   );
 }
 
-// ── Recuperar senha ───────────────────────────────────────────────────────────
 function RecuperarSenhaModal({ onClose }: { onClose: () => void }) {
   const { toast } = useToast();
-  const [email, setEmail] = useState("");
-  const [enviado, setEnviado] = useState(false);
-  const [carregando, setCarregando] = useState(false);
-
+  const [email, setEmail] = useState(""); const [enviado, setEnviado] = useState(false); const [carregando, setCarregando] = useState(false);
   const handleEnviar = async () => {
     if (!email.includes("@")) { toast({ title: "Informe um e-mail válido", variant: "destructive" }); return; }
     setCarregando(true);
-    try {
-      await fetch("/api/auth/recuperar-senha", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) });
-      setEnviado(true);
-    } catch { toast({ title: "Erro ao enviar. Tente novamente.", variant: "destructive" }); }
+    try { await fetch("/api/auth/recuperar-senha", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) }); setEnviado(true); }
+    catch { toast({ title: "Erro ao enviar. Tente novamente.", variant: "destructive" }); }
     finally { setCarregando(false); }
   };
-
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <Card className="w-full max-w-md shadow-2xl">
         <CardContent className="p-8">
           {enviado ? (
@@ -133,7 +116,7 @@ function RecuperarSenhaModal({ onClose }: { onClose: () => void }) {
               <CheckCircle className="w-14 h-14 text-green-500 mx-auto mb-4" />
               <h2 className="text-lg font-bold mb-2">E-mail enviado!</h2>
               <p className="text-sm text-gray-500 mb-6">Se este e-mail estiver cadastrado, você receberá as instruções em breve.</p>
-              <Button className="w-full bg-blue-900 hover:bg-blue-800" onClick={onClose}>Voltar ao login</Button>
+              <Button className="w-full" style={{ background: "#0a1f5e" }} onClick={onClose}>Voltar ao login</Button>
             </div>
           ) : (
             <>
@@ -143,13 +126,8 @@ function RecuperarSenhaModal({ onClose }: { onClose: () => void }) {
               </div>
               <p className="text-sm text-gray-500 mb-5">Informe o e-mail cadastrado e enviaremos um link para redefinir sua senha.</p>
               <div className="space-y-4">
-                <div>
-                  <Label>E-mail</Label>
-                  <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" onKeyDown={e => e.key === "Enter" && handleEnviar()} />
-                </div>
-                <Button className="w-full bg-blue-900 hover:bg-blue-800" onClick={handleEnviar} disabled={carregando}>
-                  {carregando ? "Enviando..." : "Enviar link de recuperação"}
-                </Button>
+                <div><Label>E-mail</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" onKeyDown={e => e.key === "Enter" && handleEnviar()} /></div>
+                <Button className="w-full" style={{ background: "#0a1f5e" }} onClick={handleEnviar} disabled={carregando}>{carregando ? "Enviando..." : "Enviar link de recuperação"}</Button>
                 <Button variant="outline" className="w-full" onClick={onClose}>Voltar</Button>
               </div>
             </>
@@ -160,75 +138,70 @@ function RecuperarSenhaModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ── Login Modal ───────────────────────────────────────────────────────────────
 function LoginModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (p: any) => void }) {
-  const { login } = useAuth();
-  const { toast } = useToast();
+  const { login } = useAuth(); const { toast } = useToast();
   const [email, setEmail] = useState(""); const [senha, setSenha] = useState("");
   const [carregando, setCarregando] = useState(false); const [erro, setErro] = useState("");
   const [recuperandoSenha, setRecuperandoSenha] = useState(false);
-
   const handleLogin = async () => {
-    setErro("");
-    if (!email || !senha) { setErro("Preencha e-mail e senha."); return; }
+    setErro(""); if (!email || !senha) { setErro("Preencha e-mail e senha."); return; }
     setCarregando(true);
     try {
       await login(email, senha);
       const { processo } = await (api.processo as any).retomar();
-      toast({ title: processo ? `Bem-vindo de volta!` : "Login realizado!" });
       onSuccess(processo);
     } catch (err: any) { setErro(err.message || "E-mail ou senha incorretos."); }
     finally { setCarregando(false); }
   };
-
   if (recuperandoSenha) return <RecuperarSenhaModal onClose={() => setRecuperandoSenha(false)} />;
-
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md shadow-2xl">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-md shadow-2xl border-0 overflow-hidden">
+        <div className="h-2 w-full" style={{ background: "linear-gradient(to right, #0a1f5e, #1a4a9e, #0099cc)" }} />
         <CardContent className="p-8">
           <div className="flex items-center justify-between mb-6">
-            <div><h2 className="text-lg font-bold">Área do Candidato</h2><p className="text-sm text-gray-500">Entre para continuar seu processo</p></div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Área do Candidato</h2>
+              <p className="text-sm text-gray-500">Entre para continuar seu processo</p>
+            </div>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
           </div>
           {erro && <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg p-3 mb-4"><AlertCircle className="w-4 h-4 text-red-500 shrink-0" /><p className="text-sm text-red-700">{erro}</p></div>}
           <div className="space-y-4">
             <div><Label>E-mail</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" onKeyDown={e => e.key === "Enter" && handleLogin()} /></div>
             <div><Label>Senha</Label><Input type="password" value={senha} onChange={e => setSenha(e.target.value)} placeholder="••••••••" onKeyDown={e => e.key === "Enter" && handleLogin()} /></div>
-            <Button className="w-full bg-blue-900 hover:bg-blue-800" onClick={handleLogin} disabled={carregando}>
+            <Button className="w-full" style={{ background: "linear-gradient(to right, #0a1f5e, #1a4a9e)" }} onClick={handleLogin} disabled={carregando}>
               {carregando ? "Entrando..." : <><LogIn className="w-4 h-4 mr-2" />Entrar</>}
             </Button>
           </div>
-          <button onClick={() => setRecuperandoSenha(true)} className="w-full text-xs text-center text-blue-600 hover:underline mt-3 block">Esqueci minha senha</button>
-          <p className="text-xs text-center text-gray-400 mt-2">Ainda não tem cadastro? <button onClick={onClose} className="text-blue-700 underline">Inicie sua certificação</button></p>
+          <button onClick={() => setRecuperandoSenha(true)} className="w-full text-xs text-center mt-3 block" style={{ color: "#1a4a9e" }}>Esqueci minha senha</button>
+          <p className="text-xs text-center text-gray-400 mt-2">Ainda não tem cadastro? <button onClick={onClose} className="underline" style={{ color: "#1a4a9e" }}>Inicie sua certificação</button></p>
         </CardContent>
       </Card>
     </div>
   );
 }
 
-// ── Painel do candidato ───────────────────────────────────────────────────────
 function PainelCandidato({ processo, onNovaCertificacao }: { processo: any; onNovaCertificacao: () => void }) {
-  const [, navigate] = useLocation();
-  const { logout } = useAuth();
+  const [, navigate] = useLocation(); const { logout } = useAuth();
   const statusInfo = STATUS_LABEL[processo.statusGeral] || STATUS_LABEL["cadastro"];
   const rota = STATUS_ROTA[processo.statusGeral];
   const etapas = ["cadastro","pagamento1","upload","validacao","entrevista","pagamento2","concluido"];
   const etapasLabel = ["Cadastro","Pagamento 1","Documentos","Validação","Entrevista","Pagamento 2","Certificado"];
   const atualIdx = etapas.indexOf(processo.statusGeral);
-
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "linear-gradient(180deg, #050a28 0%, #0a1f5e 40%, #1a4a9e 100%)" }}>
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-blue-900 rounded-2xl flex items-center justify-center mx-auto mb-4"><Award className="w-8 h-8 text-white" /></div>
-          <h1 className="text-2xl font-bold text-gray-900">Olá, {processo.candidatoNome?.split(" ")[0]}!</h1>
-          <p className="text-gray-500 mt-1">Bem-vindo à sua área de candidato</p>
+          <img src="/logo-anefac.png" alt="ANEFAC" className="h-14 mx-auto mb-4 drop-shadow-lg" onError={e => { (e.target as any).style.display='none'; }} />
+          <h1 className="text-2xl font-bold text-white">Olá, {processo.candidatoNome?.split(" ")[0]}!</h1>
+          <p className="text-blue-300 mt-1 text-sm">Bem-vindo à sua área de candidato</p>
         </div>
-        <Card className="mb-4 shadow-sm">
+        <Card className="mb-4 shadow-2xl border-0 overflow-hidden">
+          <div className="h-1 w-full" style={{ background: "linear-gradient(to right, #0a1f5e, #1a4a9e, #0099cc)" }} />
           <CardContent className="p-6">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Seu processo ativo</p>
-            <p className="font-bold text-gray-900 text-lg mb-1">{processo.certificacaoNome}</p>
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Seu processo ativo</p>
+            <p className="font-bold text-gray-900 text-lg">{processo.certificacaoNome}</p>
             <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border mt-2 mb-5 ${statusInfo.cor}`}>
               {statusInfo.icone}{statusInfo.label}
             </div>
@@ -237,17 +210,19 @@ function PainelCandidato({ processo, onNovaCertificacao }: { processo: any; onNo
                 const concluida = idx < atualIdx; const ativa = idx === atualIdx;
                 return (
                   <div key={idx} className="flex items-center gap-3">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${concluida ? "bg-green-500 text-white" : ativa ? "bg-blue-900 text-white" : "bg-gray-200 text-gray-500"}`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${concluida ? "text-white" : ativa ? "text-white" : "bg-gray-200 text-gray-500"}`}
+                      style={concluida ? { background: "#1a4a9e" } : ativa ? { background: "linear-gradient(135deg, #0a1f5e, #1a4a9e)" } : {}}>
                       {concluida ? "✓" : idx + 1}
                     </div>
-                    <span className={`text-sm ${ativa ? "font-semibold text-blue-900" : concluida ? "text-gray-400 line-through" : "text-gray-400"}`}>{etapasLabel[idx]}</span>
-                    {ativa && <span className="text-xs text-blue-600 font-medium">← você está aqui</span>}
+                    <span className={`text-sm ${ativa ? "font-semibold" : concluida ? "text-gray-400 line-through" : "text-gray-400"}`}
+                      style={ativa ? { color: "#0a1f5e" } : {}}>{etapasLabel[idx]}</span>
+                    {ativa && <span className="text-xs font-medium" style={{ color: "#1a4a9e" }}>← você está aqui</span>}
                   </div>
                 );
               })}
             </div>
             {rota ? (
-              <Button className="w-full bg-blue-900 hover:bg-blue-800" size="lg" onClick={() => navigate(rota)}>
+              <Button className="w-full text-white" size="lg" style={{ background: "linear-gradient(to right, #0a1f5e, #1a4a9e)" }} onClick={() => navigate(rota)}>
                 Continuar processo <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             ) : (
@@ -255,13 +230,12 @@ function PainelCandidato({ processo, onNovaCertificacao }: { processo: any; onNo
             )}
           </CardContent>
         </Card>
-        <button onClick={() => { logout(); onNovaCertificacao(); }} className="w-full text-sm text-gray-400 hover:text-gray-600 py-2">Sair da conta</button>
+        <button onClick={() => { logout(); onNovaCertificacao(); }} className="w-full text-sm text-blue-300 hover:text-white py-2 transition-colors">Sair da conta</button>
       </div>
     </div>
   );
 }
 
-// ── Componente principal ──────────────────────────────────────────────────────
 export function AreaCandidato() {
   const [, navigate] = useLocation();
   const { isAuthenticated } = useAuth();
@@ -270,20 +244,13 @@ export function AreaCandidato() {
   const [processoAtivo, setProcessoAtivo] = useState<any>(null);
   const [imagens, setImagens] = useState<CarrosselImagem[]>([]);
 
-  // Carrega imagens do carrossel
   useEffect(() => {
-    fetch("/api/admin/carrossel/publico")
-      .then(r => r.json())
-      .then(d => setImagens(d.imagens || []))
-      .catch(() => {});
+    fetch("/api/admin/carrossel/publico").then(r => r.json()).then(d => setImagens(d.imagens || [])).catch(() => {});
   }, []);
 
-  // Se autenticado, tenta retomar processo
   useEffect(() => {
     if (isAuthenticated) {
-      (api.processo as any).retomar().then((res: any) => {
-        if (res?.processo) setProcessoAtivo(res.processo);
-      }).catch(() => {});
+      (api.processo as any).retomar().then((res: any) => { if (res?.processo) setProcessoAtivo(res.processo); }).catch(() => {});
     }
   }, [isAuthenticated]);
 
@@ -292,82 +259,119 @@ export function AreaCandidato() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg">
+    <div className="min-h-screen flex flex-col" style={{ background: "linear-gradient(180deg, #050a28 0%, #0a1f5e 45%, #1565c0 75%, #1976d2 100%)" }}>
 
-        {/* Logo */}
-        <div className="text-center mb-6">
-          <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-xl">
-            <span className="text-blue-900 font-black text-3xl">A</span>
-          </div>
-          <h1 className="text-3xl font-black text-white tracking-tight">ANEFAC</h1>
-          <p className="text-blue-300 text-sm mt-1">Plataforma de Certificação Profissional</p>
-        </div>
+      {/* Rede de partículas decorativa */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <svg className="w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+              <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#4fc3f7" strokeWidth="0.5"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid)" />
+        </svg>
+      </div>
 
-        {/* Carrossel */}
-        <div className="mb-6">
+      <div className="relative z-10 flex flex-col min-h-screen">
+
+        {/* BANNER — carrossel full width */}
+        <div className="relative w-full" style={{ height: "420px" }}>
           <Carrossel imagens={imagens} />
+
+          {/* Overlay gradiente bottom */}
+          <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none"
+            style={{ background: "linear-gradient(to bottom, transparent, #0a1f5e)" }} />
+
+          {/* Logo sobreposto ao banner */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl px-8 py-5 text-center border border-white/20 shadow-2xl">
+              <img src="/logo-anefac.png" alt="ANEFAC" className="h-16 mx-auto mb-2 drop-shadow-xl"
+                onError={e => {
+                  const el = e.target as HTMLImageElement;
+                  el.style.display = "none";
+                  el.parentElement!.insertAdjacentHTML("afterbegin", '<span style="font-size:2.5rem;font-weight:900;color:white;letter-spacing:0.15em">ANEFAC</span>');
+                }} />
+              <p className="text-white/80 text-sm font-medium tracking-widest uppercase">Plataforma de Certificação Profissional</p>
+            </div>
+          </div>
         </div>
 
-        {/* Cards de ação */}
-        <div className="space-y-3 mb-4">
+        {/* 3 CARDS HORIZONTAIS */}
+        <div className="relative flex-1 px-4 py-8">
+          <div className="max-w-5xl mx-auto">
 
-          {/* Quero conhecer as certificações */}
-          <Card className="border-0 shadow-xl hover:shadow-2xl transition-all cursor-pointer group"
-            onClick={() => setBoasVindasAberto(true)}>
-            <CardContent className="p-5">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-blue-200 transition-colors">
-                  <Award className="w-6 h-6 text-blue-700" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-bold text-gray-900">Quero conhecer as Certificações ANEFAC</p>
-                  <p className="text-sm text-gray-500 mt-0.5">Iniciar meu processo de certificação profissional</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-700 transition-colors" />
-              </div>
-            </CardContent>
-          </Card>
+            <p className="text-center text-white/60 text-sm mb-6 tracking-wide uppercase font-medium">
+              Como você deseja prosseguir?
+            </p>
 
-          {/* Já tenho cadastro */}
-          <Card className="border-2 border-blue-400 shadow-xl cursor-pointer group bg-blue-900 hover:bg-blue-800 transition-colors"
-            onClick={() => setModalAberto(true)}>
-            <CardContent className="p-5">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-700 rounded-xl flex items-center justify-center shrink-0">
-                  <LogIn className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-bold text-white">Já tenho cadastro</p>
-                  <p className="text-sm text-blue-300 mt-0.5">Continuar meu processo de certificação</p>
-                </div>
-                <ChevronRight className="w-5 h-5 text-blue-400" />
-              </div>
-            </CardContent>
-          </Card>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-          {/* Cursos ANEFAC */}
-          <Card className="border-0 shadow-xl hover:shadow-2xl transition-all cursor-pointer group bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800"
-            onClick={() => navigate("/cursos")}>
-            <CardContent className="p-5">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
-                  <BookOpen className="w-6 h-6 text-white" />
+              {/* Card 1 — Quero me certificar */}
+              <button onClick={() => setBoasVindasAberto(true)}
+                className="group relative overflow-hidden rounded-2xl p-6 text-left transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-white/20"
+                style={{ background: "linear-gradient(135deg, #6B3FA0 0%, #4a2575 100%)" }}>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: "linear-gradient(135deg, #7d50b8 0%, #5a2e8a 100%)" }} />
+                <div className="relative z-10">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-4 group-hover:bg-white/30 transition-colors">
+                    <Award className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="font-bold text-white text-lg mb-2 leading-tight">Quero conhecer as Certificações ANEFAC</h3>
+                  <p className="text-purple-200 text-sm">Inicie seu processo de certificação profissional</p>
+                  <div className="mt-4 flex items-center text-white/70 text-xs font-medium">
+                    Começar agora <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="font-bold text-white">Prepare-se com os Cursos ANEFAC</p>
-                  <p className="text-sm text-emerald-100 mt-0.5">Acesse nossa plataforma de desenvolvimento profissional</p>
+              </button>
+
+              {/* Card 2 — Já tenho cadastro */}
+              <button onClick={() => setModalAberto(true)}
+                className="group relative overflow-hidden rounded-2xl p-6 text-left transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-white/20"
+                style={{ background: "linear-gradient(135deg, #8B2020 0%, #5c1414 100%)" }}>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: "linear-gradient(135deg, #a02828 0%, #6e1818 100%)" }} />
+                <div className="relative z-10">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-4 group-hover:bg-white/30 transition-colors">
+                    <LogIn className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="font-bold text-white text-lg mb-2 leading-tight">Já tenho cadastro</h3>
+                  <p className="text-red-200 text-sm">Continue seu processo de certificação de onde parou</p>
+                  <div className="mt-4 flex items-center text-white/70 text-xs font-medium">
+                    Fazer login <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                  </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-white/60 group-hover:text-white transition-colors" />
-              </div>
-            </CardContent>
-          </Card>
+              </button>
+
+              {/* Card 3 — Cursos ANEFAC */}
+              <button onClick={() => navigate("/cursos")}
+                className="group relative overflow-hidden rounded-2xl p-6 text-left transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-white/20"
+                style={{ background: "linear-gradient(135deg, #1B7A6B 0%, #0f4d43 100%)" }}>
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: "linear-gradient(135deg, #219080 0%, #125c51 100%)" }} />
+                <div className="relative z-10">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center mb-4 group-hover:bg-white/30 transition-colors">
+                    <BookOpen className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="font-bold text-white text-lg mb-2 leading-tight">Prepare-se com os Cursos ANEFAC</h3>
+                  <p className="text-emerald-200 text-sm">Acesse nossa plataforma de desenvolvimento profissional</p>
+                  <div className="mt-4 flex items-center text-white/70 text-xs font-medium">
+                    Ver cursos <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              </button>
+
+            </div>
+
+            {/* Link admin */}
+            <p className="text-center text-white/30 text-xs mt-8 hover:text-white/50 transition-colors">
+              <a href="/novo-fluxo/admin/login" className="underline underline-offset-2">
+                Acesso administrativo — avaliadores e gestores
+              </a>
+            </p>
+
+          </div>
         </div>
-
-        <p className="text-center text-blue-400 text-xs">
-          Acesso administrativo?{" "}
-          <a href="/novo-fluxo/admin/login" className="text-blue-300 underline">Entrar como avaliador / gestor</a>
-        </p>
       </div>
 
       {boasVindasAberto && (
@@ -381,7 +385,11 @@ export function AreaCandidato() {
 
       {modalAberto && (
         <LoginModal onClose={() => setModalAberto(false)}
-          onSuccess={(processo) => { setModalAberto(false); if (processo) setProcessoAtivo(processo); else navigate("/novo-fluxo/selecionar"); }} />
+          onSuccess={(processo) => {
+            setModalAberto(false);
+            if (processo) setProcessoAtivo(processo);
+            else navigate("/novo-fluxo/selecionar");
+          }} />
       )}
     </div>
   );
