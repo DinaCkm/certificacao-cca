@@ -8,8 +8,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Lock, AlertCircle } from "lucide-react";
 
 export function AdminLogin() {
-  const { login } = useAuth();
+  const { login, logout, user } = useAuth();
   const [, navigate] = useLocation();
+  const isCandidate = user && !["administrador","gestor_n1","gestor_n2","avaliador","entrevistador"].includes(user.role);
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
@@ -25,6 +26,17 @@ export function AdminLogin() {
     setCarregando(true);
     try {
       await login(email, senha);
+      // Verifica se tem permissão de admin
+      const meRes = await fetch("/api/auth/me", {
+        headers: { "Authorization": `Bearer ${localStorage.getItem("anefac_token")}` }
+      });
+      const meData = await meRes.json();
+      const roleAdmin = ["administrador","gestor_n1","gestor_n2","avaliador","entrevistador"];
+      if (!roleAdmin.includes(meData.user?.role)) {
+        setErro("Esta conta não tem acesso ao painel administrativo.");
+        // Não desloga o candidato — apenas impede acesso
+        return;
+      }
       navigate("/novo-fluxo/admin");
     } catch (err: any) {
       setErro(err.message || "E-mail ou senha incorretos.");
@@ -46,7 +58,22 @@ export function AdminLogin() {
             <p className="text-sm text-gray-500 mt-1">Plataforma ANEFAC — Acesso Administrativo</p>
           </div>
 
-          {/* Erro */}
+          {/* Aviso se candidato logado */}
+          {isCandidate && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+              <p className="text-xs text-amber-800 font-medium mb-1">
+                Você está logado como candidato ({user?.email})
+              </p>
+              <button
+                onClick={() => { logout(); setEmail(""); setSenha(""); setErro(""); }}
+                className="text-xs text-amber-700 underline"
+              >
+                Sair desta conta para fazer login administrativo
+              </button>
+            </div>
+          )}
+
+        {/* Erro */}
           {erro && (
             <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg p-3 mb-5">
               <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />

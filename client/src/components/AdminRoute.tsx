@@ -24,13 +24,14 @@ export function AdminRoute({ component: Component }: AdminRouteProps) {
     );
   }
 
-  // Não autenticado → redireciona para login
+  // Não autenticado → redireciona para login admin
   if (!user) {
     navigate("/novo-fluxo/admin/login");
     return null;
   }
 
-  // Autenticado mas sem permissão
+  // Candidato logado tentando acessar admin → redireciona para login admin
+  // (não desloga o candidato, apenas bloqueia o acesso)
   if (!ROLES_PERMITIDOS.includes(user.role)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -40,15 +41,23 @@ export function AdminRoute({ component: Component }: AdminRouteProps) {
           </div>
           <h1 className="text-xl font-bold text-gray-900 mb-2">Acesso Negado</h1>
           <p className="text-sm text-gray-500 mb-6">
-            Sua conta ({user.role}) não tem permissão para acessar esta área.
-            Entre em contato com o administrador.
+            Esta conta não tem permissão de acesso administrativo.
+            Use uma conta de avaliador, gestor ou administrador.
           </p>
-          <button
-            onClick={() => navigate("/novo-fluxo")}
-            className="text-sm text-blue-700 underline"
-          >
-            Voltar para a plataforma
-          </button>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => navigate("/novo-fluxo/admin/login")}
+              className="text-sm bg-blue-900 text-white px-4 py-2 rounded-lg hover:bg-blue-800"
+            >
+              Login administrativo
+            </button>
+            <button
+              onClick={() => navigate("/novo-fluxo")}
+              className="text-sm text-blue-700 underline"
+            >
+              Voltar para a plataforma
+            </button>
+          </div>
         </div>
       </div>
     );
