@@ -165,18 +165,12 @@ export function NovoFluxoCertificacoes() {
                             </span>
                           ) : (
                             <>
-                              <button onClick={() => handleQueroMeCertificar(cert)}
-                                className="flex items-center justify-center gap-2 text-white font-bold px-5 py-3 rounded-xl text-sm transition-all hover:scale-105 hover:shadow-xl"
-                                style={{ background: "linear-gradient(135deg, #6B3FA0, #1a4a9e)" }}>
-                                <Award className="w-4 h-4" />
-                                Quero me certificar
+                              {/* Mais detalhes */}
+                              <button onClick={() => setExpandida(expandida === idx ? null : idx)}
+                                className="flex items-center justify-center gap-2 border border-white/10 text-white/40 hover:text-white/70 px-5 py-2 rounded-xl text-xs transition-colors">
+                                {expandida === idx ? <><ChevronUp className="w-3 h-3" /> Ver menos</> : <><ChevronDown className="w-3 h-3" /> Mais detalhes</>}
                               </button>
-                              <button onClick={() => navigate("/cursos")}
-                                className="flex items-center justify-center gap-2 font-bold px-5 py-3 rounded-xl text-sm transition-all hover:scale-105"
-                                style={{ background: "linear-gradient(135deg, #1B7A6B, #0f4d43)", color: "white" }}>
-                                <BookOpen className="w-4 h-4" />
-                                Quero me preparar
-                              </button>
+
                               {/* Como funciona */}
                               <button onClick={() => navigate(`/como-funciona/${cert.id}`)}
                                 className="flex items-center justify-center gap-2 border border-white/20 text-blue-200 hover:text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-colors">
@@ -184,10 +178,18 @@ export function NovoFluxoCertificacoes() {
                                 Como funciona
                               </button>
 
-                              {/* Saiba mais / recolher */}
-                              <button onClick={() => setExpandida(expandida === idx ? null : idx)}
-                                className="flex items-center justify-center gap-2 border border-white/10 text-white/40 hover:text-white/70 px-5 py-2 rounded-xl text-xs transition-colors">
-                                {expandida === idx ? <><ChevronUp className="w-3 h-3" /> Ver menos</> : <><ChevronDown className="w-3 h-3" /> Mais detalhes</>}
+                              <button onClick={() => navigate("/cursos")}
+                                className="flex items-center justify-center gap-2 font-bold px-5 py-3 rounded-xl text-sm transition-all hover:scale-105"
+                                style={{ background: "linear-gradient(135deg, #1B7A6B, #0f4d43)", color: "white" }}>
+                                <BookOpen className="w-4 h-4" />
+                                Quero me preparar
+                              </button>
+
+                              <button onClick={() => handleQueroMeCertificar(cert)}
+                                className="flex items-center justify-center gap-2 text-white font-bold px-5 py-3 rounded-xl text-sm transition-all hover:scale-105 hover:shadow-xl"
+                                style={{ background: "linear-gradient(135deg, #6B3FA0, #1a4a9e)" }}>
+                                <Award className="w-4 h-4" />
+                                Quero me certificar
                               </button>
 
                               {/* Edital — só se tiver URL */}
