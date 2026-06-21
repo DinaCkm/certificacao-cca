@@ -2,6 +2,13 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { useCertification } from "@/contexts/CertificationContext";
 import { BoasVindasModal } from "@/pages/novo-fluxo/BoasVindasModal";
+import { useAuth } from "@/contexts/AuthContext";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AlertCircle, LogIn, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 import {
   Award, BookOpen, FileText, DollarSign, Clock,
   Users, ChevronDown, ChevronUp, ArrowLeft,
@@ -15,6 +22,28 @@ export function NovoFluxoCertificacoes() {
   const [expandida, setExpandida] = useState<number | null>(null);
   const [boasVindasAberto, setBoasVindasAberto] = useState(false);
   const [certSelecionada, setCertSelecionada] = useState<any>(null);
+  const [loginAberto, setLoginAberto] = useState(false);
+  const { login } = useAuth();
+  const { toast } = useToast();
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginSenha, setLoginSenha] = useState("");
+  const [loginCarregando, setLoginCarregando] = useState(false);
+  const [loginErro, setLoginErro] = useState("");
+
+  const handleLogin = async () => {
+    setLoginErro("");
+    if (!loginEmail || !loginSenha) { setLoginErro("Preencha e-mail e senha."); return; }
+    setLoginCarregando(true);
+    try {
+      await login(loginEmail, loginSenha);
+      const { processo } = await (api.processo as any).retomar();
+      toast({ title: "Bem-vindo de volta!" });
+      setLoginAberto(false);
+      if (processo) navigate("/novo-fluxo/" + (processo.statusGeral === "agendamento" ? "agendamento-entrevista" : processo.statusGeral === "validacao" ? "aguardando-validacao" : processo.statusGeral));
+      else navigate("/novo-fluxo/selecionar");
+    } catch (err: any) { setLoginErro(err.message || "E-mail ou senha incorretos."); }
+    finally { setLoginCarregando(false); }
+  };
 
   const handleQueroMeCertificar = (cert: any) => {
     setCertSelecionada(cert);
@@ -200,18 +229,87 @@ export function NovoFluxoCertificacoes() {
               </div>
             )}
 
-            {/* CTA final */}
-            <div className="mt-12 text-center pb-16">
-              <p className="text-blue-300 text-sm mb-4">Já tem cadastro? Continue seu processo de onde parou.</p>
-              <button onClick={() => navigate("/novo-fluxo")}
-                className="inline-flex items-center gap-2 border border-white/20 text-white/70 hover:text-white px-6 py-3 rounded-xl text-sm transition-colors">
-                <ArrowLeft className="w-4 h-4" /> Voltar à página inicial
+            {/* Cards secundários */}
+            <div className="mt-10 grid md:grid-cols-2 gap-4 pb-16">
+
+              {/* Já tenho cadastro */}
+              <button onClick={() => setLoginAberto(true)}
+                className="group relative overflow-hidden rounded-2xl p-6 text-left transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-white/20"
+                style={{ background: "linear-gradient(135deg, #8B2020 0%, #5c1414 100%)" }}>
+                <div className="relative z-10 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                    <LogIn className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h3 className="font-bold text-white text-base mb-1">Já tenho cadastro</h3>
+                    <p className="text-red-200 text-xs">Continue seu processo de onde parou</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-white/50 group-hover:translate-x-1 transition-transform" />
+                </div>
               </button>
+
+              {/* Cursos preparatórios */}
+              <button onClick={() => navigate("/cursos")}
+                className="group relative overflow-hidden rounded-2xl p-6 text-left transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-white/20"
+                style={{ background: "linear-gradient(135deg, #1B7A6B 0%, #0f4d43 100%)" }}>
+                <div className="relative z-10 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                    <BookOpen className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h3 className="font-bold text-white text-base mb-1">Cursos preparatórios</h3>
+                    <p className="text-emerald-200 text-xs">Prepare-se com os cursos ANEFAC antes de se certificar</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-white/50 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </button>
+
             </div>
 
           </div>
         </div>
       </div>
+
+      {/* Modal de login */}
+      {loginAberto && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <div className="h-1 w-full" style={{ background: "linear-gradient(to right, #050a28, #1a4a9e, #0099cc)" }} />
+            <div className="p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Área do Candidato</h2>
+                  <p className="text-sm text-gray-500">Entre para continuar seu processo</p>
+                </div>
+                <button onClick={() => setLoginAberto(false)} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              {loginErro && (
+                <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                  <p className="text-sm text-red-700">{loginErro}</p>
+                </div>
+              )}
+              <div className="space-y-4">
+                <div><Label>E-mail</Label><Input type="email" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="seu@email.com" onKeyDown={e => e.key === "Enter" && handleLogin()} /></div>
+                <div><Label>Senha</Label><Input type="password" value={loginSenha} onChange={e => setLoginSenha(e.target.value)} placeholder="••••••••" onKeyDown={e => e.key === "Enter" && handleLogin()} /></div>
+                <button onClick={handleLogin} disabled={loginCarregando}
+                  className="w-full text-white font-bold py-3 rounded-xl transition-all hover:opacity-90 disabled:opacity-60"
+                  style={{ background: "linear-gradient(to right, #050a28, #1a4a9e)" }}>
+                  {loginCarregando ? "Entrando..." : "Entrar"}
+                </button>
+              </div>
+              <p className="text-xs text-center text-gray-400 mt-4">
+                Ainda não tem cadastro?{" "}
+                <button onClick={() => { setLoginAberto(false); setBoasVindasAberto(true); }} className="text-blue-700 underline">
+                  Inicie sua certificação
+                </button>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mini-cadastro */}
       {boasVindasAberto && (
