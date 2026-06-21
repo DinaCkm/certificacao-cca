@@ -78,6 +78,7 @@ import { Cursos } from "./pages/site/Cursos";
 import { AdminCursos } from "./pages/novo-fluxo/admin/AdminCursos";
 import { AdminUsuarios } from "./pages/novo-fluxo/admin/AdminUsuarios";
 import { AdminCarrossel } from "./pages/novo-fluxo/admin/AdminCarrossel";
+import { NovoFluxoCertificacoes } from "./pages/novo-fluxo/NovoFluxoCertificacoes";
 // ───────────────────────────────────────────────────────────────────────────
 
 function Router() {
@@ -133,6 +134,7 @@ function Router() {
       {/* ── Novo Fluxo ANEFAC ─────────────────────────────────────────────── */}
       <Route path={"/novo-fluxo"} component={AreaCandidato} />
       <Route path={"/novo-fluxo/selecionar"} component={SelecionarCertificacao} />
+      <Route path={"/novo-fluxo/certificacoes"} component={NovoFluxoCertificacoes} />
       <Route path={"/novo-fluxo/cadastro"} component={Cadastro} />
       <Route path={"/novo-fluxo/upload-documentos"} component={UploadDocumentos} />
       <Route path={"/novo-fluxo/pagamento-analise"} component={PagamentoAnalise} />

@@ -308,7 +308,7 @@ export function AreaCandidato() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
               {/* Card 1 — Quero me certificar */}
-              <button onClick={() => setBoasVindasAberto(true)}
+              <button onClick={() => navigate("/novo-fluxo/certificacoes")}
                 className="group relative overflow-hidden rounded-2xl p-6 text-left transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-white/20"
                 style={{ background: "linear-gradient(135deg, #6B3FA0 0%, #4a2575 100%)" }}>
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
