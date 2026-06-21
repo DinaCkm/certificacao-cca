@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
+import { BoasVindasModal } from "@/pages/novo-fluxo/BoasVindasModal";
 import { useCertification } from "@/contexts/CertificationContext";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -56,6 +57,7 @@ function LoginModal({ onClose, onSuccess }: LoginModalProps) {
   const [senha, setSenha] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
+  const [recuperandoSenha, setRecuperandoSenha] = useState(false);
 
   const handleLogin = async () => {
     setErro("");
@@ -119,12 +121,16 @@ function LoginModal({ onClose, onSuccess }: LoginModalProps) {
             </Button>
           </div>
 
-          <p className="text-xs text-center text-gray-400 mt-5">
+          <button onClick={() => setRecuperandoSenha(true)} className="w-full text-xs text-center text-blue-600 hover:underline mt-2">
+            Esqueci minha senha
+          </button>
+          <p className="text-xs text-center text-gray-400 mt-2">
             Ainda não tem cadastro?{" "}
             <button onClick={onClose} className="text-blue-700 underline">
               Inicie sua certificação
             </button>
           </p>
+          {recuperandoSenha && <RecuperarSenhaModal onClose={() => setRecuperandoSenha(false)} />}
         </CardContent>
       </Card>
     </div>
@@ -232,6 +238,7 @@ export function AreaCandidato() {
   const { user, isAuthenticated } = useAuth();
   const { atualizarCandidato, selecionarCertificacao, getCertificacaoAtual } = useCertification();
   const [modalAberto, setModalAberto] = useState(false);
+  const [boasVindasAberto, setBoasVindasAberto] = useState(false);
   const [processoAtivo, setProcessoAtivo] = useState<any>(null);
 
   // Se já autenticado, tenta retomar o processo
@@ -274,7 +281,7 @@ export function AreaCandidato() {
         <div className="space-y-4">
           {/* Candidato novo */}
           <Card className="border-0 shadow-xl hover:shadow-2xl transition-shadow cursor-pointer"
-            onClick={() => navigate("/novo-fluxo/selecionar")}>
+            onClick={() => setBoasVindasAberto(true)}>
             <CardContent className="p-6 text-left">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
@@ -315,10 +322,91 @@ export function AreaCandidato() {
         </p>
       </div>
 
+      {/* Modal de boas-vindas */}
+      {boasVindasAberto && (
+        <BoasVindasModal
+          open={boasVindasAberto}
+          onClose={() => setBoasVindasAberto(false)}
+          onSuccess={(dados) => {
+            sessionStorage.setItem("anefac_pre_dados", JSON.stringify(dados));
+            setBoasVindasAberto(false);
+            navigate("/novo-fluxo/selecionar");
+          }}
+        />
+      )}
+
       {/* Modal de login */}
       {modalAberto && (
         <LoginModal onClose={() => setModalAberto(false)} onSuccess={handleLoginSuccess} />
       )}
+    </div>
+  );
+}
+
+// Componente de recuperação de senha — usado dentro do LoginModal
+export function RecuperarSenhaModal({ onClose }: { onClose: () => void }) {
+  const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [enviado, setEnviado] = useState(false);
+  const [carregando, setCarregando] = useState(false);
+
+  const handleEnviar = async () => {
+    if (!email || !email.includes("@")) {
+      toast({ title: "Informe um e-mail válido", variant: "destructive" });
+      return;
+    }
+    setCarregando(true);
+    try {
+      await fetch("/api/auth/recuperar-senha", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      setEnviado(true);
+    } catch {
+      toast({ title: "Erro ao enviar. Tente novamente.", variant: "destructive" });
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  if (enviado) {
+    return (
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <Card className="w-full max-w-md shadow-2xl">
+          <CardContent className="p-8 text-center">
+            <CheckCircle className="w-14 h-14 text-green-500 mx-auto mb-4" />
+            <h2 className="text-lg font-bold mb-2">E-mail enviado!</h2>
+            <p className="text-sm text-gray-500 mb-6">Se este e-mail estiver cadastrado, você receberá as instruções para redefinir sua senha em breve.</p>
+            <Button className="w-full bg-blue-900 hover:bg-blue-800" onClick={onClose}>Voltar ao login</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-md shadow-2xl">
+        <CardContent className="p-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-bold text-gray-900">Recuperar senha</h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+          </div>
+          <p className="text-sm text-gray-500 mb-5">Informe o e-mail cadastrado e enviaremos um link para redefinir sua senha.</p>
+          <div className="space-y-4">
+            <div>
+              <Label>E-mail</Label>
+              <Input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                placeholder="seu@email.com" onKeyDown={e => e.key === "Enter" && handleEnviar()} />
+            </div>
+            <Button className="w-full bg-blue-900 hover:bg-blue-800" onClick={handleEnviar} disabled={carregando}>
+              {carregando ? "Enviando..." : "Enviar link de recuperação"}
+            </Button>
+            <Button variant="outline" className="w-full" onClick={onClose}>Voltar</Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

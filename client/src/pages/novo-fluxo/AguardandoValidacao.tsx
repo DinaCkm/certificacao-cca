@@ -4,7 +4,7 @@ import { FluxoLayout } from "@/components/FluxoLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCertification } from "@/contexts/CertificationContext";
-import { Clock, CheckCircle, Mail, FileText, Phone, HelpCircle } from "lucide-react";
+import { Clock, CheckCircle, Mail, FileText, Phone, HelpCircle, BookOpen, Home, LogOut } from "lucide-react";
 
 export function AguardandoValidacao() {
   const { processo, getCertificacaoAtual } = useCertification();
@@ -201,6 +201,26 @@ export function AguardandoValidacao() {
             </CardContent>
           </Card>
         </div>
+      </div>
+      {/* Ações finais */}
+      <div className="flex flex-col sm:flex-row gap-3 mt-6">
+        <a
+          href="https://anefac.com.br/cursos"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 flex items-center justify-center gap-2 bg-blue-900 text-white font-semibold px-5 py-3 rounded-xl hover:bg-blue-800 transition-colors text-sm"
+        >
+          <BookOpen className="w-4 h-4" />
+          Prepare-se com os Cursos ANEFAC
+        </a>
+        <Button
+          variant="outline"
+          className="flex-1"
+          onClick={() => navigate("/novo-fluxo")}
+        >
+          <Home className="w-4 h-4 mr-2" />
+          Voltar ao Menu Principal
+        </Button>
       </div>
     </FluxoLayout>
   );

@@ -47,11 +47,13 @@ export function Cadastro() {
   const { toast } = useToast();
   const certAtual = getCertificacaoAtual();
 
+  const preData = (() => { try { return JSON.parse(sessionStorage.getItem("anefac_pre_dados") || "null"); } catch { return null; } })();
+
   const [form, setForm] = useState<FormData>({
-    nome: "",
-    cpf: "",
-    email: "",
-    senha: "",
+    nome: preData?.nome || "",
+    cpf: preData?.cpf || "",
+    email: preData?.email || "",
+    senha: preData?.senha || "",
     telefone: "",
     dataNascimento: "",
     empresa: "",
@@ -110,6 +112,9 @@ export function Cadastro() {
 
       // 2. Salva o token de autenticação
       setToken(token);
+
+      // Limpa dados do mini-cadastro
+      sessionStorage.removeItem("anefac_pre_dados");
 
       // 3. Atualiza o contexto local (para manter compatibilidade com o fluxo atual)
       atualizarCandidato({

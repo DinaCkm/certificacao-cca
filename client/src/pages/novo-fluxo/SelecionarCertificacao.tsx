@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCertification, Certification } from "@/contexts/CertificationContext";
+import { BoasVindasModal } from "@/pages/novo-fluxo/BoasVindasModal";
 import { cn } from "@/lib/utils";
 import {
   CheckCircle,
@@ -376,6 +377,8 @@ function CertificationCard({
 }
 
 export function SelecionarCertificacao() {
+  // Recupera dados do mini-cadastro se vieram do modal de boas-vindas
+  const preData = (() => { try { return JSON.parse(sessionStorage.getItem("anefac_pre_dados") || "null"); } catch { return null; } })();
   const { certifications, selecionarCertificacao } = useCertification();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailCert, setDetailCert] = useState<Certification | null>(null);
