@@ -7,6 +7,7 @@ import { iniciarVerificadorDiario } from "./services/schedulerService.js";
 import { authRouter } from "./routes/auth.js";
 import { processoRouter } from "./routes/processo.js";
 import { adminRouter } from "./routes/admin.js";
+import { provaRouter } from "./routes/prova.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,6 +50,7 @@ async function startServer() {
   });
 
   app.use("/api/admin", adminRouter);
+  app.use("/api/prova", provaRouter);
 
   // Health check
   app.get("/api/health", (_req, res) => {
