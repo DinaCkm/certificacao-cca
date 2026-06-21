@@ -231,13 +231,13 @@ export function ComoFuncionaLideranca() {
 
         {/* Botões de navegação */}
         <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/certificacoes">
+          <Link href="/novo-fluxo/certificacoes">
             <a className="inline-flex items-center gap-2 border-2 border-gray-200 text-gray-700 font-semibold px-8 py-4 rounded-xl hover:border-green-400 hover:text-green-700 transition-all text-base">
               <ArrowLeft className="w-5 h-5" />
               Voltar para Certificações
             </a>
           </Link>
-          <Link href="/certificacoes">
+          <Link href="/novo-fluxo/certificacoes">
             <a className="inline-flex items-center gap-2 text-white font-bold px-8 py-4 rounded-xl transition-all text-base"
               style={{ background: "linear-gradient(135deg, #1a3a2a 0%, #2d6a4f 100%)" }}>
               Inscrever-se agora

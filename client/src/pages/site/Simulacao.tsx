@@ -332,7 +332,7 @@ export function Simulacao() {
                 </div>
 
                 <div className="flex flex-col gap-3">
-                  <Link href="/certificacoes">
+                  <Link href="/novo-fluxo/certificacoes">
                     <a className="w-full flex items-center justify-center gap-2 text-white font-bold py-4 rounded-xl transition-all text-base"
                       style={{ background: "linear-gradient(135deg, #1e3a6e 0%, #2d5be3 100%)" }}>
                       Ver certificações disponíveis

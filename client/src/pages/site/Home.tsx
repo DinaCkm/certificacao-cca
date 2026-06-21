@@ -221,7 +221,7 @@ export function Home() {
                           <BookOpen className="w-4 h-4" /> Como funciona
                         </a>
                       </Link>
-                      <Link href="/certificacoes">
+                      <Link href="/novo-fluxo/certificacoes">
                         <a className="inline-flex items-center gap-1 text-blue-600 text-sm font-bold hover:gap-2 transition-all">
                           Ver detalhes <ArrowRight className="w-4 h-4" />
                         </a>
@@ -261,7 +261,7 @@ export function Home() {
                           <BookOpen className="w-3.5 h-3.5" /> Como funciona
                         </a>
                       </Link>
-                      <Link href="/certificacoes">
+                      <Link href="/novo-fluxo/certificacoes">
                         <a className="inline-flex items-center gap-1 text-xs font-bold transition-all" style={{ color: corMap[cert.cor] || "#16a34a" }}>
                           Saiba mais <ArrowRight className="w-3 h-3" />
                         </a>
@@ -275,7 +275,7 @@ export function Home() {
 
           {/* CTA — após os cards */}
           <div className="flex justify-center mt-12">
-            <Link href="/certificacoes">
+            <Link href="/novo-fluxo/certificacoes">
               <a className="group inline-flex items-center gap-2 bg-yellow-400 text-blue-900 font-black px-8 py-4 rounded-2xl hover:bg-yellow-300 transition-all shadow-lg shadow-yellow-400/30 hover:shadow-yellow-400/50 text-base hover:scale-105">
                 {config.hero.ctaPrimario}
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -490,7 +490,7 @@ export function Home() {
             <div>
               <p className="font-bold text-white mb-4 text-sm">Programa</p>
               <div className="flex flex-col gap-2">
-                <Link href="/certificacoes"><a className="text-gray-400 text-sm hover:text-white transition-colors">Certificações</a></Link>
+                <Link href="/novo-fluxo/certificacoes"><a className="text-gray-400 text-sm hover:text-white transition-colors">Certificações</a></Link>
                 <Link href="/como-funciona"><a className="text-gray-400 text-sm hover:text-white transition-colors">Como funciona</a></Link>
                 <Link href="/simulacao"><a className="text-gray-400 text-sm hover:text-white transition-colors">Simulação</a></Link>
               </div>

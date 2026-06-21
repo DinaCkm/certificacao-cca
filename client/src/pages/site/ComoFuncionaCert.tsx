@@ -16,7 +16,7 @@ export function ComoFuncionaCert() {
         <Navbar />
         <div className="pt-32 text-center px-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Certificação não encontrada</h1>
-          <Link href="/certificacoes">
+          <Link href="/novo-fluxo/certificacoes">
             <a className="text-blue-700 font-medium hover:underline">← Voltar para certificações</a>
           </Link>
         </div>
@@ -32,7 +32,7 @@ export function ComoFuncionaCert() {
         <Navbar />
         <div className="pt-16" style={{ background: "linear-gradient(135deg, #0f1f4e 0%, #1e3a6e 100%)" }}>
           <div className="max-w-5xl mx-auto px-6 py-16">
-            <Link href="/certificacoes">
+            <Link href="/novo-fluxo/certificacoes">
               <a className="inline-flex items-center gap-2 text-blue-300 hover:text-white text-sm mb-6 transition-colors">
                 <ArrowLeft className="w-4 h-4" />
                 Voltar para certificações
@@ -72,7 +72,7 @@ export function ComoFuncionaCert() {
       {/* Header */}
       <div className="pt-16" style={{ background: "linear-gradient(135deg, #0f1f4e 0%, #1e3a6e 100%)" }}>
         <div className="max-w-5xl mx-auto px-6 py-16">
-          <Link href="/certificacoes">
+          <Link href="/novo-fluxo/certificacoes">
             <a className="inline-flex items-center gap-2 text-blue-300 hover:text-white text-sm mb-6 transition-colors">
               <ArrowLeft className="w-4 h-4" />
               Voltar para certificações
@@ -205,8 +205,8 @@ export function ComoFuncionaCert() {
                 </a>
               </Link>
 
-              {/* Botão inscrição */}
-              <Link href={`/certificacoes/${cert.id}`}>
+              {/* Botão inscrição — vai para /novo-fluxo/certificacoes onde abre o mini-cadastro */}
+              <Link href={"/novo-fluxo/certificacoes"}>
                 <a
                   className="w-full flex items-center justify-center gap-2 text-white font-bold py-3.5 rounded-xl transition-all text-sm hover:opacity-90"
                   style={{ background: `linear-gradient(135deg, ${accent.bg} 0%, #2d5be3 100%)` }}
@@ -216,7 +216,7 @@ export function ComoFuncionaCert() {
               </Link>
 
               {/* Voltar */}
-              <Link href="/certificacoes">
+              <Link href="/novo-fluxo/certificacoes">
                 <a className="w-full flex items-center justify-center gap-2 border border-gray-200 text-gray-600 font-medium py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm">
                   <ArrowLeft className="w-4 h-4" />
                   Ver todas as certificações

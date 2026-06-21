@@ -164,7 +164,7 @@ export function ComoFunciona() {
         <div className="mt-12 text-center">
           <p className="text-gray-500 mb-6">Pronto para começar?</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/certificacoes">
+            <Link href="/novo-fluxo/certificacoes">
               <a className="inline-flex items-center gap-2 text-white font-bold px-8 py-4 rounded-xl transition-all text-base"
                 style={{ background: "linear-gradient(135deg, #1e3a6e 0%, #2d5be3 100%)" }}>
                 Ver certificações disponíveis

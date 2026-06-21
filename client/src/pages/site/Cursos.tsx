@@ -290,7 +290,7 @@ export function Cursos() {
 
         {/* Voltar */}
         <div className="mt-8 pt-8 border-t border-gray-200">
-          <Link href="/certificacoes">
+          <Link href="/novo-fluxo/certificacoes">
             <a className="inline-flex items-center gap-2 text-[#1e3a6e] font-medium hover:underline text-sm">
               <ArrowLeft className="w-4 h-4" /> Voltar para certificações
             </a>
