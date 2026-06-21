@@ -74,8 +74,34 @@ export function Prova() {
 
   const [iniciada, setIniciada] = useState(false);
   const [respostas, setRespostas] = useState<Record<number, number>>({});
-  const [tempoRestante, setTempoRestante] = useState(30 * 60); // 30 min
+  const [tempoRestante, setTempoRestante] = useState(30 * 60);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [provaConfig, setProvaConfig] = useState<any>(null);
+  const [questoesBanco, setQuestoesBanco] = useState<any[]>([]);
+  const [carregandoConfig, setCarregandoConfig] = useState(true);
+
+  // Carrega config e questões da API
+  useEffect(() => {
+    const certId = processo.certificacaoId;
+    if (!certId) return;
+    Promise.all([
+      fetch(`/api/admin/prova-config/${certId}`).then(r => r.json()),
+      fetch(`/api/admin/questoes/${certId}`).then(r => r.json()),
+    ]).then(([configRes, questoesRes]) => {
+      if (configRes.config) {
+        setProvaConfig(configRes.config);
+        setTempoRestante((configRes.config.duracao_minutos || 30) * 60);
+      }
+      if (questoesRes.questoes?.length > 0) {
+        setQuestoesBanco(questoesRes.questoes.map((q: any) => ({
+          id: q.id,
+          enunciado: q.enunciado,
+          opcoes: [q.opcao_a, q.opcao_b, q.opcao_c, q.opcao_d].filter(Boolean),
+          correta: q.resposta_correta,
+        })));
+      }
+    }).catch(() => {}).finally(() => setCarregandoConfig(false));
+  }, [processo.certificacaoId]);
 
   useEffect(() => {
     if (!processo.certificacaoId) navigate("/novo-fluxo");
@@ -115,6 +141,8 @@ export function Prova() {
   };
 
   if (!certAtual) return null;
+
+  const questoesParaExibir = questoesBanco.length > 0 ? questoesBanco : QUESTOES;
 
   if (!iniciada) {
     return (

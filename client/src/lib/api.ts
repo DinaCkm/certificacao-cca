@@ -154,3 +154,10 @@ Object.assign(api.admin, {
   editarCarrossel: (id: number, body: any) => request<{ message: string }>("PUT", `/admin/carrossel/${id}`, body),
   removerCarrossel: (id: number) => request<{ message: string }>("DELETE", `/admin/carrossel/${id}`),
 });
+
+// Prova config
+Object.assign(api.admin, {
+  salvarProvaConfig: (body: any) => request<{ message: string }>("POST", "/admin/prova-config", body),
+  adicionarQuestao: (body: any) => request<{ id: number }>("POST", "/admin/questoes", body),
+  removerQuestao: (id: number) => request<{ message: string }>("DELETE", `/admin/questoes/${id}`),
+});

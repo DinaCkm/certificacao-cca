@@ -80,6 +80,7 @@ import { Cursos } from "./pages/site/Cursos";
 import { AdminCursos } from "./pages/novo-fluxo/admin/AdminCursos";
 import { AdminUsuarios } from "./pages/novo-fluxo/admin/AdminUsuarios";
 import { AdminCarrossel } from "./pages/novo-fluxo/admin/AdminCarrossel";
+import { AdminProvaConfig } from "./pages/novo-fluxo/admin/AdminProvaConfig";
 import { NovoFluxoCertificacoes } from "./pages/novo-fluxo/NovoFluxoCertificacoes";
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -160,6 +161,7 @@ function Router() {
       <Route path={"/novo-fluxo/admin/cursos"} component={() => <AdminRoute component={AdminCursos} />} />
       <Route path={"/novo-fluxo/admin/usuarios"} component={() => <AdminRoute component={AdminUsuarios} />} />
       <Route path={"/novo-fluxo/admin/carrossel"} component={() => <AdminRoute component={AdminCarrossel} />} />
+      <Route path={"/novo-fluxo/admin/prova-config"} component={() => <AdminRoute component={AdminProvaConfig} />} />
       {/* ─────────────────────────────────────────────────────────────────────── */}
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

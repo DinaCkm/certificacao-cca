@@ -347,3 +347,158 @@ adminRouter.delete("/carrossel/:id",
     }
   }
 );
+
+// ── Parametrização da Prova ───────────────────────────────────────────────────
+
+// GET /api/admin/prova-config/:certSlug — busca config da prova
+adminRouter.get("/prova-config/:certSlug", async (req, res) => {
+  try {
+    const [rows] = await db.execute(
+      `SELECT pc.*, ct.nome as cert_nome
+       FROM prova_config pc
+       JOIN certification_types ct ON ct.slug = pc.cert_slug
+       WHERE pc.cert_slug = ?`,
+      [req.params.certSlug]
+    ) as any;
+    return res.json({ config: rows[0] || null });
+  } catch (err) {
+    return res.status(500).json({ error: "Erro ao buscar configuração" });
+  }
+});
+
+// GET /api/admin/prova-config — lista todas
+adminRouter.get("/prova-config",
+  requireRole("administrador", "gestor_n1", "avaliador"),
+  async (_req, res) => {
+    try {
+      const [rows] = await db.execute(
+        `SELECT pc.*, ct.nome as cert_nome
+         FROM prova_config pc
+         JOIN certification_types ct ON ct.slug = pc.cert_slug
+         ORDER BY ct.numero`
+      ) as any;
+      return res.json({ configs: rows });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao listar configurações" });
+    }
+  }
+);
+
+// POST /api/admin/prova-config — cria ou atualiza config
+adminRouter.post("/prova-config",
+  requireRole("administrador", "gestor_n1"),
+  async (req, res) => {
+    const {
+      cert_slug, total_questoes, duracao_minutos, nota_minima,
+      max_tentativas, prazo_dias, mensagem_boas_vindas, instrucoes_extras
+    } = req.body;
+
+    if (!cert_slug) return res.status(400).json({ error: "cert_slug é obrigatório" });
+
+    try {
+      await db.execute(
+        `INSERT INTO prova_config
+          (cert_slug, total_questoes, duracao_minutos, nota_minima, max_tentativas,
+           prazo_dias, mensagem_boas_vindas, instrucoes_extras, atualizado_por)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+          total_questoes = VALUES(total_questoes),
+          duracao_minutos = VALUES(duracao_minutos),
+          nota_minima = VALUES(nota_minima),
+          max_tentativas = VALUES(max_tentativas),
+          prazo_dias = VALUES(prazo_dias),
+          mensagem_boas_vindas = VALUES(mensagem_boas_vindas),
+          instrucoes_extras = VALUES(instrucoes_extras),
+          atualizado_por = VALUES(atualizado_por),
+          atualizado_em = NOW()`,
+        [cert_slug, total_questoes || 5, duracao_minutos || 30, nota_minima || 60,
+         2, prazo_dias || 3, mensagem_boas_vindas || null, instrucoes_extras || null,
+         req.user!.userId]
+      );
+      return res.json({ message: "Configuração salva com sucesso" });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao salvar configuração" });
+    }
+  }
+);
+
+// GET /api/admin/questoes/:certSlug — lista questões
+adminRouter.get("/questoes/:certSlug",
+  requireRole("administrador", "gestor_n1", "avaliador"),
+  async (req, res) => {
+    try {
+      const [rows] = await db.execute(
+        `SELECT pq.* FROM prova_questoes pq
+         JOIN provas p ON p.id = pq.prova_id
+         JOIN certification_types ct ON ct.id = p.certification_type_id
+         WHERE ct.slug = ?
+         ORDER BY pq.numero`,
+        [req.params.certSlug]
+      ) as any;
+      return res.json({ questoes: rows });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao listar questões" });
+    }
+  }
+);
+
+// POST /api/admin/questoes — adiciona questão
+adminRouter.post("/questoes",
+  requireRole("administrador", "gestor_n1"),
+  async (req, res) => {
+    const { cert_slug, enunciado, opcao_a, opcao_b, opcao_c, opcao_d, resposta_correta } = req.body;
+    if (!cert_slug || !enunciado || !opcao_a || !opcao_b || resposta_correta === undefined) {
+      return res.status(400).json({ error: "Campos obrigatórios: cert_slug, enunciado, opcao_a, opcao_b, resposta_correta" });
+    }
+    try {
+      // Busca ou cria a prova para esta certificação
+      const [certs] = await db.execute("SELECT id FROM certification_types WHERE slug = ?", [cert_slug]) as any;
+      if (!certs.length) return res.status(404).json({ error: "Certificação não encontrada" });
+
+      let [provas] = await db.execute(
+        "SELECT id FROM provas WHERE certification_type_id = ?", [certs[0].id]
+      ) as any;
+
+      let prova_id: number;
+      if (!provas.length) {
+        const [r] = await db.execute(
+          "INSERT INTO provas (certification_type_id, titulo) VALUES (?, ?)",
+          [certs[0].id, `Prova ${cert_slug.toUpperCase()}`]
+        ) as any;
+        prova_id = r.insertId;
+      } else {
+        prova_id = provas[0].id;
+      }
+
+      // Numero sequencial
+      const [count] = await db.execute(
+        "SELECT COUNT(*) as total FROM prova_questoes WHERE prova_id = ?", [prova_id]
+      ) as any;
+
+      const [result] = await db.execute(
+        `INSERT INTO prova_questoes (prova_id, numero, enunciado, opcao_a, opcao_b, opcao_c, opcao_d, resposta_correta)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [prova_id, count[0].total + 1, enunciado, opcao_a, opcao_b, opcao_c || null, opcao_d || null, resposta_correta]
+      ) as any;
+
+      return res.status(201).json({ id: result.insertId });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao adicionar questão" });
+    }
+  }
+);
+
+// DELETE /api/admin/questoes/:id
+adminRouter.delete("/questoes/:id",
+  requireRole("administrador", "gestor_n1"),
+  async (req, res) => {
+    try {
+      await db.execute("DELETE FROM prova_questoes WHERE id = ?", [parseInt(req.params.id)]);
+      return res.json({ message: "Questão removida" });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao remover questão" });
+    }
+  }
+);
