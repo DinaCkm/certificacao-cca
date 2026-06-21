@@ -194,7 +194,7 @@ export function AdminProvaConfig() {
         </Card>
 
         {carregando ? (
-          <div className="text-center py-12 text-gray-400">Carregando configuração...</div>
+          <div className="text-center py-12 text-blue-300">Carregando configuração...</div>
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
 
@@ -254,7 +254,7 @@ export function AdminProvaConfig() {
                       onChange={e => setConfig({ ...config, mensagem_boas_vindas: e.target.value })}
                       placeholder="Ex: Bem-vindo à prova de competência CCA. Esta prova avalia seus conhecimentos em Controladoria..."
                       rows={3}
-                      className="w-full border border-white/20 bg-white/10 text-white placeholder:text-white/40 border rounded-md px-3 py-2 text-sm bg-background mt-1 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-white/20 text-white placeholder:text-white/40 rounded-md px-3 py-2 text-sm w-full border border-white/20 mt-1 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <div>
@@ -264,7 +264,7 @@ export function AdminProvaConfig() {
                       onChange={e => setConfig({ ...config, instrucoes_extras: e.target.value })}
                       placeholder="Ex: Certifique-se de estar em local silencioso. Não é permitido consultar materiais durante a prova..."
                       rows={4}
-                      className="w-full border border-white/20 bg-white/10 text-white placeholder:text-white/40 border rounded-md px-3 py-2 text-sm bg-background mt-1 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-white/20 text-white placeholder:text-white/40 rounded-md px-3 py-2 text-sm w-full border border-white/20 mt-1 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <p className="text-xs text-blue-400 mt-1">Cada linha será exibida como um item de instrução.</p>
                   </div>
@@ -330,7 +330,7 @@ export function AdminProvaConfig() {
                             </div>
                           </div>
                           <button onClick={() => removerQuestao(q.id)}
-                            className="text-gray-400 hover:text-red-500 transition-colors shrink-0 p-1">
+                            className="text-white/40 hover:text-red-400 transition-colors shrink-0 p-1">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
@@ -352,19 +352,19 @@ export function AdminProvaConfig() {
                   <Eye className="w-4 h-4 text-blue-700" />
                   Preview — O que o candidato vai ver
                 </h2>
-                <button onClick={() => setPreviewAberto(false)} className="text-gray-400 hover:text-gray-600">
+                <button onClick={() => setPreviewAberto(false)} className="text-white/50 hover:text-white">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Simulação da tela do candidato */}
-              <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+              <div className="rounded-xl p-6 border border-white/10" style={{ background: "rgba(255,255,255,0.05)" }}>
                 <div className="max-w-md mx-auto text-center">
                   <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <FileText className="w-8 h-8 text-blue-700" />
                   </div>
                   <h3 className="text-xl font-bold text-white mb-1">Prova de Competência</h3>
-                  <p className="text-sm text-gray-500 mb-1">{certAtual?.nome}</p>
+                  <p className="text-sm text-blue-300 mb-1">{certAtual?.nome}</p>
                   {config.mensagem_boas_vindas && (
                     <p className="text-sm text-blue-700 bg-blue-50 border border-blue-100 rounded-lg p-3 mb-4 text-left">
                       {config.mensagem_boas_vindas}
@@ -374,22 +374,22 @@ export function AdminProvaConfig() {
                   <div className="flex justify-center gap-4 mb-5">
                     <div className="text-center">
                       <p className="text-2xl font-black text-blue-900">{config.total_questoes || 5}</p>
-                      <p className="text-xs text-gray-500">questões</p>
+                      <p className="text-xs text-blue-300">questões</p>
                     </div>
-                    <div className="w-px bg-gray-200" />
+                    <div className="w-px bg-white/20" />
                     <div className="text-center">
                       <p className="text-2xl font-black text-blue-900">{config.duracao_minutos || 30}</p>
-                      <p className="text-xs text-gray-500">minutos</p>
+                      <p className="text-xs text-blue-300">minutos</p>
                     </div>
-                    <div className="w-px bg-gray-200" />
+                    <div className="w-px bg-white/20" />
                     <div className="text-center">
                       <p className="text-2xl font-black text-blue-900">{config.nota_minima || 60}%</p>
-                      <p className="text-xs text-gray-500">mínimo</p>
+                      <p className="text-xs text-blue-300">mínimo</p>
                     </div>
                   </div>
 
                   <div className="text-left space-y-2 mb-5">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Instruções</p>
+                    <p className="text-xs font-semibold text-white/60 uppercase tracking-wide mb-2">Instruções</p>
                     {[
                       `${config.total_questoes || 5} questões de múltipla escolha`,
                       `Tempo total: ${config.duracao_minutos || 30} minutos`,
@@ -430,8 +430,8 @@ export function AdminProvaConfig() {
           <Card className="w-full max-w-2xl shadow-2xl my-4">
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-5">
-                <h2 className="text-lg font-bold text-gray-900">Nova Questão</h2>
-                <button onClick={() => setModalQuestao(false)} className="text-gray-400 hover:text-gray-600">
+                <h2 className="text-lg font-bold text-white">Nova Questão</h2>
+                <button onClick={() => setModalQuestao(false)} className="text-white/50 hover:text-white">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -444,11 +444,11 @@ export function AdminProvaConfig() {
                     onChange={e => setNovaQuestao({ ...novaQuestao, enunciado: e.target.value })}
                     placeholder="Digite o enunciado da questão..."
                     rows={3}
-                    className="w-full border border-white/20 bg-white/10 text-white placeholder:text-white/40 border rounded-md px-3 py-2 text-sm bg-background mt-1 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-white/20 text-white placeholder:text-white/40 rounded-md px-3 py-2 text-sm w-full border border-white/20 mt-1 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Alternativas (marque a correta)</p>
+                <p className="text-xs font-semibold text-white/60 uppercase tracking-wide">Alternativas (marque a correta)</p>
 
                 {["opcao_a", "opcao_b", "opcao_c", "opcao_d"].map((campo, i) => (
                   <div key={campo} className="flex items-center gap-3">
@@ -457,7 +457,7 @@ export function AdminProvaConfig() {
                       className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-bold text-sm shrink-0 transition-all ${
                         novaQuestao.resposta_correta === i
                           ? "bg-green-600 border-green-600 text-white"
-                          : "border-gray-300 text-gray-400 hover:border-green-400"
+                          : "border-white/30 text-white/40 hover:border-green-400"
                       }`}>
                       {OPCOES_LABEL[i]}
                     </button>
