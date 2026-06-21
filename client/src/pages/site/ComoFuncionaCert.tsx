@@ -195,29 +195,36 @@ export function ComoFuncionaCert() {
             )}
 
             {/* CTA */}
-            <div className="rounded-2xl border border-white/20 p-6 space-y-3" style={{ background: "rgba(255,255,255,0.08)", backdropFilter: "blur(8px)" }}>
-              {/* Botão preparação */}
-              <Link href="/cursos">
-                <a className="w-full flex items-center gap-3 bg-amber-400 hover:bg-amber-500 text-amber-900 font-bold py-3.5 px-4 rounded-xl transition-all text-sm">
-                  <BookOpen className="w-5 h-5 shrink-0" />
-                  <span>Quero me preparar antes de fazer a certificação</span>
+            <div className="space-y-3">
+
+              {/* Botão principal — Certificar */}
+              <Link href={"/novo-fluxo/certificacoes"}>
+                <a className="w-full flex items-center justify-center gap-2 text-white font-bold py-4 rounded-2xl transition-all text-sm hover:scale-105 hover:shadow-xl border border-white/10"
+                  style={{ background: `linear-gradient(135deg, ${accent.bg} 0%, #2d5be3 100%)` }}>
+                  Estou pronto, quero me certificar
                 </a>
               </Link>
 
-              {/* Botão inscrição — vai para /novo-fluxo/certificacoes onde abre o mini-cadastro */}
-              <Link href={"/novo-fluxo/certificacoes"}>
-                <a
-                  className="w-full flex items-center justify-center gap-2 text-white font-bold py-3.5 rounded-xl transition-all text-sm hover:opacity-90"
-                  style={{ background: `linear-gradient(135deg, ${accent.bg} 0%, #2d5be3 100%)` }}
-                >
-                  Estou pronto, quero me certificar
+              {/* Divisor */}
+              <div className="flex items-center gap-3 py-1">
+                <div className="flex-1 h-px bg-white/10" />
+                <span className="text-white/30 text-xs">ou</span>
+                <div className="flex-1 h-px bg-white/10" />
+              </div>
+
+              {/* Botão preparação */}
+              <Link href="/cursos">
+                <a className="w-full flex items-center justify-center gap-2 font-bold py-3.5 px-4 rounded-2xl transition-all text-sm hover:scale-105 border border-white/10"
+                  style={{ background: "linear-gradient(135deg, #1B7A6B, #0f4d43)", color: "white" }}>
+                  <BookOpen className="w-4 h-4 shrink-0" />
+                  <span>Quero me preparar primeiro</span>
                 </a>
               </Link>
 
               {/* Voltar */}
               <Link href="/novo-fluxo/certificacoes">
-                <a className="w-full flex items-center justify-center gap-2 border border-gray-200 text-gray-600 font-medium py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm">
-                  <ArrowLeft className="w-4 h-4" />
+                <a className="w-full flex items-center justify-center gap-2 border border-white/10 text-blue-300 hover:text-white font-medium py-3 rounded-2xl transition-colors text-xs mt-1">
+                  <ArrowLeft className="w-3.5 h-3.5" />
                   Ver todas as certificações
                 </a>
               </Link>
