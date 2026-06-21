@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Navbar } from "@/components/Navbar";
+
 import { ArrowLeft, ArrowRight, Search, Users, BookOpen, ClipboardCheck, Award, CheckCircle, DollarSign } from "lucide-react";
 
 const ETAPAS = [
@@ -85,11 +85,11 @@ const NIVEIS = [
 
 export function ComoFuncionaLideranca() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <div className="min-h-screen" style={{ background: "linear-gradient(180deg, #050a28 0%, #0a1f5e 45%, #1565c0 75%, #1976d2 100%)" }}>
+      
 
       {/* Header */}
-      <div className="pt-16" style={{ background: "linear-gradient(135deg, #1a3a2a 0%, #2d6a4f 100%)" }}>
+      <div className="pt-8" style={{ background: "linear-gradient(135deg, #1a3a2a 0%, #2d6a4f 100%)" }}>
         <div className="max-w-4xl mx-auto px-6 py-16 text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 text-green-200 text-sm font-semibold px-4 py-2 rounded-full mb-6">
             <Award className="w-4 h-4" />
@@ -135,7 +135,7 @@ export function ComoFuncionaLideranca() {
                   </div>
                   <div className={`flex-1 bg-white rounded-2xl p-6 shadow-sm border ${etapa.destaque ? "border-green-200" : "border-gray-100"}`}>
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="text-xs font-bold text-gray-400 tracking-widest">ETAPA {etapa.numero}</span>
+                      <span className="text-xs font-bold text-blue-400 tracking-widest">ETAPA {etapa.numero}</span>
                       {etapa.destaque && (
                         <span className="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">
                           Ponto de atenção
@@ -143,7 +143,7 @@ export function ComoFuncionaLideranca() {
                       )}
                     </div>
                     <h3 className="text-lg font-bold text-gray-900 mb-2">{etapa.titulo}</h3>
-                    <p className="text-gray-600 text-sm leading-relaxed">{etapa.descricao}</p>
+                    <p className="text-blue-200 text-sm leading-relaxed">{etapa.descricao}</p>
                     {etapa.nota && (
                       <div className="mt-3 flex items-center gap-2 bg-green-50 border border-green-100 rounded-lg px-3 py-2">
                         <CheckCircle className="w-4 h-4 text-green-600 shrink-0" />
@@ -158,32 +158,32 @@ export function ComoFuncionaLideranca() {
         </div>
 
         {/* Investimento */}
-        <div className="mt-16 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="mt-16 bg-white rounded-2xl border border-white/10" style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(8px)" }} className=" overflow-hidden">
           <div className="px-8 py-6 border-b border-gray-100 flex items-center gap-3">
             <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
               <DollarSign className="w-5 h-5 text-green-700" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Investimento da Formação</h2>
-              <p className="text-gray-500 text-sm">Válido para todos os níveis da Certificação de Liderança EcodoBem</p>
+              <h2 className="text-xl font-bold text-white">Investimento da Formação</h2>
+              <p className="text-blue-300 text-sm">Válido para todos os níveis da Certificação de Liderança EcodoBem</p>
             </div>
           </div>
           <div className="p-8">
             <div className="flex flex-col sm:flex-row gap-6 items-center">
               <div className="text-center">
                 <p className="text-4xl font-black text-green-700">6x</p>
-                <p className="text-lg font-bold text-gray-900">R$ 250,00</p>
-                <p className="text-sm text-gray-500">parcelas mensais</p>
+                <p className="text-lg font-bold text-white">R$ 250,00</p>
+                <p className="text-sm text-blue-300">parcelas mensais</p>
               </div>
               <div className="hidden sm:block w-px h-16 bg-gray-200" />
               <div className="text-center">
-                <p className="text-4xl font-black text-gray-900">R$ 1.500</p>
-                <p className="text-sm text-gray-500">total da formação</p>
+                <p className="text-4xl font-black text-white">R$ 1.500</p>
+                <p className="text-sm text-blue-300">total da formação</p>
               </div>
               <div className="hidden sm:block w-px h-16 bg-gray-200" />
               <div className="text-center">
-                <p className="text-4xl font-black text-gray-900">R$ 250</p>
-                <p className="text-sm text-gray-500">taxa de emissão do certificado</p>
+                <p className="text-4xl font-black text-white">R$ 250</p>
+                <p className="text-sm text-blue-300">taxa de emissão do certificado</p>
               </div>
             </div>
             <div className="mt-6 grid sm:grid-cols-2 gap-3">
@@ -208,16 +208,16 @@ export function ComoFuncionaLideranca() {
         {/* Níveis */}
         <div className="mt-16">
           <h2 className="text-2xl font-black text-gray-900 mb-2">Os 4 Níveis da Certificação</h2>
-          <p className="text-gray-500 text-sm mb-8">O nível de ingresso é definido pela entrevista diagnóstica com base no seu perfil profissional.</p>
+          <p className="text-blue-300 text-sm mb-8">O nível de ingresso é definido pela entrevista diagnóstica com base no seu perfil profissional.</p>
           <div className="grid sm:grid-cols-2 gap-4">
             {NIVEIS.map((n, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+              <div key={i} className="rounded-2xl border border-white/10" style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(8px)" }} className=" overflow-hidden">
                 <div className={`${n.cor} px-5 py-3 flex items-center gap-3`}>
                   <span className="text-white font-black text-lg">{n.nivel}</span>
                   <span className="text-white font-semibold text-sm">{n.titulo}</span>
                 </div>
                 <div className="p-5">
-                  <p className="text-xs text-gray-500 mb-3 leading-relaxed">{n.publico}</p>
+                  <p className="text-xs text-blue-300 mb-3 leading-relaxed">{n.publico}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {n.competencias.map((c, j) => (
                       <span key={j} className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full">{c}</span>
@@ -248,14 +248,14 @@ export function ComoFuncionaLideranca() {
       </div>
 
       {/* Footer */}
-      <footer className="py-10 border-t border-gray-100 bg-white">
+      <footer className="py-10 border-t border-white/10">
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <img src="/anefac-logo.png" alt="ANEFAC" className="h-8 w-auto" />
-            <span className="font-bold text-gray-900">ANEFAC</span>
-            <span className="text-gray-400 text-sm">Certificações</span>
+            <span className="font-bold text-white">ANEFAC</span>
+            <span className="text-blue-400 text-sm">Certificações</span>
           </div>
-          <p className="text-xs text-gray-400">© {new Date().getFullYear()} ANEFAC. Todos os direitos reservados.</p>
+          <p className="text-xs text-blue-400">© {new Date().getFullYear()} ANEFAC. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>

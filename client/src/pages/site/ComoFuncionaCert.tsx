@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useParams } from "wouter";
-import { Navbar } from "@/components/Navbar";
+// Navbar removida — layout imersivo ANEFAC
 import { useCertification } from "@/contexts/CertificationContext";
 import { ArrowLeft, CheckCircle, DollarSign, Info, BookOpen, AlertCircle } from "lucide-react";
 
@@ -87,7 +87,7 @@ export function ComoFuncionaCert() {
             </div>
             <div>
               <p className="text-blue-300 text-sm font-medium mb-1">{cert.subtitulo}</p>
-              <h1 className="text-3xl md:text-4xl font-black text-white mb-2">
+              <h1 className="text-3xl md:text-4xl font-black text-white mb-2 leading-tight">
                 {cf.titulo || `Como funciona — ${cert.nome}`}
               </h1>
               {cf.subtitulo && (
@@ -99,19 +99,19 @@ export function ComoFuncionaCert() {
       </div>
 
       {/* Content */}
-      <div className="max-w-5xl mx-auto px-6 py-14">
+      <div className="max-w-5xl mx-auto px-6 py-14 relative z-10">
         <div className="grid lg:grid-cols-3 gap-10">
 
           {/* Etapas — coluna principal */}
           <div className="lg:col-span-2">
-            <h2 className="text-xl font-black text-gray-900 mb-8 flex items-center gap-3">
+            <h2 className="text-xl font-black text-white mb-8 flex items-center gap-3">
               <BookOpen className="w-5 h-5" style={{ color: accent.text }} />
               Etapas do processo
             </h2>
 
             <div className="relative">
               {/* Linha vertical conectora */}
-              <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200" aria-hidden="true" />
+              <div className="absolute left-6 top-0 bottom-0 w-0.5 opacity-30" style={{ background: "#4fc3f7" }} aria-hidden="true" />
 
               <div className="space-y-6">
                 {cf.etapas.map((etapa, i) => (
@@ -125,9 +125,9 @@ export function ComoFuncionaCert() {
                     </div>
 
                     {/* Conteúdo */}
-                    <div className="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-1">
-                      <h3 className="font-bold text-gray-900 mb-2">{etapa.titulo}</h3>
-                      <p className="text-gray-600 text-sm leading-relaxed">{etapa.descricao}</p>
+                    <div className="flex-1 rounded-2xl border border-white/10 shadow-sm p-5 mb-1" style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(8px)" }}>
+                      <h3 className="font-bold text-white mb-2">{etapa.titulo}</h3>
+                      <p className="text-blue-200 text-sm leading-relaxed">{etapa.descricao}</p>
                       {etapa.nota && (
                         <div className="mt-3 space-y-2">
                           {etapa.nota.split('\n\n').map((bloco, bi) => (
@@ -154,29 +154,29 @@ export function ComoFuncionaCert() {
 
             {/* Investimento */}
             {cf.investimento && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <div className="rounded-2xl border border-white/10 p-6" style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(8px)" }}>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: accent.badge }}>
-                    <DollarSign className="w-5 h-5" style={{ color: accent.text }} />
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(79,195,247,0.2)" }}>
+                    <DollarSign className="w-5 h-5" style={{ color: "#4fc3f7" }} />
                   </div>
-                  <h3 className="font-bold text-gray-900">Investimento</h3>
+                  <h3 className="font-bold text-white">Investimento</h3>
                 </div>
-                <p className="text-gray-700 text-sm leading-relaxed font-medium">{cf.investimento}</p>
+                <p className="text-blue-200 text-sm leading-relaxed font-medium">{cf.investimento}</p>
               </div>
             )}
 
             {/* O que está incluído */}
             {cf.inclusoes && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <div className="rounded-2xl border border-white/10 p-6" style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(8px)" }}>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: accent.badge }}>
-                    <CheckCircle className="w-5 h-5" style={{ color: accent.text }} />
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(79,195,247,0.2)" }}>
+                    <CheckCircle className="w-5 h-5" style={{ color: "#4fc3f7" }} />
                   </div>
-                  <h3 className="font-bold text-gray-900">O que está incluído</h3>
+                  <h3 className="font-bold text-white">O que está incluído</h3>
                 </div>
                 <div className="space-y-1.5">
                   {cf.inclusoes.split("·").map((item, i) => (
-                    <div key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                    <div key={i} className="flex items-start gap-2 text-sm text-blue-200">
                       <span className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: accent.text }} />
                       {item.trim()}
                     </div>
@@ -196,7 +196,7 @@ export function ComoFuncionaCert() {
             )}
 
             {/* CTA */}
-            <div className="bg-white rounded-2xl border-2 shadow-sm p-6 space-y-3" style={{ borderColor: accent.badge }}>
+            <div className="rounded-2xl border border-white/20 p-6 space-y-3" style={{ background: "rgba(255,255,255,0.08)", backdropFilter: "blur(8px)" }}>
               {/* Botão preparação */}
               <Link href="/cursos">
                 <a className="w-full flex items-center gap-3 bg-amber-400 hover:bg-amber-500 text-amber-900 font-bold py-3.5 px-4 rounded-xl transition-all text-sm">
@@ -228,17 +228,18 @@ export function ComoFuncionaCert() {
       </div>
 
       {/* Footer */}
-      <footer className="py-10 border-t border-gray-100 bg-white mt-4">
+      <footer className="py-10 border-t border-white/10 mt-4 relative z-10">
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-white text-sm"
               style={{ background: "linear-gradient(135deg, #1e3a6e 0%, #2d5be3 100%)" }}>A</div>
-            <span className="font-bold text-gray-900">ANEFAC</span>
-            <span className="text-gray-400 text-sm">Certificações</span>
+            <span className="font-bold text-white">ANEFAC</span>
+            <span className="text-blue-300 text-sm">Certificações</span>
           </div>
-          <p className="text-xs text-gray-400">© {new Date().getFullYear()} ANEFAC. Todos os direitos reservados.</p>
+          <p className="text-xs text-blue-400">© {new Date().getFullYear()} ANEFAC. Todos os direitos reservados.</p>
         </div>
       </footer>
+      </div>
     </div>
   );
 }
