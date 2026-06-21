@@ -177,16 +177,24 @@ export function NovoFluxoCertificacoes() {
                                 <BookOpen className="w-4 h-4" />
                                 Quero me preparar
                               </button>
-                              <button onClick={() => setExpandida(expandida === idx ? null : idx)}
+                              {/* Como funciona */}
+                              <button onClick={() => navigate(`/como-funciona/${cert.id}`)}
                                 className="flex items-center justify-center gap-2 border border-white/20 text-blue-200 hover:text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-colors">
                                 <FileText className="w-4 h-4" />
-                                {expandida === idx ? "Ver menos" : "Saiba mais"}
-                                {expandida === idx ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                Como funciona
                               </button>
+
+                              {/* Saiba mais / recolher */}
+                              <button onClick={() => setExpandida(expandida === idx ? null : idx)}
+                                className="flex items-center justify-center gap-2 border border-white/10 text-white/40 hover:text-white/70 px-5 py-2 rounded-xl text-xs transition-colors">
+                                {expandida === idx ? <><ChevronUp className="w-3 h-3" /> Ver menos</> : <><ChevronDown className="w-3 h-3" /> Mais detalhes</>}
+                              </button>
+
+                              {/* Edital — só se tiver URL */}
                               {cert.editalUrl && (
                                 <a href={cert.editalUrl} target="_blank" rel="noopener noreferrer"
-                                  className="flex items-center justify-center gap-2 border border-white/10 text-white/50 hover:text-white/80 px-5 py-2.5 rounded-xl text-xs transition-colors">
-                                  <ExternalLink className="w-3 h-3" /> Edital
+                                  className="flex items-center justify-center gap-2 border border-white/10 text-white/40 hover:text-white/70 px-5 py-2 rounded-xl text-xs transition-colors">
+                                  <ExternalLink className="w-3 h-3" /> Edital / Comunicado
                                 </a>
                               )}
                             </>
