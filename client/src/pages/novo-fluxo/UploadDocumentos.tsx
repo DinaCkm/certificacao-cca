@@ -80,7 +80,7 @@ export function UploadDocumentos() {
       });
       return;
     }
-    atualizarStatus("aguardando_validacao");
+    atualizarStatus("validacao");
     navigate("/novo-fluxo/aguardando-validacao");
   };
 

@@ -1,6 +1,5 @@
 import React from "react";
 import { Link, useParams } from "wouter";
-// Navbar removida — layout imersivo ANEFAC
 import { useCertification } from "@/contexts/CertificationContext";
 import { ArrowLeft, CheckCircle, DollarSign, Info, BookOpen, AlertCircle } from "lucide-react";
 
@@ -13,8 +12,7 @@ export function ComoFuncionaCert() {
   if (!cert) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="pt-32 text-center px-6">
+                <div className="pt-32 text-center px-6">
           <h1 className="text-2xl font-bold text-white mb-4">Certificação não encontrada</h1>
           <Link href="/novo-fluxo/certificacoes">
             <a className="text-blue-300 hover:text-white font-medium hover:underline">← Voltar para certificações</a>
@@ -29,8 +27,7 @@ export function ComoFuncionaCert() {
   if (!cf || cf.etapas.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="pt-8 relative z-10" style={{ background: "linear-gradient(135deg, #0f1f4e 0%, #1e3a6e 100%)" }}>
+                <div className="pt-8 relative z-10" style={{ background: "linear-gradient(135deg, #0f1f4e 0%, #1e3a6e 100%)" }}>
           <div className="max-w-5xl mx-auto px-6 py-16">
             <Link href="/novo-fluxo/certificacoes">
               <a className="inline-flex items-center gap-2 text-blue-300 hover:text-white text-sm mb-6 transition-colors">
@@ -245,7 +242,6 @@ export function ComoFuncionaCert() {
           <p className="text-xs text-blue-400">© {new Date().getFullYear()} ANEFAC. Todos os direitos reservados.</p>
         </div>
       </footer>
-      </div>
     </div>
   );
 }

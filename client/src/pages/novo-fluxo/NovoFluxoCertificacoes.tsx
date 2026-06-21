@@ -142,7 +142,7 @@ export function NovoFluxoCertificacoes() {
                         <div className="flex-1 min-w-0">
                           <h2 className="text-2xl font-black text-white mb-1">{cert.nome}</h2>
                           <p className="font-medium text-sm mb-3" style={{ color: "#4fc3f7" }}>{cert.subtitulo}</p>
-                          <p className="text-blue-200 text-sm leading-relaxed">{cert.descricaBreve || cert.descricao}</p>
+                          <p className="text-blue-200 text-sm leading-relaxed">{cert.descricaoBreve || cert.descricao}</p>
 
                           {/* Taxas */}
                           <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-white/10">

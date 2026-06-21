@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import { Router, Request, Response } from "express";
 import { registerUser, loginUser } from "../services/authService.js";
 import { requireAuth } from "../middleware/auth.js";

@@ -182,9 +182,10 @@ export function AdminProvaConfig() {
                 <button key={c.id} onClick={() => setCertSelecionada(c.id)}
                   className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all ${
                     certSelecionada === c.id
-                      ? "text-white border-transparent" style={{ background: "linear-gradient(135deg, #6B3FA0, #1a4a9e)" }}
-                      : "bg-white text-gray-700 border-gray-200 hover:border-blue-300"
-                  }`}>
+                      ? "text-white border-transparent"
+                      : "border-white/20 text-blue-200 hover:border-blue-300"
+                  }`}
+                  style={certSelecionada === c.id ? { background: "linear-gradient(135deg, #6B3FA0, #1a4a9e)" } : { background: "rgba(255,255,255,0.05)" }}>
                   {c.nome}
                 </button>
               ))}
@@ -315,11 +316,13 @@ export function AdminProvaConfig() {
                             </div>
                             <div className="grid grid-cols-2 gap-1.5 ml-8">
                               {[q.opcao_a, q.opcao_b, q.opcao_c, q.opcao_d].filter(Boolean).map((op, i) => (
-                                <div key={i} className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg ${
-                                  i === q.resposta_correta
-                                    ? "bg-green-50 text-green-700 border border-green-200 font-medium"
-                                    : "text-blue-200" style={{ background: "rgba(255,255,255,0.05)" }}
-                                }`}>
+                                <div key={i}
+                                  className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg ${
+                                    i === q.resposta_correta
+                                      ? "bg-green-50 text-green-700 border border-green-200 font-medium"
+                                      : "text-blue-200"
+                                  }`}
+                                  style={i !== q.resposta_correta ? { background: "rgba(255,255,255,0.05)" } : {}}>
                                   <span className="font-bold">{OPCOES_LABEL[i]}.</span> {op}
                                   {i === q.resposta_correta && <Check className="w-3 h-3 ml-auto shrink-0" />}
                                 </div>

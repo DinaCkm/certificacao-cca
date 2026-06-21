@@ -69,8 +69,6 @@ export function Cadastro() {
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [mostrarConfirmar, setMostrarConfirmar] = useState(false);
   const [enviando, setEnviando] = useState(false);
-  const [mostrarSenha, setMostrarSenha] = useState(false);
-  const [mostrarConfirmar, setMostrarConfirmar] = useState(false);
 
   useEffect(() => {
     if (!processo.certificacaoId) navigate("/novo-fluxo");
@@ -135,7 +133,7 @@ export function Cadastro() {
         candidatoEmpresa: form.empresa,
         candidatoCargo: form.cargo,
       });
-      atualizarStatus("pagamento_analise");
+      atualizarStatus("pagamento1");
 
       // 4. Salva dados complementares localmente (empresa, cargo, formação)
       // Estes campos serão migrados para o banco na Fase 3

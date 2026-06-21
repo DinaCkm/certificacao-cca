@@ -166,7 +166,7 @@ export function ComoFuncionaLideranca() {
         </div>
 
         {/* Investimento */}
-        <div className="mt-16  rounded-2xl border border-white/10" style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(8px)" }} className=" overflow-hidden">
+        <div className="mt-16 rounded-2xl border border-white/10 overflow-hidden" style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(8px)" }}>
           <div className="px-8 py-6 border-b border-white/10 flex items-center gap-3">
             <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
               <DollarSign className="w-5 h-5 text-green-700" />
@@ -219,7 +219,7 @@ export function ComoFuncionaLideranca() {
           <p className="text-blue-300 text-sm mb-8">O nível de ingresso é definido pela entrevista diagnóstica com base no seu perfil profissional.</p>
           <div className="grid sm:grid-cols-2 gap-4">
             {NIVEIS.map((n, i) => (
-              <div key={i} className="rounded-2xl border border-white/10" style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(8px)" }} className=" overflow-hidden">
+              <div key={i} className="rounded-2xl border border-white/10 overflow-hidden" style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(8px)" }}>
                 <div className={`${n.cor} px-5 py-3 flex items-center gap-3`}>
                   <span className="text-white font-black text-lg">{n.nivel}</span>
                   <span className="text-white font-semibold text-sm">{n.titulo}</span>
