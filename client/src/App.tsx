@@ -77,6 +77,7 @@ import { CourseProvider } from "./contexts/CourseContext";
 import { Cursos } from "./pages/site/Cursos";
 import { AdminCursos } from "./pages/novo-fluxo/admin/AdminCursos";
 import { AdminUsuarios } from "./pages/novo-fluxo/admin/AdminUsuarios";
+import { AdminCarrossel } from "./pages/novo-fluxo/admin/AdminCarrossel";
 // ───────────────────────────────────────────────────────────────────────────
 
 function Router() {
@@ -152,6 +153,7 @@ function Router() {
       <Route path={"/novo-fluxo/admin/institucional"} component={() => <AdminRoute component={AdminInstitucional} />} />
       <Route path={"/novo-fluxo/admin/cursos"} component={() => <AdminRoute component={AdminCursos} />} />
       <Route path={"/novo-fluxo/admin/usuarios"} component={() => <AdminRoute component={AdminUsuarios} />} />
+      <Route path={"/novo-fluxo/admin/carrossel"} component={() => <AdminRoute component={AdminCarrossel} />} />
       {/* ─────────────────────────────────────────────────────────────────────── */}
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

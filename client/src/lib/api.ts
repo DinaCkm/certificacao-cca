@@ -146,3 +146,11 @@ Object.assign(api.processo, {
   retomar: () =>
     request<{ processo: any | null }>("GET", "/processo/retomar"),
 });
+
+// Carrossel — métodos admin
+Object.assign(api.admin, {
+  listarCarrossel: () => request<{ imagens: any[] }>("GET", "/admin/carrossel"),
+  criarCarrossel: (body: any) => request<{ id: number }>("POST", "/admin/carrossel", body),
+  editarCarrossel: (id: number, body: any) => request<{ message: string }>("PUT", `/admin/carrossel/${id}`, body),
+  removerCarrossel: (id: number) => request<{ message: string }>("DELETE", `/admin/carrossel/${id}`),
+});

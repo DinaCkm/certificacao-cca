@@ -258,3 +258,91 @@ adminRouter.delete(
     }
   }
 );
+
+// ── Carrossel de imagens ──────────────────────────────────────────────────────
+
+// GET /api/admin/carrossel — público (para exibir na entrada)
+adminRouter.get("/carrossel/publico", async (_req, res) => {
+  try {
+    const [rows] = await db.execute(
+      "SELECT id, titulo, subtitulo, url_imagem, ordem FROM carrossel_imagens WHERE ativo = TRUE ORDER BY ordem ASC LIMIT 5"
+    ) as any;
+    return res.json({ imagens: rows });
+  } catch (err) {
+    return res.status(500).json({ error: "Erro ao buscar carrossel" });
+  }
+});
+
+// GET /api/admin/carrossel — lista todas (admin/gestor_n1)
+adminRouter.get("/carrossel",
+  requireRole("administrador", "gestor_n1"),
+  async (_req, res) => {
+    try {
+      const [rows] = await db.execute(
+        "SELECT * FROM carrossel_imagens ORDER BY ordem ASC"
+      ) as any;
+      return res.json({ imagens: rows });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao buscar carrossel" });
+    }
+  }
+);
+
+// POST /api/admin/carrossel — adiciona imagem
+adminRouter.post("/carrossel",
+  requireRole("administrador", "gestor_n1"),
+  async (req, res) => {
+    const { titulo, subtitulo, url_imagem, ordem } = req.body;
+    if (!url_imagem) return res.status(400).json({ error: "URL da imagem é obrigatória" });
+
+    try {
+      // Verifica limite de 5 imagens ativas
+      const [count] = await db.execute(
+        "SELECT COUNT(*) as total FROM carrossel_imagens WHERE ativo = TRUE"
+      ) as any;
+      if (count[0].total >= 5) {
+        return res.status(400).json({ error: "Limite de 5 imagens atingido. Desative uma imagem antes de adicionar." });
+      }
+
+      const [result] = await db.execute(
+        "INSERT INTO carrossel_imagens (titulo, subtitulo, url_imagem, ordem, criado_por) VALUES (?, ?, ?, ?, ?)",
+        [titulo || null, subtitulo || null, url_imagem, ordem || count[0].total, req.user!.userId]
+      ) as any;
+
+      return res.status(201).json({ id: result.insertId, message: "Imagem adicionada" });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao adicionar imagem" });
+    }
+  }
+);
+
+// PUT /api/admin/carrossel/:id — edita imagem
+adminRouter.put("/carrossel/:id",
+  requireRole("administrador", "gestor_n1"),
+  async (req, res) => {
+    const { titulo, subtitulo, url_imagem, ordem, ativo } = req.body;
+    const id = parseInt(req.params.id);
+    try {
+      await db.execute(
+        "UPDATE carrossel_imagens SET titulo=?, subtitulo=?, url_imagem=?, ordem=?, ativo=? WHERE id=?",
+        [titulo, subtitulo, url_imagem, ordem, ativo ? 1 : 0, id]
+      );
+      return res.json({ message: "Imagem atualizada" });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao atualizar imagem" });
+    }
+  }
+);
+
+// DELETE /api/admin/carrossel/:id
+adminRouter.delete("/carrossel/:id",
+  requireRole("administrador", "gestor_n1"),
+  async (req, res) => {
+    try {
+      await db.execute("DELETE FROM carrossel_imagens WHERE id=?", [parseInt(req.params.id)]);
+      return res.json({ message: "Imagem removida" });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao remover imagem" });
+    }
+  }
+);
