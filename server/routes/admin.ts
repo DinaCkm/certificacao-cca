@@ -711,3 +711,189 @@ adminRouter.post("/lgpd/aceite", async (req: any, res) => {
     return res.status(500).json({ error: "Erro ao registrar aceite" });
   }
 });
+
+// ── Resultado da Entrevista ───────────────────────────────────────────────────
+
+// POST /api/admin/entrevista/:processoId/resultado
+adminRouter.post("/entrevista/:processoId/resultado",
+  requireRole("administrador", "gestor_n1", "entrevistador"),
+  async (req, res) => {
+    const processoId = parseInt(req.params.processoId);
+    const { decisao, observacoes } = req.body; // decisao: "habilitado" | "nao_habilitado"
+
+    if (!decisao || !["habilitado", "nao_habilitado"].includes(decisao)) {
+      return res.status(400).json({ error: "Decisão inválida. Use 'habilitado' ou 'nao_habilitado'" });
+    }
+
+    try {
+      // Busca processo e dados do candidato
+      const [processos] = await db.execute(
+        `SELECT cp.*, u.full_name, u.email, ct.nome as cert_nome
+         FROM candidato_processos cp
+         JOIN users u ON u.id = cp.user_id
+         JOIN certification_types ct ON ct.id = cp.certification_type_id
+         WHERE cp.id = ?`,
+        [processoId]
+      ) as any;
+
+      if (!processos.length) {
+        return res.status(404).json({ error: "Processo não encontrado" });
+      }
+
+      const processo = processos[0];
+      const habilitado = decisao === "habilitado";
+
+      // Atualiza status do processo
+      const novoStatus = habilitado ? "pagamento2" : "encerrado";
+      await db.execute(
+        `UPDATE candidato_processos
+         SET aprovado_entrevista = ?, status_geral = ?, updated_at = NOW()
+         WHERE id = ?`,
+        [habilitado ? 1 : 0, novoStatus, processoId]
+      );
+
+      // Audit log
+      await db.execute(
+        `INSERT INTO audit_log (user_id, processo_id, acao, entidade, entidade_id, descricao, resultado)
+         VALUES (?, ?, ?, 'candidato_processos', ?, ?, 'sucesso')`,
+        [
+          req.user!.userId,
+          processoId,
+          habilitado ? "entrevista_habilitado" : "entrevista_nao_habilitado",
+          processoId,
+          `${processo.full_name} ${habilitado ? "HABILITADO" : "NÃO HABILITADO"} na entrevista. ${observacoes ? "Obs: " + observacoes : ""}`
+        ]
+      );
+
+      // Envia email ao candidato
+      const appUrl = process.env.APP_URL || "https://certificacao-cca-staging.up.railway.app";
+
+      if (habilitado) {
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: process.env.FROM_EMAIL || "ANEFAC <noreply@ckmtalents.net>",
+            to: [processo.email],
+            subject: `🎓 Parabéns! Você foi habilitado na certificação ${processo.cert_nome}`,
+            html: `
+              <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px">
+                <div style="background:linear-gradient(135deg,#0a1f5e,#1565c0);padding:32px;border-radius:16px 16px 0 0;text-align:center">
+                  <img src="${appUrl}/logo-anefac.png" alt="ANEFAC" style="height:50px;margin-bottom:16px" />
+                  <h1 style="color:white;margin:0;font-size:24px">Parabéns, ${processo.full_name.split(" ")[0]}!</h1>
+                  <p style="color:#93c5fd;margin:8px 0 0;font-size:16px">Você foi habilitado na sua entrevista!</p>
+                </div>
+                <div style="background:white;padding:32px;border:1px solid #e2e8f0;border-top:none">
+                  <p style="color:#374151;font-size:16px">
+                    É com grande satisfação que informamos que você foi <strong>aprovado e habilitado</strong> na entrevista técnica do processo de certificação <strong>${processo.cert_nome}</strong>.
+                  </p>
+                  <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:20px;margin:24px 0;text-align:center">
+                    <p style="color:#15803d;font-size:18px;font-weight:bold;margin:0">✅ Resultado: HABILITADO</p>
+                  </div>
+                  <p style="color:#374151;">
+                    O próximo passo é realizar o <strong>pagamento da taxa de emissão do certificado</strong>. 
+                    Acesse sua área de candidato clicando no botão abaixo:
+                  </p>
+                  <div style="text-align:center;margin:28px 0">
+                    <a href="${appUrl}/novo-fluxo"
+                       style="background:linear-gradient(135deg,#0a1f5e,#1565c0);color:white;padding:16px 36px;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;display:inline-block">
+                      Acessar minha área e pagar →
+                    </a>
+                  </div>
+                  <p style="color:#6b7280;font-size:14px;">
+                    Após a confirmação do pagamento, seu certificado será emitido em até 5 dias úteis.
+                  </p>
+                  <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0" />
+                  <p style="color:#9ca3af;font-size:12px;text-align:center">
+                    Em caso de dúvidas, acesse o <a href="${appUrl}/novo-fluxo" style="color:#1565c0">Fale Conosco</a> na plataforma.
+                    <br/>ANEFAC — Associação Nacional dos Executivos de Finanças, Administração e Contabilidade
+                  </p>
+                </div>
+              </div>
+            `,
+          }),
+        });
+      } else {
+        // Email de não habilitado
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: process.env.FROM_EMAIL || "ANEFAC <noreply@ckmtalents.net>",
+            to: [processo.email],
+            subject: `Resultado da entrevista — ${processo.cert_nome}`,
+            html: `
+              <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px">
+                <div style="background:linear-gradient(135deg,#0a1f5e,#1565c0);padding:32px;border-radius:16px 16px 0 0;text-align:center">
+                  <h1 style="color:white;margin:0;font-size:22px">Resultado da Entrevista</h1>
+                  <p style="color:#93c5fd;margin:8px 0 0">${processo.cert_nome}</p>
+                </div>
+                <div style="background:white;padding:32px;border:1px solid #e2e8f0;border-top:none">
+                  <p style="color:#374151">Olá, <strong>${processo.full_name.split(" ")[0]}</strong>!</p>
+                  <p style="color:#374151;">
+                    Agradecemos sua participação no processo de certificação ANEFAC. Após análise da banca examinadora, informamos que o resultado da sua entrevista técnica foi:
+                  </p>
+                  <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:20px;margin:24px 0;text-align:center">
+                    <p style="color:#dc2626;font-size:18px;font-weight:bold;margin:0">Resultado: Não habilitado nesta etapa</p>
+                  </div>
+                  <p style="color:#374151;">
+                    Você poderá verificar novos processos de certificação em edições futuras. Para dúvidas, use o Fale Conosco.
+                  </p>
+                  <div style="text-align:center;margin:24px 0">
+                    <a href="${appUrl}/novo-fluxo"
+                       style="background:#6b7280;color:white;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600;display:inline-block">
+                      Acessar a plataforma
+                    </a>
+                  </div>
+                  <p style="color:#9ca3af;font-size:12px;text-align:center">
+                    ANEFAC — Associação Nacional dos Executivos de Finanças, Administração e Contabilidade
+                  </p>
+                </div>
+              </div>
+            `,
+          }),
+        });
+      }
+
+      return res.json({
+        message: habilitado
+          ? "Candidato habilitado! E-mail de pagamento enviado automaticamente."
+          : "Resultado registrado. E-mail de não habilitação enviado ao candidato.",
+        novo_status: novoStatus,
+        email_enviado: true,
+      });
+    } catch (err) {
+      console.error("Erro resultado entrevista:", err);
+      return res.status(500).json({ error: "Erro ao registrar resultado" });
+    }
+  }
+);
+
+// GET /api/admin/entrevista/pendentes — candidatos aguardando resultado
+adminRouter.get("/entrevista/pendentes",
+  requireRole("administrador", "gestor_n1", "entrevistador"),
+  async (req, res) => {
+    try {
+      const [rows] = await db.execute(
+        `SELECT cp.id as processo_id, cp.status_geral, cp.caminho_avaliacao,
+                u.full_name, u.email, ct.nome as cert_nome,
+                ae.data_hora as entrevista_data
+         FROM candidato_processos cp
+         JOIN users u ON u.id = cp.user_id
+         JOIN certification_types ct ON ct.id = cp.certification_type_id
+         LEFT JOIN agendamentos_entrevista ae ON ae.processo_id = cp.id
+         WHERE cp.status_geral IN ('entrevista', 'agendamento')
+         ORDER BY ae.data_hora ASC`,
+      ) as any;
+      return res.json({ pendentes: rows });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao buscar pendentes" });
+    }
+  }
+);

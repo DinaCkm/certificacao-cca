@@ -153,7 +153,7 @@ const ROLES = [
     cor: "from-green-600 to-green-800",
     corBadge: "bg-green-100 text-green-800",
     icone: <Award className="w-6 h-6 text-white" />,
-    descricao: "Conduz as entrevistas técnicas dos candidatos aprovados na avaliação documental. Visualiza os candidatos designados para si.",
+    descricao: "Conduz as entrevistas técnicas dos candidatos. Registra o resultado (Habilitado ou Não Habilitado), que aciona automaticamente o envio de e-mail ao candidato e atualiza o status do processo.",
     permissoes: [
       { categoria: "Candidatos", itens: [
         { label: "Ver candidatos designados", pode: true },
@@ -161,8 +161,9 @@ const ROLES = [
         { label: "Inativar ou excluir candidato", pode: false },
       ]},
       { categoria: "Entrevistas", itens: [
-        { label: "Ver agenda de entrevistas", pode: true },
-        { label: "Registrar resultado da entrevista", pode: true },
+        { label: "Ver candidatos aguardando resultado", pode: true },
+        { label: "Registrar Habilitado ou Não Habilitado", pode: true },
+        { label: "Acionar envio automático de e-mail ao candidato", pode: true },
         { label: "Acessar sala de entrevista", pode: true },
       ]},
       { categoria: "Plataforma", itens: [

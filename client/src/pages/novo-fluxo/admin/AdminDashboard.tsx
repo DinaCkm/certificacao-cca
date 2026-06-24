@@ -188,6 +188,7 @@ export function AdminDashboard() {
                 <div className="space-y-2">
                   {[
                     { label: "Validar documentos", href: "/novo-fluxo/admin/validacao", icon: FileText, color: "text-yellow-600" },
+                    { label: "Resultado de Entrevistas", href: "/novo-fluxo/admin/resultado-entrevista", icon: Award, color: "text-green-600" },
                     { label: "Fale Conosco", href: "/novo-fluxo/admin/fale-conosco", icon: FileText, color: "text-green-600" },
                     { label: "Todos os Candidatos", href: "/novo-fluxo/admin/candidatos", icon: FileText, color: "text-cyan-600" },
                     { label: "Perfis e Permissões", href: "/novo-fluxo/admin/perfis", icon: Settings, color: "text-violet-600" },
