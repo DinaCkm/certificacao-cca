@@ -51,9 +51,18 @@ export function AdminDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" className="text-white hover:text-blue-200 text-xs" onClick={() => navigate("/novo-fluxo")}>
+            <a
+              href="/novo-fluxo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white hover:text-blue-200 text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-white/10 transition-colors"
+              title="Abre em nova aba sem usar sua sessão de administrador"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
               Ver portal do candidato
-            </Button>
+            </a>
             <div className="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center text-xs font-bold">
               AD
             </div>

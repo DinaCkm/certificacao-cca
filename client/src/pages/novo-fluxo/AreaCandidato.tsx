@@ -276,7 +276,12 @@ export function AreaCandidato() {
     }
   }, [isAuthenticated]);
 
-  if (isAuthenticated && processoAtivo) {
+  // Admin/gestor/avaliador logado não deve ver painel de candidato
+  const rolesAdmin = ["administrador", "gestor_n1", "gestor_n2", "avaliador", "entrevistador"];
+  const { user } = useAuth();
+  const isAdminUser = user && rolesAdmin.includes((user as any).role);
+
+  if (isAuthenticated && processoAtivo && !isAdminUser) {
     return <PainelCandidato processo={processoAtivo} onNovaCertificacao={() => navigate("/novo-fluxo/selecionar")} />;
   }
 
