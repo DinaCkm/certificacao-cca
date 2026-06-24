@@ -146,7 +146,7 @@ export function BoasVindasModal({ open, onClose, onSuccess }: BoasVindasModalPro
           </div>
 
           <Button className="w-full bg-blue-900 hover:bg-blue-800 mt-2" onClick={handleContinuar} disabled={verificando}>
-            {verificando ? "Verificando..." : "Conhecer as certificações →"}
+            {verificando ? "Verificando..." : "Quero me certificar →"}
           </Button>
 
           <p className="text-xs text-center text-gray-400">
