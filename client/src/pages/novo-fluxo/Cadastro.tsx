@@ -121,8 +121,20 @@ export function Cadastro() {
       // 2. Salva o token de autenticação
       setToken(token);
 
-      // Limpa dados do mini-cadastro
+      // Limpa dados do mini-cadastro e LGPD
       sessionStorage.removeItem("anefac_pre_dados");
+
+      // Registra aceite LGPD no banco se foi aceito
+      if (sessionStorage.getItem("anefac_lgpd_aceito")) {
+        fetch("/api/admin/lgpd/aceite", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("anefac_token")}`,
+          },
+        }).catch(() => {});
+        sessionStorage.removeItem("anefac_lgpd_aceito");
+      }
 
       // 3. Atualiza o contexto local (para manter compatibilidade com o fluxo atual)
       atualizarCandidato({

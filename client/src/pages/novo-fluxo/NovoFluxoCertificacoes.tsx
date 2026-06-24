@@ -47,11 +47,16 @@ export function NovoFluxoCertificacoes() {
 
   const handleQueroMeCertificar = (cert: any) => {
     setCertSelecionada(cert);
-    // Se já tem dados do mini-cadastro na sessão, vai direto
+    selecionarCertificacao(cert);
+    // Se já tem dados do mini-cadastro na sessão, vai para LGPD
     const preData = sessionStorage.getItem("anefac_pre_dados");
     if (preData) {
-      selecionarCertificacao(cert);
-      navigate("/novo-fluxo/cadastro");
+      const lgpdAceito = sessionStorage.getItem("anefac_lgpd_aceito");
+      if (lgpdAceito) {
+        navigate("/novo-fluxo/cadastro");
+      } else {
+        navigate("/novo-fluxo/lgpd");
+      }
       return;
     }
     setBoasVindasAberto(true);

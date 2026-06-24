@@ -50,6 +50,8 @@ import { AdminUsuarios } from "./pages/novo-fluxo/admin/AdminUsuarios";
 import { AdminCarrossel } from "./pages/novo-fluxo/admin/AdminCarrossel";
 import { AdminProvaConfig } from "./pages/novo-fluxo/admin/AdminProvaConfig";
 import { AdminFaleConosco } from "./pages/novo-fluxo/admin/AdminFaleConosco";
+import { AdminCandidatos } from "./pages/novo-fluxo/admin/AdminCandidatos";
+import { AceiteLGPD } from "./pages/novo-fluxo/AceiteLGPD";
 import { NavbarGlobal } from "./components/NavbarGlobal";
 import { FaleConosco } from "./components/FaleConosco";
 import { NovoFluxoCertificacoes } from "./pages/novo-fluxo/NovoFluxoCertificacoes";
@@ -134,6 +136,8 @@ function Router() {
       <Route path={"/novo-fluxo/admin/carrossel"} component={() => <AdminRoute component={AdminCarrossel} />} />
       <Route path={"/novo-fluxo/admin/prova-config"} component={() => <AdminRoute component={AdminProvaConfig} />} />
       <Route path={"/novo-fluxo/admin/fale-conosco"} component={() => <AdminRoute component={AdminFaleConosco} />} />
+      <Route path={"/novo-fluxo/admin/candidatos"} component={() => <AdminRoute component={AdminCandidatos} />} />
+      <Route path={"/novo-fluxo/lgpd"} component={AceiteLGPD} />
       {/* ─────────────────────────────────────────────────────────────────────── */}
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

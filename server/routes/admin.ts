@@ -554,3 +554,151 @@ adminRouter.put("/fale-conosco/:id/lida",
     }
   }
 );
+
+// ── Gestão de Candidatos ──────────────────────────────────────────────────────
+
+// GET /api/admin/candidatos — lista todos os candidatos com processo
+adminRouter.get("/candidatos",
+  requireRole("administrador", "gestor_n1", "gestor_n2"),
+  async (req, res) => {
+    try {
+      const { busca, status } = req.query as any;
+      let sql = `
+        SELECT
+          u.id, u.full_name, u.email, u.cpf, u.is_active,
+          u.created_at,
+          cp.id as processo_id, cp.status_geral, cp.caminho_avaliacao,
+          ct.nome as certificacao_nome, ct.numero as cert_numero,
+          la.aceito_em as lgpd_aceito_em
+        FROM users u
+        LEFT JOIN candidato_processos cp ON cp.user_id = u.id
+          AND cp.status_geral NOT IN ('concluido','encerrado')
+        LEFT JOIN certification_types ct ON ct.id = cp.certification_type_id
+        LEFT JOIN lgpd_aceites la ON la.user_id = u.id
+        WHERE u.role_id = 1
+      `;
+      const params: any[] = [];
+
+      if (busca) {
+        sql += ` AND (u.full_name LIKE ? OR u.email LIKE ? OR u.cpf LIKE ?)`;
+        params.push(`%${busca}%`, `%${busca}%`, `%${busca}%`);
+      }
+      if (status) {
+        sql += ` AND cp.status_geral = ?`;
+        params.push(status);
+      }
+
+      sql += ` ORDER BY u.created_at DESC LIMIT 200`;
+
+      const [rows] = await db.execute(sql, params) as any;
+      return res.json({ candidatos: rows });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao buscar candidatos" });
+    }
+  }
+);
+
+// GET /api/admin/candidatos/:id — detalhe do candidato
+adminRouter.get("/candidatos/:id",
+  requireRole("administrador", "gestor_n1", "gestor_n2"),
+  async (req, res) => {
+    try {
+      const [rows] = await db.execute(
+        `SELECT u.*, cp.status_geral, cp.caminho_avaliacao, cp.tentativas_prova,
+                cp.pagamento1_realizado, cp.pagamento2_realizado,
+                ct.nome as certificacao_nome, la.aceito_em as lgpd_aceito_em
+         FROM users u
+         LEFT JOIN candidato_processos cp ON cp.user_id = u.id
+         LEFT JOIN certification_types ct ON ct.id = cp.certification_type_id
+         LEFT JOIN lgpd_aceites la ON la.user_id = u.id
+         WHERE u.id = ? AND u.role_id = 1`,
+        [parseInt(req.params.id)]
+      ) as any;
+      if (!rows.length) return res.status(404).json({ error: "Candidato não encontrado" });
+      return res.json({ candidato: rows[0] });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao buscar candidato" });
+    }
+  }
+);
+
+// PUT /api/admin/candidatos/:id/inativar — inativa candidato
+adminRouter.put("/candidatos/:id/inativar",
+  requireRole("administrador", "gestor_n1"),
+  async (req, res) => {
+    try {
+      await db.execute(
+        "UPDATE users SET is_active = FALSE WHERE id = ? AND role_id = 1",
+        [parseInt(req.params.id)]
+      );
+      await db.execute(
+        `INSERT INTO audit_log (user_id, acao, entidade, entidade_id, descricao, resultado)
+         VALUES (?, 'candidato_inativado', 'users', ?, 'Candidato inativado por LGPD', 'sucesso')`,
+        [req.user!.userId, parseInt(req.params.id)]
+      );
+      return res.json({ message: "Candidato inativado" });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao inativar" });
+    }
+  }
+);
+
+// PUT /api/admin/candidatos/:id/reativar
+adminRouter.put("/candidatos/:id/reativar",
+  requireRole("administrador", "gestor_n1"),
+  async (req, res) => {
+    try {
+      await db.execute(
+        "UPDATE users SET is_active = TRUE WHERE id = ? AND role_id = 1",
+        [parseInt(req.params.id)]
+      );
+      return res.json({ message: "Candidato reativado" });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao reativar" });
+    }
+  }
+);
+
+// DELETE /api/admin/candidatos/:id — exclusão permanente (LGPD)
+adminRouter.delete("/candidatos/:id",
+  requireRole("administrador"),
+  async (req, res) => {
+    const id = parseInt(req.params.id);
+    try {
+      // Verifica se é candidato
+      const [rows] = await db.execute(
+        "SELECT id, full_name FROM users WHERE id = ? AND role_id = 1",
+        [id]
+      ) as any;
+      if (!rows.length) return res.status(404).json({ error: "Candidato não encontrado" });
+
+      // Exclui dados relacionados em ordem
+      await db.execute("DELETE FROM lgpd_aceites WHERE user_id = ?", [id]);
+      await db.execute("DELETE FROM fale_conosco WHERE user_id = ?", [id]);
+      await db.execute("DELETE FROM tentativas_prova WHERE user_id = ?", [id]);
+      await db.execute("DELETE FROM candidato_processos WHERE user_id = ?", [id]);
+      await db.execute("DELETE FROM users WHERE id = ?", [id]);
+
+      return res.json({ message: `Candidato ${rows[0].full_name} excluído permanentemente` });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao excluir candidato" });
+    }
+  }
+);
+
+// POST /api/admin/lgpd/aceite — registra aceite LGPD
+adminRouter.post("/lgpd/aceite", async (req: any, res) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) return res.status(401).json({ error: "Não autenticado" });
+    await db.execute(
+      "INSERT INTO lgpd_aceites (user_id, ip_address, versao_politica) VALUES (?, ?, '1.0')",
+      [userId, req.ip]
+    );
+    return res.json({ message: "Aceite registrado" });
+  } catch (err) {
+    return res.status(500).json({ error: "Erro ao registrar aceite" });
+  }
+});
