@@ -67,7 +67,7 @@ export function NovoFluxoCertificacoes() {
     setBoasVindasAberto(false);
     if (certSelecionada) {
       selecionarCertificacao(certSelecionada);
-      navigate("/novo-fluxo/cadastro");
+      navigate("/novo-fluxo/lgpd");
     }
   };
 

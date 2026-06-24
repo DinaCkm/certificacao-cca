@@ -434,7 +434,7 @@ export function AreaCandidato() {
           onSuccess={(dados) => {
             sessionStorage.setItem("anefac_pre_dados", JSON.stringify(dados));
             setBoasVindasAberto(false);
-            navigate("/novo-fluxo/selecionar");
+            navigate("/novo-fluxo/lgpd");
           }} />
       )}
 
