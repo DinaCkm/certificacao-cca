@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,32 +8,52 @@ import {
   XCircle, BarChart3, Settings, ChevronRight, AlertCircle, Globe, BookOpen
 } from "lucide-react";
 
-const MOCK_CANDIDATOS = [
-  { nome: "Ana Paula Ferreira", cert: "Certificação Controller", status: "Aguardando validação", data: "12/06/2026" },
-  { nome: "Roberto Mendes", cert: "Certificação Controller Plus", status: "Em entrevista", data: "11/06/2026" },
-  { nome: "Carla Souza", cert: "Certificação CCA", status: "Prova agendada", data: "10/06/2026" },
-  { nome: "Marcos Lima", cert: "Certificação Controller", status: "Certificado emitido", data: "09/06/2026" },
-  { nome: "Fernanda Costa", cert: "Certificação Controller Plus", status: "Documentos enviados", data: "08/06/2026" },
-];
-
-const STATUS_COLORS: Record<string, string> = {
-  "Aguardando validação": "bg-yellow-100 text-yellow-800",
-  "Em entrevista": "bg-blue-100 text-blue-800",
-  "Prova agendada": "bg-purple-100 text-purple-800",
-  "Certificado emitido": "bg-green-100 text-green-800",
-  "Documentos enviados": "bg-gray-100 text-gray-700",
+const STATUS_LABEL_DASH: Record<string, { label: string; cor: string }> = {
+  cadastro:         { label: "Cadastro",              cor: "bg-blue-100 text-blue-800" },
+  pagamento1:       { label: "Pagou taxa análise",    cor: "bg-orange-100 text-orange-800" },
+  upload:           { label: "Documentos enviados",   cor: "bg-gray-100 text-gray-700" },
+  validacao:        { label: "Aguardando validação",  cor: "bg-yellow-100 text-yellow-800" },
+  aguardando_prova: { label: "Aguard. prova",         cor: "bg-indigo-100 text-indigo-800" },
+  prova1_andamento: { label: "Fazendo prova",         cor: "bg-blue-100 text-blue-800" },
+  prova1_aprovada:  { label: "Prova aprovada",        cor: "bg-green-100 text-green-800" },
+  prova1_reprovada: { label: "2ª tentativa",          cor: "bg-amber-100 text-amber-800" },
+  prova2_aprovada:  { label: "Prova aprovada",        cor: "bg-green-100 text-green-800" },
+  prova2_reprovada: { label: "Encerrado",             cor: "bg-red-100 text-red-800" },
+  agendamento:      { label: "Agend. entrevista",     cor: "bg-teal-100 text-teal-800" },
+  entrevista:       { label: "Em entrevista",         cor: "bg-blue-100 text-blue-800" },
+  pagamento2:       { label: "Pagou taxa emissão",    cor: "bg-orange-100 text-orange-800" },
+  emissao:          { label: "Emitindo cert.",        cor: "bg-green-100 text-green-800" },
+  concluido:        { label: "Certificado emitido",   cor: "bg-green-200 text-green-900" },
+  encerrado:        { label: "Processo encerrado",    cor: "bg-red-100 text-red-800" },
 };
 
 export function AdminDashboard() {
   const { processo, getCertificacaoAtual } = useCertification();
   const [, navigate] = useLocation();
   const certAtual = getCertificacaoAtual();
+  const [candidatos, setCandidatos] = useState<any[]>([]);
+  const [metricas, setMetricas] = useState({ total: 0, validacao: 0, concluidos: 0 });
+
+  useEffect(() => {
+    const token = localStorage.getItem("anefac_token");
+    fetch("/api/admin/candidatos?", {
+      headers: { "Authorization": `Bearer ${token}` }
+    }).then(r => r.json()).then(data => {
+      const lista = data.candidatos || [];
+      setCandidatos(lista.slice(0, 5));
+      setMetricas({
+        total: lista.length,
+        validacao: lista.filter((c: any) => c.status_geral === "validacao").length,
+        concluidos: lista.filter((c: any) => c.status_geral === "concluido").length,
+      });
+    }).catch(() => {});
+  }, []);
 
   const METRICAS = [
-    { label: "Total de candidatos", value: "47", icon: Users, color: "bg-blue-100 text-blue-700", delta: "+5 esta semana" },
-    { label: "Em análise documental", value: "12", icon: FileText, color: "bg-yellow-100 text-yellow-700", delta: "3 aguardando decisão" },
-    { label: "Certificados emitidos", value: "23", icon: Award, color: "bg-green-100 text-green-700", delta: "+3 este mês" },
-    { label: "Receita do mês", value: "R$ 48.500", icon: DollarSign, color: "bg-purple-100 text-purple-700", delta: "Taxa de análise + emissão" },
+    { label: "Total de candidatos", value: String(metricas.total), icon: Users, color: "bg-blue-100 text-blue-700", delta: "cadastrados na plataforma" },
+    { label: "Em validação documental", value: String(metricas.validacao), icon: FileText, color: "bg-yellow-100 text-yellow-700", delta: "aguardando decisão" },
+    { label: "Certificados emitidos", value: String(metricas.concluidos), icon: Award, color: "bg-green-100 text-green-700", delta: "processo concluído" },
+    { label: "Fale Conosco", value: "—", icon: DollarSign, color: "bg-purple-100 text-purple-700", delta: "ver mensagens recebidas" },
   ];
 
   return (
@@ -106,23 +126,30 @@ export function AdminDashboard() {
                   </Button>
                 </div>
                 <div className="space-y-3">
-                  {MOCK_CANDIDATOS.map((c, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
-                        <span className="text-blue-700 font-bold text-sm">{c.nome[0]}</span>
+                  {candidatos.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">Nenhum candidato ainda</p>
+                  ) : candidatos.map((c) => {
+                    const si = STATUS_LABEL_DASH[c.status_geral] || { label: "Sem processo", cor: "bg-gray-100 text-gray-700" };
+                    return (
+                      <div key={c.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+                          <span className="text-blue-700 font-bold text-sm">{c.full_name?.charAt(0).toUpperCase()}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{c.full_name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{c.certificacao_nome || "Sem certificação"}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${si.cor}`}>
+                            {si.label}
+                          </span>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {new Date(c.created_at).toLocaleDateString("pt-BR")}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{c.nome}</p>
-                        <p className="text-xs text-muted-foreground truncate">{c.cert}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[c.status] || "bg-gray-100 text-gray-700"}`}>
-                          {c.status}
-                        </span>
-                        <p className="text-xs text-muted-foreground mt-0.5">{c.data}</p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
