@@ -51,6 +51,7 @@ import { AdminCarrossel } from "./pages/novo-fluxo/admin/AdminCarrossel";
 import { AdminProvaConfig } from "./pages/novo-fluxo/admin/AdminProvaConfig";
 import { AdminFaleConosco } from "./pages/novo-fluxo/admin/AdminFaleConosco";
 import { AdminCandidatos } from "./pages/novo-fluxo/admin/AdminCandidatos";
+import { AdminCandidatoDetalhe } from "./pages/novo-fluxo/admin/AdminCandidatoDetalhe";
 import { AceiteLGPD } from "./pages/novo-fluxo/AceiteLGPD";
 import { NavbarGlobal } from "./components/NavbarGlobal";
 import { FaleConosco } from "./components/FaleConosco";
@@ -137,6 +138,7 @@ function Router() {
       <Route path={"/novo-fluxo/admin/prova-config"} component={() => <AdminRoute component={AdminProvaConfig} />} />
       <Route path={"/novo-fluxo/admin/fale-conosco"} component={() => <AdminRoute component={AdminFaleConosco} />} />
       <Route path={"/novo-fluxo/admin/candidatos"} component={() => <AdminRoute component={AdminCandidatos} />} />
+      <Route path={"/novo-fluxo/admin/candidatos/:id"} component={() => <AdminRoute component={AdminCandidatoDetalhe} />} />
       <Route path={"/novo-fluxo/lgpd"} component={AceiteLGPD} />
       {/* ─────────────────────────────────────────────────────────────────────── */}
       <Route path={"/404"} component={NotFound} />
