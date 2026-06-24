@@ -911,6 +911,7 @@ adminRouter.get("/validacao/pendentes",
          JOIN users u ON u.id = cp.user_id
          JOIN certification_types ct ON ct.id = cp.certification_type_id
          WHERE cp.status_geral = 'validacao'
+           AND u.role_id = 1
          ORDER BY cp.updated_at ASC`
       ) as any;
 

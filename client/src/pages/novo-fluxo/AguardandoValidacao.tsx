@@ -204,6 +204,14 @@ export function AguardandoValidacao() {
       </div>
       {/* Ações finais */}
       <div className="flex flex-col sm:flex-row gap-3 mt-6">
+        <Button
+          variant="outline"
+          className="flex-1 border-blue-200 text-blue-700 hover:bg-blue-50"
+          onClick={() => navigate("/novo-fluxo/upload-documentos")}
+        >
+          <FileText className="w-4 h-4 mr-2" />
+          Reenviar ou completar documentos
+        </Button>
         <a
           href="/cursos"
           target="_blank"
