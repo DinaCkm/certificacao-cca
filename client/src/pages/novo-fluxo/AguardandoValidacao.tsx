@@ -205,7 +205,7 @@ export function AguardandoValidacao() {
       {/* Ações finais */}
       <div className="flex flex-col sm:flex-row gap-3 mt-6">
         <a
-          href="https://anefac.com.br/cursos"
+          href="/cursos"
           target="_blank"
           rel="noopener noreferrer"
           className="flex-1 flex items-center justify-center gap-2 bg-blue-900 text-white font-semibold px-5 py-3 rounded-xl hover:bg-blue-800 transition-colors text-sm"
