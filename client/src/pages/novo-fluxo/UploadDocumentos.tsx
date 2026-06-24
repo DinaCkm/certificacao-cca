@@ -32,18 +32,51 @@ export function UploadDocumentos() {
       navigate("/novo-fluxo");
       return;
     }
-    if (certAtual) {
-      setDocumentos(
-        certAtual.documentosExigidos.map((doc, idx) => ({
-          id: `doc-${idx}`,
-          nome: doc,
-          descricao: "Envie o arquivo em formato PDF, JPG ou PNG (máx. 10MB)",
-          obrigatorio: true,
-          arquivo: null,
-          status: "pendente",
-        }))
-      );
-    }
+    if (!certAtual) return;
+
+    // Inicializa lista com status pendente
+    const listaBase = certAtual.documentosExigidos.map((doc, idx) => ({
+      id: `doc-${idx}`,
+      nome: doc,
+      descricao: "Envie o arquivo em formato PDF, JPG ou PNG (máx. 10MB)",
+      obrigatorio: true,
+      arquivo: null,
+      status: "pendente" as const,
+    }));
+    setDocumentos(listaBase);
+
+    // Busca uploads já enviados no servidor
+    const token = localStorage.getItem("anefac_token");
+    const processoId = localStorage.getItem("anefac_processo_id");
+    if (!token) return;
+
+    fetch(`/api/upload/documentos${processoId ? `?processo_id=${processoId}` : ""}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.documentos?.length) return;
+        // Para cada tipo de documento já enviado, marca como "enviado"
+        // e guarda o id do upload
+        const idsMap: Record<string, number> = {};
+        const enviados: Record<string, string> = {}; // docId -> nome_arquivo
+
+        data.documentos.forEach((up: any) => {
+          // tipo_documento é o id do doc (ex: "doc-0")
+          idsMap[up.tipo_documento] = up.id;
+          enviados[up.tipo_documento] = up.nome_arquivo;
+        });
+
+        setUploadIds(idsMap);
+        setDocumentos((prev) =>
+          prev.map((d) =>
+            enviados[d.id]
+              ? { ...d, status: "enviado" as const }
+              : d
+          )
+        );
+      })
+      .catch(() => {/* silently ignore */});
   }, [certAtual, processo.certificacaoId, navigate]);
 
   const handleFileChange = async (docId: string, file: File | null) => {

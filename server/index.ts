@@ -121,6 +121,66 @@ async function startServer() {
     }
   );
 
+  // GET /api/upload/documentos — lista documentos já enviados pelo candidato logado
+  app.get("/api/upload/documentos", async (req: any, res) => {
+    try {
+      const jwt = await import("jsonwebtoken");
+      const token = req.headers.authorization?.replace("Bearer ", "");
+      if (!token) return res.status(401).json({ error: "Não autenticado" });
+      const decoded: any = jwt.default.verify(token, process.env.JWT_SECRET || "anefac2026XyZsecret!");
+      const userId = decoded.userId;
+
+      const processoId = req.query.processo_id || null;
+      const { db } = await import("./db/connection.js");
+
+      let rows: any[];
+      if (processoId) {
+        [rows] = await db.execute(
+          `SELECT id, tipo_documento, nome_arquivo, caminho_arquivo, tamanho_bytes, mime_type, status, criado_em
+           FROM documentos_candidato
+           WHERE user_id = ? AND processo_id = ?
+           ORDER BY criado_em DESC`,
+          [userId, processoId]
+        ) as any;
+      } else {
+        [rows] = await db.execute(
+          `SELECT id, tipo_documento, nome_arquivo, caminho_arquivo, tamanho_bytes, mime_type, status, criado_em
+           FROM documentos_candidato
+           WHERE user_id = ?
+           ORDER BY criado_em DESC`,
+          [userId]
+        ) as any;
+      }
+
+      return res.json({ documentos: rows });
+    } catch (err: any) {
+      return res.status(401).json({ error: "Não autorizado" });
+    }
+  });
+
+  // GET /api/upload/documentos/candidato/:userId — lista documentos de um candidato (admin)
+  app.get("/api/upload/documentos/candidato/:userId", async (req: any, res) => {
+    try {
+      const jwt = await import("jsonwebtoken");
+      const token = req.headers.authorization?.replace("Bearer ", "");
+      if (!token) return res.status(401).json({ error: "Não autenticado" });
+      jwt.default.verify(token, process.env.JWT_SECRET || "anefac2026XyZsecret!");
+
+      const { db } = await import("./db/connection.js");
+      const [rows] = await db.execute(
+        `SELECT id, tipo_documento, nome_arquivo, caminho_arquivo, tamanho_bytes, mime_type, status, criado_em
+         FROM documentos_candidato
+         WHERE user_id = ?
+         ORDER BY criado_em DESC`,
+        [parseInt(req.params.userId)]
+      ) as any;
+
+      return res.json({ documentos: rows });
+    } catch (err: any) {
+      return res.status(401).json({ error: "Não autorizado" });
+    }
+  });
+
   // GET /api/upload/documento/:filename — serve o arquivo
   app.get("/api/upload/documento/:filename", async (req: any, res) => {
     try {

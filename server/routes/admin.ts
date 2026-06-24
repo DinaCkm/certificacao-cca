@@ -897,3 +897,104 @@ adminRouter.get("/entrevista/pendentes",
     }
   }
 );
+
+// GET /api/admin/validacao/pendentes — candidatos aguardando validação documental com seus docs
+adminRouter.get("/validacao/pendentes",
+  requireRole("administrador", "gestor_n1", "gestor_n2", "avaliador"),
+  async (_req, res) => {
+    try {
+      const [candidatos] = await db.execute(
+        `SELECT cp.id as processo_id, cp.user_id, cp.status_geral,
+                u.full_name, u.email,
+                ct.nome as cert_nome, ct.slug as cert_slug
+         FROM candidato_processos cp
+         JOIN users u ON u.id = cp.user_id
+         JOIN certification_types ct ON ct.id = cp.certification_type_id
+         WHERE cp.status_geral = 'validacao'
+         ORDER BY cp.updated_at ASC`
+      ) as any;
+
+      // Para cada candidato, busca os documentos enviados
+      const resultado = await Promise.all(
+        candidatos.map(async (c: any) => {
+          const [docs] = await db.execute(
+            `SELECT id, tipo_documento, nome_arquivo, caminho_arquivo, tamanho_bytes, status, criado_em
+             FROM documentos_candidato
+             WHERE user_id = ?
+             ORDER BY criado_em DESC`,
+            [c.user_id]
+          ) as any;
+          return { ...c, documentos: docs };
+        })
+      );
+
+      return res.json({ candidatos: resultado });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao buscar candidatos em validação" });
+    }
+  }
+);
+
+// POST /api/admin/validacao/:processoId/decisao — registra decisão documental
+adminRouter.post("/validacao/:processoId/decisao",
+  requireRole("administrador", "gestor_n1", "gestor_n2", "avaliador"),
+  async (req, res) => {
+    const processoId = parseInt(req.params.processoId);
+    const { caminho, parecer_geral } = req.body; // caminho: "A" | "B" | "reprovado"
+
+    if (!caminho || !["A", "B", "reprovado"].includes(caminho)) {
+      return res.status(400).json({ error: "Caminho inválido. Use A, B ou reprovado" });
+    }
+
+    try {
+      const [processos] = await db.execute(
+        `SELECT cp.*, u.full_name, u.email, ct.nome as cert_nome
+         FROM candidato_processos cp
+         JOIN users u ON u.id = cp.user_id
+         JOIN certification_types ct ON ct.id = cp.certification_type_id
+         WHERE cp.id = ?`,
+        [processoId]
+      ) as any;
+
+      if (!processos.length) return res.status(404).json({ error: "Processo não encontrado" });
+
+      const processo = processos[0];
+      let novoStatus: string;
+      let novoCaminho: string | null = null;
+
+      if (caminho === "reprovado") {
+        novoStatus = "encerrado";
+      } else if (caminho === "A") {
+        novoStatus = "entrevista";
+        novoCaminho = "A";
+      } else {
+        novoStatus = "prova";
+        novoCaminho = "B";
+      }
+
+      await db.execute(
+        `UPDATE candidato_processos
+         SET status_geral = ?, caminho_avaliacao = ?, updated_at = NOW()
+         WHERE id = ?`,
+        [novoStatus, novoCaminho, processoId]
+      );
+
+      await db.execute(
+        `INSERT INTO audit_log (user_id, processo_id, acao, entidade, entidade_id, descricao, resultado)
+         VALUES (?, ?, 'validacao_documental', 'candidato_processos', ?, ?, 'sucesso')`,
+        [
+          (req as any).user!.userId,
+          processoId,
+          processoId,
+          `Candidato ${processo.full_name} — Caminho ${caminho}. ${parecer_geral || ""}`
+        ]
+      );
+
+      return res.json({ message: "Decisão registrada", novo_status: novoStatus, caminho });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao registrar decisão" });
+    }
+  }
+);
