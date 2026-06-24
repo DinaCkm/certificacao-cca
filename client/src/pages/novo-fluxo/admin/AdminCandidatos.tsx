@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import {
   Users, Search, UserX, UserCheck, Trash2, Eye,
-  ChevronRight, Shield, AlertTriangle, CheckCircle, X
+  ChevronRight, AlertTriangle, CheckCircle, X
 } from "lucide-react";
 
 const STATUS_LABEL: Record<string, { label: string; cor: string }> = {
@@ -181,7 +181,6 @@ export function AdminCandidatos() {
                     <th className="text-left px-4 py-3 text-xs font-semibold text-white/60 uppercase tracking-wide hidden lg:table-cell">Certificação</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-white/60 uppercase tracking-wide">Etapa</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-white/60 uppercase tracking-wide hidden lg:table-cell">Cadastro</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-white/60 uppercase tracking-wide hidden md:table-cell">LGPD</th>
                     <th className="px-4 py-3"></th>
                   </tr>
                 </thead>
@@ -212,15 +211,6 @@ export function AdminCandidatos() {
                         </td>
                         <td className="px-4 py-3 text-xs text-blue-300 hidden lg:table-cell">
                           {new Date(c.created_at).toLocaleDateString("pt-BR")}
-                        </td>
-                        <td className="px-4 py-3 hidden md:table-cell">
-                          {c.lgpd_aceito_em ? (
-                            <span className="flex items-center gap-1 text-xs text-green-400">
-                              <Shield className="w-3 h-3" /> Aceito
-                            </span>
-                          ) : (
-                            <span className="text-xs text-white/30">—</span>
-                          )}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1 justify-end">
