@@ -20,6 +20,7 @@ interface ChecklistItem {
 }
 
 interface DocAnalise {
+  caminho_arquivo?: string;
   nome: string;
   url: string;
   checklist: ChecklistItem[];
@@ -386,7 +387,24 @@ export function AdminValidacaoDocumental() {
             <div className="flex flex-col lg:flex-row flex-1 min-h-0">
               {/* Visualizador do documento */}
               <div className="lg:w-1/2 bg-gray-100 min-h-[400px] flex items-center justify-center rounded-bl-2xl">
-                {docAtual.url ? (
+                {docAtual.caminho_arquivo ? (
+                  // Arquivo real enviado pelo candidato
+                  docAtual.caminho_arquivo.match(/\.(jpg|jpeg|png)$/i) ? (
+                    <img
+                      src={`/api/upload/documento/${docAtual.caminho_arquivo}?token=${localStorage.getItem("anefac_token")}`}
+                      alt={docAtual.nome}
+                      className="w-full h-full object-contain p-4 max-h-[70vh]"
+                      onError={e => { (e.target as any).src = ""; }}
+                    />
+                  ) : (
+                    <iframe
+                      src={`/api/upload/documento/${docAtual.caminho_arquivo}?token=${localStorage.getItem("anefac_token")}`}
+                      title={docAtual.nome}
+                      className="w-full min-h-[500px]"
+                      style={{ border: "none" }}
+                    />
+                  )
+                ) : docAtual.url ? (
                   docAtual.url.startsWith("data:image") ? (
                     <img src={docAtual.url} alt={docAtual.nome} className="w-full h-full object-contain p-4 max-h-[70vh]" />
                   ) : (
@@ -395,8 +413,8 @@ export function AdminValidacaoDocumental() {
                 ) : (
                   <div className="flex flex-col items-center justify-center text-muted-foreground p-8">
                     <FileText className="w-16 h-16 mb-3 opacity-20" />
-                    <p className="text-sm font-medium">Arquivo não disponível para visualização</p>
-                    <p className="text-xs mt-1 opacity-60 text-center">Nesta versão demo, os arquivos são simulados. Em produção, o arquivo enviado pelo candidato será exibido aqui.</p>
+                    <p className="text-sm font-medium text-center">Nenhum arquivo enviado ainda</p>
+                    <p className="text-xs mt-1 opacity-60 text-center">O candidato ainda não enviou este documento.</p>
                   </div>
                 )}
               </div>

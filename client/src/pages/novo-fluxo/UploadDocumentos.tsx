@@ -46,17 +46,46 @@ export function UploadDocumentos() {
     }
   }, [certAtual, processo.certificacaoId, navigate]);
 
-  const handleFileChange = (docId: string, file: File | null) => {
+  const handleFileChange = async (docId: string, file: File | null) => {
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
       toast({ title: "Arquivo muito grande", description: "O arquivo deve ter no máximo 10MB.", variant: "destructive" });
       return;
     }
+
+    // Atualiza UI imediatamente
     setDocumentos((prev) =>
-      prev.map((d) =>
-        d.id === docId ? { ...d, arquivo: file, status: "enviado" } : d
-      )
+      prev.map((d) => d.id === docId ? { ...d, arquivo: file, status: "enviado" } : d)
     );
+
+    // Envia para o servidor
+    setEnviando(docId);
+    try {
+      const formData = new FormData();
+      formData.append("arquivo", file);
+      formData.append("tipo_documento", docId);
+      const processoId = localStorage.getItem("anefac_processo_id"); if (processoId) formData.append("processo_id", processoId);
+
+      const token = localStorage.getItem("anefac_token");
+      const res = await fetch("/api/upload/documento", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      setUploadIds(prev => ({ ...prev, [docId]: data.id }));
+      toast({ title: `✅ ${file.name} enviado com sucesso` });
+    } catch (err: any) {
+      toast({ title: "Erro ao enviar arquivo", description: err.message, variant: "destructive" });
+      // Reverte status
+      setDocumentos((prev) =>
+        prev.map((d) => d.id === docId ? { ...d, arquivo: null, status: "pendente" } : d)
+      );
+    } finally {
+      setEnviando(null);
+    }
   };
 
   const handleRemove = (docId: string) => {
@@ -67,6 +96,8 @@ export function UploadDocumentos() {
     );
   };
 
+  const [uploadIds, setUploadIds] = useState<Record<string, number>>({});
+  const [enviando, setEnviando] = useState<string | null>(null);
   const obrigatoriosPendentes = documentos.filter((d) => d.obrigatorio && d.status === "pendente");
   const totalEnviados = documentos.filter((d) => d.status === "enviado").length;
   const progresso = documentos.length > 0 ? Math.round((totalEnviados / documentos.length) * 100) : 0;
@@ -206,6 +237,7 @@ export function UploadDocumentos() {
                         className="hidden"
                         accept=".pdf,.jpg,.jpeg,.png"
                         onChange={(e) => handleFileChange(doc.id, e.target.files?.[0] || null)}
+                        disabled={enviando === doc.id}
                       />
                       <Button size="sm" variant="outline" className="h-8 text-xs" asChild>
                         <span>

@@ -8,6 +8,8 @@ import { authRouter } from "./routes/auth.js";
 import { processoRouter } from "./routes/processo.js";
 import { adminRouter } from "./routes/admin.js";
 import { provaRouter } from "./routes/prova.js";
+import fs from "fs";
+// multer loaded dynamically
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,6 +37,107 @@ async function startServer() {
   // ── API Routes ──────────────────────────────────────────────────────────────
   app.use("/api/auth", authRouter);
   app.use("/api/processo", processoRouter);
+
+  // ── Upload de documentos ─────────────────────────────────────────────────────
+  // Configura storage no Railway Volume (/data) ou /tmp como fallback
+  const uploadDir = process.env.RAILWAY_VOLUME_MOUNT_PATH
+    ? path.join(process.env.RAILWAY_VOLUME_MOUNT_PATH, "documentos")
+    : path.join(process.cwd(), "uploads", "documentos");
+
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  // @ts-ignore
+  const multerLib = (await import("multer")).default;
+  const storage = multerLib.diskStorage({
+    destination: (_req: any, _file: any, cb: any) => cb(null, uploadDir),
+    filename: (req: any, file: any, cb: any) => {
+      const ext = path.extname(file.originalname);
+      const nome = `${Date.now()}_${req.user?.userId || "anonimo"}_${file.fieldname}${ext}`;
+      cb(null, nome);
+    },
+  });
+
+  const upload = multerLib({
+    storage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+    fileFilter: (_req: any, file: any, cb: any) => {
+      const allowed = [".pdf", ".jpg", ".jpeg", ".png"];
+      const ext = path.extname(file.originalname).toLowerCase();
+      if (allowed.includes(ext)) cb(null, true);
+      else cb(new Error("Formato inválido. Use PDF, JPG ou PNG."));
+    },
+  });
+
+  // POST /api/upload/documento — salva arquivo no volume
+  app.post("/api/upload/documento",
+    (req: any, res, next) => {
+      // Verifica token JWT
+      const auth = req.headers.authorization;
+      if (!auth) return res.status(401).json({ error: "Não autenticado" });
+      next();
+    },
+    upload.single("arquivo"),
+    async (req: any, res) => {
+      try {
+        if (!req.file) return res.status(400).json({ error: "Nenhum arquivo enviado" });
+
+        const { tipo_documento, processo_id } = req.body;
+        const { db } = await import("./db/connection.js");
+
+        // Extrai user_id do token
+        const jwt = await import("jsonwebtoken");
+        const token = req.headers.authorization?.replace("Bearer ", "");
+        const decoded: any = jwt.default.verify(token, process.env.JWT_SECRET || "anefac2026XyZsecret!");
+        const userId = decoded.userId;
+
+        // Salva referência no banco
+        const [result] = await db.execute(
+          `INSERT INTO documentos_candidato
+            (processo_id, user_id, tipo_documento, nome_arquivo, caminho_arquivo, tamanho_bytes, mime_type, status)
+           VALUES (?, ?, ?, ?, ?, ?, ?, 'enviado')`,
+          [
+            processo_id || null,
+            userId,
+            tipo_documento || "documento",
+            req.file.originalname,
+            req.file.filename,
+            req.file.size,
+            req.file.mimetype,
+          ]
+        ) as any;
+
+        return res.json({
+          id: result.insertId,
+          nome: req.file.originalname,
+          tamanho: req.file.size,
+          caminho: req.file.filename,
+        });
+      } catch (err: any) {
+        console.error("Erro upload:", err);
+        return res.status(500).json({ error: err.message || "Erro ao fazer upload" });
+      }
+    }
+  );
+
+  // GET /api/upload/documento/:filename — serve o arquivo
+  app.get("/api/upload/documento/:filename", async (req: any, res) => {
+    try {
+      const jwt = await import("jsonwebtoken");
+      const token = req.headers.authorization?.replace("Bearer ", "") ||
+                    req.query.token as string;
+      jwt.default.verify(token, process.env.JWT_SECRET || "anefac2026XyZsecret!");
+
+      const filepath = path.join(uploadDir, req.params.filename);
+      if (!fs.existsSync(filepath)) {
+        return res.status(404).json({ error: "Arquivo não encontrado" });
+      }
+      return res.sendFile(filepath);
+    } catch {
+      return res.status(401).json({ error: "Não autorizado" });
+    }
+  });
 
   // Rota pública do carrossel — sem autenticação
   app.get("/api/admin/carrossel/publico", async (_req, res) => {
