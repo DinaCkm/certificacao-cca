@@ -257,7 +257,7 @@ export function AdminProvaConfig() {
                       onChange={e => setMsgBoasVindas(e.target.value)}
                       placeholder="Ex: Bem-vindo à prova de competência CCA. Esta prova avalia seus conhecimentos em Controladoria..."
                       rows={3}
-                      className="w-full rounded-md px-3 py-2 text-sm mt-1 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 text-white placeholder:text-white/40" style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)" }}
+                      className="w-full rounded-md px-3 py-2 text-sm mt-1 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white" style={{ border: "1px solid #cbd5e1" }}
                     />
                   </div>
                   <div>
@@ -267,7 +267,7 @@ export function AdminProvaConfig() {
                       onChange={e => setInstrucoes(e.target.value)}
                       placeholder="Ex: Certifique-se de estar em local silencioso. Não é permitido consultar materiais durante a prova..."
                       rows={4}
-                      className="w-full rounded-md px-3 py-2 text-sm mt-1 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 text-white placeholder:text-white/40" style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)" }}
+                      className="w-full rounded-md px-3 py-2 text-sm mt-1 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white" style={{ border: "1px solid #cbd5e1" }}
                     />
                     <p className="text-xs text-blue-400 mt-1">Cada linha será exibida como um item de instrução.</p>
                   </div>
@@ -447,7 +447,7 @@ export function AdminProvaConfig() {
                     onChange={e => setNovaQuestao({ ...novaQuestao, enunciado: e.target.value })}
                     placeholder="Digite o enunciado da questão..."
                     rows={3}
-                    className="w-full rounded-md px-3 py-2 text-sm mt-1 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 text-white placeholder:text-white/40" style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)" }}
+                    className="w-full rounded-md px-3 py-2 text-sm mt-1 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white" style={{ border: "1px solid #cbd5e1" }}
                   />
                 </div>
 
