@@ -346,13 +346,23 @@ export function AdminProvaConfig() {
           </div>
         )}
 
-        {/* Preview do candidato */}
+        {/* Botão voltar ao menu */}
+        <div className="mt-8 pb-4">
+          <a href="/novo-fluxo/admin"
+            className="inline-flex items-center gap-2 border border-white/20 text-white/70 hover:text-white px-5 py-2.5 rounded-xl text-sm transition-colors"
+            style={{ background: "rgba(255,255,255,0.05)" }}>
+            ← Voltar ao menu admin
+          </a>
+        </div>
+
+        {/* Preview do candidato — modal fixo */}
         {previewAberto && (
-          <Card className="mt-6 border-white/20" style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}>
-            <CardContent className="p-6">
+          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="w-full max-w-lg my-4 rounded-2xl overflow-hidden shadow-2xl" style={{ background: "linear-gradient(180deg, #0a1f5e, #1565c0)" }}>
+            <div className="p-6">
               <div className="flex items-center justify-between mb-5">
                 <h2 className="font-semibold text-white flex items-center gap-2">
-                  <Eye className="w-4 h-4 text-blue-700" />
+                  <Eye className="w-4 h-4 text-blue-300" />
                   Preview — O que o candidato vai ver
                 </h2>
                 <button onClick={() => setPreviewAberto(false)} className="text-white/50 hover:text-white">
@@ -420,11 +430,10 @@ export function AdminProvaConfig() {
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+          </div>
         )}
-      </div>
-
       </div>
 
       {/* Modal nova questão */}
@@ -486,5 +495,6 @@ export function AdminProvaConfig() {
         </div>
       )}
     </div>
+  </div>
   );
 }
