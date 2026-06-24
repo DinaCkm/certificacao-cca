@@ -51,6 +51,9 @@ export function AdminProvaConfig() {
     mensagem_boas_vindas: "",
     instrucoes_extras: "",
   });
+  // Campos de texto separados para evitar re-render ao digitar
+  const [msgBoasVindas, setMsgBoasVindas] = useState("");
+  const [instrucoes, setInstrucoes] = useState("");
   const [questoes, setQuestoes] = useState<Questao[]>([]);
   const [salvando, setSalvando] = useState(false);
   const [carregando, setCarregando] = useState(false);
@@ -95,7 +98,7 @@ export function AdminProvaConfig() {
   async function salvarConfig() {
     setSalvando(true);
     try {
-      await (api.admin as any).salvarProvaConfig({ ...config, cert_slug: certSelecionada });
+      await (api.admin as any).salvarProvaConfig({ ...config, mensagem_boas_vindas: msgBoasVindas, instrucoes_extras: instrucoes, cert_slug: certSelecionada });
       toast({ title: "Configuração salva com sucesso!" });
     } catch (err: any) {
       toast({ title: err.message || "Erro ao salvar", variant: "destructive" });
@@ -250,8 +253,8 @@ export function AdminProvaConfig() {
                   <div>
                     <Label>Mensagem de boas-vindas</Label>
                     <textarea
-                      value={config.mensagem_boas_vindas || ""}
-                      onChange={e => setConfig({ ...config, mensagem_boas_vindas: e.target.value })}
+                      value={msgBoasVindas}
+                      onChange={e => setMsgBoasVindas(e.target.value)}
                       placeholder="Ex: Bem-vindo à prova de competência CCA. Esta prova avalia seus conhecimentos em Controladoria..."
                       rows={3}
                       className="w-full rounded-md px-3 py-2 text-sm mt-1 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 text-white placeholder:text-white/40" style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)" }}
@@ -260,8 +263,8 @@ export function AdminProvaConfig() {
                   <div>
                     <Label>Instruções adicionais</Label>
                     <textarea
-                      value={config.instrucoes_extras || ""}
-                      onChange={e => setConfig({ ...config, instrucoes_extras: e.target.value })}
+                      value={instrucoes}
+                      onChange={e => setInstrucoes(e.target.value)}
                       placeholder="Ex: Certifique-se de estar em local silencioso. Não é permitido consultar materiais durante a prova..."
                       rows={4}
                       className="w-full rounded-md px-3 py-2 text-sm mt-1 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 text-white placeholder:text-white/40" style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.25)" }}
@@ -365,9 +368,9 @@ export function AdminProvaConfig() {
                   </div>
                   <h3 className="text-xl font-bold text-white mb-1">Prova de Competência</h3>
                   <p className="text-sm text-blue-300 mb-1">{certAtual?.nome}</p>
-                  {config.mensagem_boas_vindas && (
+                  {msgBoasVindas && (
                     <p className="text-sm text-blue-700 bg-blue-50 border border-blue-100 rounded-lg p-3 mb-4 text-left">
-                      {config.mensagem_boas_vindas}
+                      {msgBoasVindas}
                     </p>
                   )}
 
@@ -397,7 +400,7 @@ export function AdminProvaConfig() {
                       "Você tem direito a 1 nova tentativa em caso de reprovação",
                       "Após 2 reprovações, o processo é encerrado",
                       `Prazo para realizar: ${config.prazo_dias || 3} dias corridos`,
-                      ...(config.instrucoes_extras || "").split("\n").filter(Boolean),
+                      ...(instrucoes || "").split("\n").filter(Boolean),
                     ].map((inst, i) => (
                       <div key={i} className="flex items-start gap-2 text-sm text-gray-600">
                         <Check className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
