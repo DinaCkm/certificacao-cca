@@ -31,7 +31,7 @@ const STATUS_LABEL: Record<string, { label: string; cor: string; icone: React.Re
 const STATUS_ROTA: Record<string, string> = {
   cadastro: "/novo-fluxo/cadastro", pagamento1: "/novo-fluxo/pagamento-analise",
   upload: "/novo-fluxo/upload-documentos", validacao: "/novo-fluxo/aguardando-validacao",
-  prova: "/novo-fluxo/prova", agendamento: "/novo-fluxo/agendamento-entrevista",
+  prova: "/novo-fluxo/prova", agendamento: "/novo-fluxo/documentos-aprovados",
   entrevista: "/novo-fluxo/sala-entrevista", pagamento2: "/novo-fluxo/pagamento-emissao",
   emissao: "/novo-fluxo/emissao-certificado", concluido: "/novo-fluxo/emissao-certificado",
 };
