@@ -49,6 +49,9 @@ import { AdminCursos } from "./pages/novo-fluxo/admin/AdminCursos";
 import { AdminUsuarios } from "./pages/novo-fluxo/admin/AdminUsuarios";
 import { AdminCarrossel } from "./pages/novo-fluxo/admin/AdminCarrossel";
 import { AdminProvaConfig } from "./pages/novo-fluxo/admin/AdminProvaConfig";
+import { AdminFaleConosco } from "./pages/novo-fluxo/admin/AdminFaleConosco";
+import { NavbarGlobal } from "./components/NavbarGlobal";
+import { FaleConosco } from "./components/FaleConosco";
 import { NovoFluxoCertificacoes } from "./pages/novo-fluxo/NovoFluxoCertificacoes";
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -130,6 +133,7 @@ function Router() {
       <Route path={"/novo-fluxo/admin/usuarios"} component={() => <AdminRoute component={AdminUsuarios} />} />
       <Route path={"/novo-fluxo/admin/carrossel"} component={() => <AdminRoute component={AdminCarrossel} />} />
       <Route path={"/novo-fluxo/admin/prova-config"} component={() => <AdminRoute component={AdminProvaConfig} />} />
+      <Route path={"/novo-fluxo/admin/fale-conosco"} component={() => <AdminRoute component={AdminFaleConosco} />} />
       {/* ─────────────────────────────────────────────────────────────────────── */}
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
@@ -174,7 +178,9 @@ function App() {
             {!isInitialPage && <GlobalHeader />}
             <div className={isInitialPage ? "" : ""}>
               <div className={isInitialPage && location === "/" ? "w-full" : "flex-1 min-h-screen"}>
-                <Router />
+                <NavbarGlobal />
+        <Router />
+        <FaleConosco />
               </div>
             </div>
             {!isInitialPage && <GlobalFooter />}

@@ -1,5 +1,4 @@
 import { enviarConfirmacaoEntrevista, enviarAvisoEntrevistador } from "../services/emailService.js";
-import { verificarSlotsEAlertarSeNecessario } from "../services/schedulerService.js";
 import { Router, Request, Response } from "express";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { db } from "../db/connection.js";

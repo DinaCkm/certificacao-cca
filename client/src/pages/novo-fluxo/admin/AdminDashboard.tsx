@@ -161,6 +161,7 @@ export function AdminDashboard() {
                 <div className="space-y-2">
                   {[
                     { label: "Validar documentos", href: "/novo-fluxo/admin/validacao", icon: FileText, color: "text-yellow-600" },
+                    { label: "Fale Conosco", href: "/novo-fluxo/admin/fale-conosco", icon: FileText, color: "text-green-600" },
                     { label: "Parametrizar Prova", href: "/novo-fluxo/admin/prova-config", icon: FileText, color: "text-purple-600" },
                     { label: "Gestão de Usuários", href: "/novo-fluxo/admin/usuarios", icon: Settings, color: "text-blue-600" },
                     { label: "Carrossel de Imagens", href: "/novo-fluxo/admin/carrossel", icon: Globe, color: "text-pink-600" },

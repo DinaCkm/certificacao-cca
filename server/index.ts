@@ -3,7 +3,7 @@ import { createServer } from "http";
 import path from "path";
 import { fileURLToPath } from "url";
 import { testConnection } from "./db/connection.js";
-import { iniciarVerificadorDiario } from "./services/schedulerService.js";
+import { iniciarScheduler } from "./services/schedulerService.js";
 import { authRouter } from "./routes/auth.js";
 import { processoRouter } from "./routes/processo.js";
 import { adminRouter } from "./routes/admin.js";
@@ -49,6 +49,24 @@ async function startServer() {
     }
   });
 
+  // Fale conosco — rota pública (sem autenticação obrigatória)
+  app.post("/api/fale-conosco/enviar", async (req, res) => {
+    const { nome, email, mensagem, pagina_origem } = req.body;
+    if (!nome || !email || !mensagem) {
+      return res.status(400).json({ error: "Nome, e-mail e mensagem são obrigatórios" });
+    }
+    try {
+      const { db } = await import("./db/connection.js");
+      await db.execute(
+        "INSERT INTO fale_conosco (nome, email, mensagem, pagina_origem) VALUES (?, ?, ?, ?)",
+        [nome, email, mensagem, pagina_origem || null]
+      );
+      return res.json({ message: "Mensagem enviada com sucesso!" });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao enviar mensagem" });
+    }
+  });
+
   app.use("/api/admin", adminRouter);
   app.use("/api/prova", provaRouter);
 
@@ -77,7 +95,7 @@ async function startServer() {
   const port = process.env.PORT || 3000;
 
   // Inicia verificador diário de slots
-  iniciarVerificadorDiario();
+  iniciarScheduler();
 
   server.listen(port, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${port}/`);
