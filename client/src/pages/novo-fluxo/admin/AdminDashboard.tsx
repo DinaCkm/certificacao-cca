@@ -152,12 +152,13 @@ export function AdminDashboard() {
                 <div className="space-y-2">
                   {[
                     { label: "Validar documentos", href: "/novo-fluxo/admin/validacao", icon: FileText, color: "text-yellow-600" },
+                    { label: "Parametrizar Prova", href: "/novo-fluxo/admin/prova-config", icon: FileText, color: "text-purple-600" },
+                    { label: "Gestão de Usuários", href: "/novo-fluxo/admin/usuarios", icon: Settings, color: "text-blue-600" },
+                    { label: "Carrossel de Imagens", href: "/novo-fluxo/admin/carrossel", icon: Globe, color: "text-pink-600" },
                     { label: "Certificações ativas", href: "/novo-fluxo/admin/certificacoes", icon: Award, color: "text-blue-600" },
-                    { label: "Relatório financeiro", href: "#", icon: BarChart3, color: "text-green-600" },
                     { label: "Configurar site", href: "/novo-fluxo/admin/site", icon: Globe, color: "text-indigo-600" },
                     { label: "Documentos & Comitê", href: "/novo-fluxo/admin/institucional", icon: BookOpen, color: "text-teal-600" },
                     { label: "Cursos e Pacotes", href: "/novo-fluxo/admin/cursos", icon: BookOpen, color: "text-amber-600" },
-                    { label: "Configurações", href: "#", icon: Settings, color: "text-gray-600" },
                   ].map(({ label, href, icon: Icon, color }) => (
                     <Link key={label} href={href}>
                       <a className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors group">
