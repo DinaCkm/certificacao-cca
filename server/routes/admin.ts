@@ -568,13 +568,14 @@ adminRouter.get("/candidatos",
           u.id, u.full_name, u.email, u.cpf, u.is_active,
           u.created_at,
           cp.id as processo_id, cp.status_geral, cp.caminho_avaliacao,
+          cp.pagamento1_realizado, cp.pagamento2_realizado,
+          cp.tentativas_prova, cp.aprovado_entrevista,
           ct.nome as certificacao_nome, ct.numero as cert_numero,
-          la.aceito_em as lgpd_aceito_em
+          (SELECT COUNT(*) FROM tentativas_prova tp WHERE tp.user_id = u.id AND tp.aprovado = 1) as provas_aprovadas,
+          (SELECT COUNT(*) FROM tentativas_prova tp WHERE tp.user_id = u.id) as total_tentativas
         FROM users u
         LEFT JOIN candidato_processos cp ON cp.user_id = u.id
-          AND cp.status_geral NOT IN ('concluido','encerrado')
         LEFT JOIN certification_types ct ON ct.id = cp.certification_type_id
-        LEFT JOIN lgpd_aceites la ON la.user_id = u.id
         WHERE u.role_id = 1
       `;
       const params: any[] = [];

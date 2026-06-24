@@ -9,25 +9,29 @@ import {
   ChevronRight, AlertTriangle, CheckCircle, X
 } from "lucide-react";
 
-const STATUS_LABEL: Record<string, { label: string; cor: string }> = {
-  selecao:         { label: "Seleção",              cor: "bg-gray-100 text-gray-700" },
-  cadastro:        { label: "Cadastro",             cor: "bg-blue-100 text-blue-700" },
-  pagamento1:      { label: "Pagamento 1",          cor: "bg-orange-100 text-orange-700" },
-  upload:          { label: "Documentos",           cor: "bg-purple-100 text-purple-700" },
-  validacao:       { label: "Em validação",         cor: "bg-yellow-100 text-yellow-700" },
-  aguardando_prova:{ label: "Aguard. prova",        cor: "bg-indigo-100 text-indigo-700" },
-  prova1_andamento:{ label: "Prova 1 andamento",   cor: "bg-blue-100 text-blue-700" },
-  prova1_aprovada: { label: "Prova 1 aprovada",    cor: "bg-green-100 text-green-700" },
-  prova1_reprovada:{ label: "Prova 1 reprovada",   cor: "bg-red-100 text-red-700" },
-  prova2_aprovada: { label: "Prova 2 aprovada",    cor: "bg-green-100 text-green-700" },
-  prova2_reprovada:{ label: "Processo encerrado",  cor: "bg-red-100 text-red-700" },
-  agendamento:     { label: "Agend. entrevista",   cor: "bg-teal-100 text-teal-700" },
-  entrevista:      { label: "Em entrevista",        cor: "bg-indigo-100 text-indigo-700" },
-  pagamento2:      { label: "Pagamento 2",          cor: "bg-orange-100 text-orange-700" },
-  emissao:         { label: "Emitindo cert.",       cor: "bg-green-100 text-green-700" },
-  concluido:       { label: "Certificado emitido",  cor: "bg-green-200 text-green-800" },
-  encerrado:       { label: "Encerrado",            cor: "bg-red-200 text-red-800" },
-};
+// Etapas do processo em ordem sequencial para mostrar progresso
+const ETAPAS_PROCESSO = [
+  { key: "cadastro",         label: "Cadastro",              emoji: "📝", cor: "bg-blue-100 text-blue-700" },
+  { key: "pagamento1",       label: "Pagou taxa de análise", emoji: "💳", cor: "bg-orange-100 text-orange-700" },
+  { key: "upload",           label: "Enviou documentos",     emoji: "📁", cor: "bg-purple-100 text-purple-700" },
+  { key: "validacao",        label: "Em validação documental",emoji: "🔍", cor: "bg-yellow-100 text-yellow-700" },
+  { key: "aguardando_prova", label: "Aguardando prova",      emoji: "📋", cor: "bg-indigo-100 text-indigo-700" },
+  { key: "prova1_andamento", label: "Fazendo prova",         emoji: "✍️", cor: "bg-blue-100 text-blue-700" },
+  { key: "prova1_aprovada",  label: "Aprovado na prova",     emoji: "✅", cor: "bg-green-100 text-green-700" },
+  { key: "prova1_reprovada", label: "Reprovado - 2ª chance", emoji: "⚠️", cor: "bg-amber-100 text-amber-700" },
+  { key: "prova2_aprovada",  label: "Aprovado na 2ª prova",  emoji: "✅", cor: "bg-green-100 text-green-700" },
+  { key: "prova2_reprovada", label: "Reprovado definitivo",  emoji: "❌", cor: "bg-red-100 text-red-700" },
+  { key: "agendamento",      label: "Agendando entrevista",  emoji: "📅", cor: "bg-teal-100 text-teal-700" },
+  { key: "entrevista",       label: "Em entrevista",         emoji: "🎤", cor: "bg-indigo-100 text-indigo-700" },
+  { key: "pagamento2",       label: "Pagou taxa de emissão", emoji: "💳", cor: "bg-orange-100 text-orange-700" },
+  { key: "emissao",          label: "Certificado sendo emitido", emoji: "🏆", cor: "bg-green-100 text-green-700" },
+  { key: "concluido",        label: "Certificado emitido",   emoji: "🎓", cor: "bg-green-200 text-green-800 font-semibold" },
+  { key: "encerrado",        label: "Processo encerrado",    emoji: "🚫", cor: "bg-red-200 text-red-800" },
+  { key: "selecao",          label: "Iniciando",             emoji: "👋", cor: "bg-gray-100 text-gray-600" },
+];
+
+const STATUS_LABEL: Record<string, { label: string; cor: string; emoji: string }> = 
+  Object.fromEntries(ETAPAS_PROCESSO.map(e => [e.key, { label: e.label, cor: e.cor, emoji: e.emoji }]));
 
 function formatCPF(cpf: string) {
   if (!cpf) return "—";
@@ -179,14 +183,14 @@ export function AdminCandidatos() {
                     <th className="text-left px-4 py-3 text-xs font-semibold text-white/60 uppercase tracking-wide">Candidato</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-white/60 uppercase tracking-wide hidden md:table-cell">CPF</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-white/60 uppercase tracking-wide hidden lg:table-cell">Certificação</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-white/60 uppercase tracking-wide">Etapa</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-white/60 uppercase tracking-wide">Status no processo</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-white/60 uppercase tracking-wide hidden lg:table-cell">Cadastro</th>
                     <th className="px-4 py-3"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {candidatos.map((c, idx) => {
-                    const statusInfo = STATUS_LABEL[c.status_geral] || { label: "Sem processo", cor: "bg-gray-100 text-gray-500" };
+                    const statusInfo = STATUS_LABEL[c.status_geral] || { label: "Sem processo", cor: "bg-gray-100 text-gray-500", emoji: "👤" };
                     return (
                       <tr key={c.id} className={`border-b border-white/5 hover:bg-white/5 transition-colors ${!c.is_active ? "opacity-50" : ""}`}>
                         <td className="px-4 py-3">
@@ -205,7 +209,8 @@ export function AdminCandidatos() {
                         <td className="px-4 py-3 text-sm text-blue-200 hidden md:table-cell">{formatCPF(c.cpf)}</td>
                         <td className="px-4 py-3 text-xs text-blue-200 hidden lg:table-cell">{c.certificacao_nome || "—"}</td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusInfo.cor}`}>
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusInfo.cor}`}>
+                            <span>{statusInfo.emoji}</span>
                             {statusInfo.label}
                           </span>
                         </td>
