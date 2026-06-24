@@ -148,6 +148,22 @@ function LoginModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (p
     setCarregando(true);
     try {
       await login(email, senha);
+
+      // Verifica o role do usuário logado
+      const meRes = await fetch("/api/auth/me", {
+        headers: { "Authorization": `Bearer ${localStorage.getItem("anefac_token")}` }
+      });
+      const meData = await meRes.json();
+      const rolesAdmin = ["administrador", "gestor_n1", "gestor_n2", "avaliador", "entrevistador"];
+
+      if (rolesAdmin.includes(meData.user?.role)) {
+        // É admin — redireciona para área administrativa
+        setErro("");
+        window.location.href = "/novo-fluxo/admin";
+        return;
+      }
+
+      // É candidato — segue normalmente
       const { processo } = await (api.processo as any).retomar();
       onSuccess(processo);
     } catch (err: any) { setErro(err.message || "E-mail ou senha incorretos."); }
@@ -176,6 +192,12 @@ function LoginModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (p
           </div>
           <button onClick={() => setRecuperandoSenha(true)} className="w-full text-xs text-center mt-3 block" style={{ color: "#1a4a9e" }}>Esqueci minha senha</button>
           <p className="text-xs text-center text-gray-400 mt-2">Ainda não tem cadastro? <button onClick={onClose} className="underline" style={{ color: "#1a4a9e" }}>Inicie sua certificação</button></p>
+          <div className="mt-4 pt-3 border-t border-gray-100 text-center">
+            <p className="text-xs text-gray-400">É avaliador, gestor ou administrador?</p>
+            <a href="/novo-fluxo/admin/login" className="text-xs font-medium underline" style={{ color: "#6B3FA0" }}>
+              Acesse a área administrativa →
+            </a>
+          </div>
         </CardContent>
       </Card>
     </div>
