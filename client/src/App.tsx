@@ -9,49 +9,17 @@ import { GlobalHeader } from "./components/GlobalHeader";
 import { GlobalFooter } from "./components/GlobalFooter";
 
 import Home from "./pages/Home";
-import { ExamSecurityCheck } from "./pages/ExamSecurityCheck";
-import { CertificationTypeSelection } from "./pages/CertificationTypeSelection";
-import { CertificationLevelSelection } from "./pages/CertificationLevelSelection";
-import { RequirementsValidation } from "./pages/RequirementsValidation";
-import { SelectCertificationType } from "./pages/SelectCertificationType";
-import { SelectCertificationLevel } from "./pages/SelectCertificationLevel";
-import { SelectCertificationLevelCAC } from "./pages/SelectCertificationLevelCAC";
-import { SelectCertificationLevelCCA } from "./pages/SelectCertificationLevelCCA";
-import { SelectCertificationLevelLiders } from "./pages/SelectCertificationLevelLiders";
 
 import { Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9 } from "./pages/Steps";
-import { PaymentCheckout } from "./pages/PaymentCheckout";
-import { WelcomeCourses } from "./pages/WelcomeCourses";
-import { CoursesPlatform } from "./pages/CoursesPlatform";
-import { ExamResults } from "./pages/ExamResults";
-import { DocumentalAnalysisCheckout } from "./pages/DocumentalAnalysisCheckout";
-import { LattesCurriculumForm } from "./pages/LattesCurriculumForm";
-import { Level2Information } from "./pages/Level2Information";
-import { Level2LattesValidation } from "./pages/Level2LattesValidation";
-import { Level2TermsAndWarning } from "./pages/Level2TermsAndWarning";
-import { Level2Checkout } from "./pages/Level2Checkout";
-import { CertificationDirectPreparationCheck } from "./pages/CertificationDirectPreparationCheck";
-import { DirectCertificationForm } from "./pages/DirectCertificationForm";
-import { DirectCertificationWaitingInfo } from "./pages/DirectCertificationWaitingInfo";
-import { DirectCertificationInterviewScheduling } from "./pages/DirectCertificationInterviewScheduling";
-import { DirectCertificationInterviewRoom } from "./pages/DirectCertificationInterviewRoom";
-import { DirectCertificationResult } from "./pages/DirectCertificationResult";
-import { DirectRecordingPlayback } from "./pages/DirectRecordingPlayback";
-import { InterviewScheduling } from "./pages/InterviewScheduling";
-import { InterviewRoom } from "./pages/InterviewRoom";
-import { InterviewResult } from "./pages/InterviewResult";
-import { SelectPurchaseType } from "./pages/SelectPurchaseType";
 
 // ── Novo Fluxo ANEFAC ──────────────────────────────────────────────────────
 import { CertificationProvider } from "./contexts/CertificationContext";
 import { SiteConfigProvider } from "./contexts/SiteConfigContext";
 import { Home as SiteHome } from "./pages/site/Home";
-import { Certificacoes } from "./pages/site/Certificacoes";
 import { ComoFuncionaCert } from "./pages/site/ComoFuncionaCert";
 import { ComoFunciona } from "./pages/site/ComoFunciona";
 import { ComoFuncionaLideranca } from "./pages/site/ComoFuncionaLideranca";
 import { Simulacao } from "./pages/site/Simulacao";
-import { CertificacaoDetalhe } from "./pages/site/CertificacaoDetalhe";
 import LandingPage from "./pages/LandingPage";
 import { SelecionarCertificacao } from "./pages/novo-fluxo/SelecionarCertificacao";
 import { AreaCandidato } from "./pages/novo-fluxo/AreaCandidato";
@@ -87,54 +55,54 @@ import { NovoFluxoCertificacoes } from "./pages/novo-fluxo/NovoFluxoCertificacoe
 function Router() {
   return (
     <Switch>
-      <Route path={"/"} component={SiteHome} />
-      <Route path={"/certificacoes"} component={Certificacoes} />
-      <Route path={"/certificacoes/:id"} component={CertificacaoDetalhe} />
+      <Route path={"/"} component={() => { window.location.replace("/novo-fluxo"); return null; }} />
+      <Route path={"/certificacoes"} component={() => { window.location.replace("/novo-fluxo/certificacoes"); return null; }} />
+      <Route path={"/certificacoes/:id"} component={() => { window.location.replace("/novo-fluxo/certificacoes"); return null; }} />
       <Route path={"/como-funciona"} component={ComoFunciona} />
       <Route path={"/como-funciona/:id"} component={ComoFuncionaCert} />
       <Route path={"/como-funciona/lideranca"} component={ComoFuncionaLideranca} />
       <Route path={"/simulacao"} component={Simulacao} />
       <Route path={"/cursos"} component={Cursos} />
-      <Route path={"/home"} component={Home} />
-      <Route path={"/select-certification-type"} component={SelectCertificationType} />
+      {/* ARQUIVADO: <Route path={"/home"} component={Home} /> */}
+      {/* ARQUIVADO: <Route path={"/select-certification-type"} component={SelectCertificationType} /> */}
 
-      <Route path={"/select-level"} component={SelectCertificationLevel} />
-      <Route path={"/select-level-cac"} component={SelectCertificationLevelCAC} />
-      <Route path={"/select-level-cca"} component={SelectCertificationLevelCCA} />
-      <Route path={"/select-level-liders"} component={SelectCertificationLevelLiders} />
-      <Route path={"/select-purchase-type"} component={SelectPurchaseType} />
-      <Route path={"/certification-type"} component={CertificationTypeSelection} />
-      <Route path={"/requirements-validation"} component={RequirementsValidation} />
-      <Route path={"/certification-level"} component={CertificationLevelSelection} />
-      <Route path={"/step-2"} component={Step2} />
-      <Route path={"/step-3"} component={Step3} />
-      <Route path={"/step-4"} component={Step4} />
-      <Route path={"/payment"} component={PaymentCheckout} />
-      <Route path={"/welcome-courses"} component={WelcomeCourses} />
-      <Route path={"/courses-learning"} component={CoursesPlatform} />
-      <Route path={"/exam-security-check"} component={ExamSecurityCheck} />
-      <Route path={"/exam-results"} component={ExamResults} />
-      <Route path={"/documental-analysis-checkout"} component={DocumentalAnalysisCheckout} />
-      <Route path={"/step-5"} component={Step5} />
-      <Route path={"/step-6"} component={Step6} />
-      <Route path={"/step-7"} component={Step7} />
-      <Route path={"/step-8"} component={Step8} />
-      <Route path={"/step-9"} component={Step9} />
-      <Route path={"/lattes-curriculum-form"} component={LattesCurriculumForm} />
-      <Route path={"/level2-information"} component={Level2Information} />
-      <Route path={"/level2-lattes-validation"} component={Level2LattesValidation} />
-      <Route path={"/level2-terms-warning"} component={Level2TermsAndWarning} />
-      <Route path={"/level2-checkout"} component={Level2Checkout} />
-      <Route path={"/certification-direct-preparation-check"} component={CertificationDirectPreparationCheck} />
-      <Route path={"/direct-certification-form"} component={DirectCertificationForm} />
-      <Route path={"/direct-certification-waiting"} component={DirectCertificationWaitingInfo} />
-      <Route path={"/direct-interview-scheduling"} component={DirectCertificationInterviewScheduling} />
-      <Route path={"/direct-interview-room"} component={DirectCertificationInterviewRoom} />
-      <Route path={"/direct-certification-result"} component={DirectCertificationResult} />
-      <Route path={"/direct-recording-playback"} component={DirectRecordingPlayback} />
-      <Route path={"/interview-scheduling"} component={InterviewScheduling} />
-      <Route path={"/interview-room"} component={InterviewRoom} />
-      <Route path={"/interview-result"} component={InterviewResult} />
+      {/* ARQUIVADO: <Route path={"/select-level"} component={SelectCertificationLevel} /> */}
+      {/* ARQUIVADO: <Route path={"/select-level-cac"} component={SelectCertificationLevelCAC} /> */}
+      {/* ARQUIVADO: <Route path={"/select-level-cca"} component={SelectCertificationLevelCCA} /> */}
+      {/* ARQUIVADO: <Route path={"/select-level-liders"} component={SelectCertificationLevelLiders} /> */}
+      {/* ARQUIVADO: <Route path={"/select-purchase-type"} component={SelectPurchaseType} /> */}
+      {/* ARQUIVADO: <Route path={"/certification-type"} component={CertificationTypeSelection} /> */}
+      {/* ARQUIVADO: <Route path={"/requirements-validation"} component={RequirementsValidation} /> */}
+      {/* ARQUIVADO: <Route path={"/certification-level"} component={CertificationLevelSelection} /> */}
+      {/* ARQUIVADO: <Route path={"/step-2"} component={Step2} /> */}
+      {/* ARQUIVADO: <Route path={"/step-3"} component={Step3} /> */}
+      {/* ARQUIVADO: <Route path={"/step-4"} component={Step4} /> */}
+      {/* ARQUIVADO: <Route path={"/payment"} component={PaymentCheckout} /> */}
+      {/* ARQUIVADO: <Route path={"/welcome-courses"} component={WelcomeCourses} /> */}
+      {/* ARQUIVADO: <Route path={"/courses-learning"} component={CoursesPlatform} /> */}
+      {/* ARQUIVADO: <Route path={"/exam-security-check"} component={ExamSecurityCheck} /> */}
+      {/* ARQUIVADO: <Route path={"/exam-results"} component={ExamResults} /> */}
+      {/* ARQUIVADO: <Route path={"/documental-analysis-checkout"} component={DocumentalAnalysisCheckout} /> */}
+      {/* ARQUIVADO: <Route path={"/step-5"} component={Step5} /> */}
+      {/* ARQUIVADO: <Route path={"/step-6"} component={Step6} /> */}
+      {/* ARQUIVADO: <Route path={"/step-7"} component={Step7} /> */}
+      {/* ARQUIVADO: <Route path={"/step-8"} component={Step8} /> */}
+      {/* ARQUIVADO: <Route path={"/step-9"} component={Step9} /> */}
+      {/* ARQUIVADO: <Route path={"/lattes-curriculum-form"} component={LattesCurriculumForm} /> */}
+      {/* ARQUIVADO: <Route path={"/level2-information"} component={Level2Information} /> */}
+      {/* ARQUIVADO: <Route path={"/level2-lattes-validation"} component={Level2LattesValidation} /> */}
+      {/* ARQUIVADO: <Route path={"/level2-terms-warning"} component={Level2TermsAndWarning} /> */}
+      {/* ARQUIVADO: <Route path={"/level2-checkout"} component={Level2Checkout} /> */}
+      {/* ARQUIVADO: <Route path={"/certification-direct-preparation-check"} component={CertificationDirectPreparationCheck} /> */}
+      {/* ARQUIVADO: <Route path={"/direct-certification-form"} component={DirectCertificationForm} /> */}
+      {/* ARQUIVADO: <Route path={"/direct-certification-waiting"} component={DirectCertificationWaitingInfo} /> */}
+      {/* ARQUIVADO: <Route path={"/direct-interview-scheduling"} component={DirectCertificationInterviewScheduling} /> */}
+      {/* ARQUIVADO: <Route path={"/direct-interview-room"} component={DirectCertificationInterviewRoom} /> */}
+      {/* ARQUIVADO: <Route path={"/direct-certification-result"} component={DirectCertificationResult} /> */}
+      {/* ARQUIVADO: <Route path={"/direct-recording-playback"} component={DirectRecordingPlayback} /> */}
+      {/* ARQUIVADO: <Route path={"/interview-scheduling"} component={InterviewScheduling} /> */}
+      {/* ARQUIVADO: <Route path={"/interview-room"} component={InterviewRoom} /> */}
+      {/* ARQUIVADO: <Route path={"/interview-result"} component={InterviewResult} /> */}
 
       {/* ── Novo Fluxo ANEFAC ─────────────────────────────────────────────── */}
       <Route path={"/novo-fluxo"} component={AreaCandidato} />
