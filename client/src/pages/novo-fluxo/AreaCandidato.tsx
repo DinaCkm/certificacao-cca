@@ -261,6 +261,34 @@ export function AreaCandidato() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "linear-gradient(180deg, #050a28 0%, #0a1f5e 45%, #1565c0 75%, #1976d2 100%)" }}>
 
+      {/* Navbar topo */}
+      <nav className="relative z-20 flex items-center justify-between px-6 py-4 border-b border-white/10" style={{ background: "rgba(5,10,40,0.8)", backdropFilter: "blur(12px)" }}>
+        <div className="flex items-center gap-3">
+          <img src="/logo-anefac.png" alt="ANEFAC" className="h-8 drop-shadow"
+            onError={e => { (e.target as any).style.display = "none"; }} />
+          <span className="text-white font-bold text-sm hidden sm:block">ANEFAC</span>
+        </div>
+        <div className="flex items-center gap-1 sm:gap-3">
+          <a href="/como-funciona" className="text-white/60 hover:text-white text-xs sm:text-sm px-2 sm:px-3 py-2 rounded-lg hover:bg-white/10 transition-colors">
+            Como funciona
+          </a>
+          <a href="/cursos" className="text-white/60 hover:text-white text-xs sm:text-sm px-2 sm:px-3 py-2 rounded-lg hover:bg-white/10 transition-colors">
+            Cursos
+          </a>
+          <a href="/simulacao" className="text-white/60 hover:text-white text-xs sm:text-sm px-2 sm:px-3 py-2 rounded-lg hover:bg-white/10 transition-colors hidden sm:block">
+            Simulação
+          </a>
+          <a href="/novo-fluxo/admin/login"
+            className="flex items-center gap-1.5 text-xs sm:text-sm font-medium px-3 py-2 rounded-lg transition-all border border-white/20 text-white hover:bg-white/10"
+            title="Área administrativa">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <span className="hidden sm:inline">Admin</span>
+          </a>
+        </div>
+      </nav>
+
       {/* Rede de partículas decorativa */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <svg className="w-full h-full opacity-10" xmlns="http://www.w3.org/2000/svg">
