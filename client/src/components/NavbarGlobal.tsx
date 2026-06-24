@@ -81,22 +81,25 @@ export function NavbarGlobal() {
         {/* Direita: Usuário + Sair */}
         <div className="flex items-center gap-2">
           {isAuthenticated && user && (
-            <div className="hidden sm:flex items-center gap-2">
+            <div className="flex items-center gap-2">
               {isAdmin && !isAdminArea && (
                 <a href="/novo-fluxo/admin"
-                  className="flex items-center gap-1.5 text-xs border border-white/20 text-white/70 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">
+                  className="hidden sm:flex items-center gap-1.5 text-xs border border-white/20 text-white/70 hover:text-white px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">
                   <Shield className="w-3.5 h-3.5" />
                   Área Admin
                 </a>
               )}
-              <span className="text-xs text-white/50 max-w-32 truncate hidden lg:block">
-                {(user as any).email || (user as any).nome}
-              </span>
-              <button onClick={handleSair}
-                className="flex items-center gap-1.5 text-xs border border-white/20 text-white/70 hover:text-red-300 px-3 py-1.5 rounded-lg hover:bg-red-500/10 transition-colors">
-                <LogOut className="w-3.5 h-3.5" />
-                Sair
-              </button>
+              {/* Nome do usuário + Sair — sempre visível */}
+              <div className="flex flex-col items-end leading-tight mr-1">
+                <span className="text-white font-semibold text-xs sm:text-sm truncate max-w-[140px] sm:max-w-[200px]">
+                {(user as any).full_name || (user as any).nome || (user as any).email}
+                </span>
+                <button onClick={handleSair}
+                  className="flex items-center gap-1 text-red-300 hover:text-red-200 text-xs transition-colors mt-0.5">
+                  <LogOut className="w-3 h-3" />
+                  Sair
+                </button>
+              </div>
             </div>
           )}
 
