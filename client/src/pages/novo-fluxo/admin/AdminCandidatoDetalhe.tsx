@@ -50,6 +50,7 @@ export function AdminCandidatoDetalhe() {
   const [candidato, setCandidato] = useState<any>(null);
   const [carregando, setCarregando] = useState(true);
   const [confirmacao, setConfirmacao] = useState<"inativar"|"reativar"|"excluir"|null>(null);
+  const [motivo, setMotivo] = useState("");
 
   useEffect(() => {
     if (!params?.id) return;
@@ -70,13 +71,14 @@ export function AdminCandidatoDetalhe() {
     try {
       const res = await fetch(path, {
         method,
-        headers: { "Authorization": `Bearer ${getToken()}` }
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
+        body: JSON.stringify({ motivo }),
       });
       const data = await res.json();
       toast({ title: data.message });
       if (tipo === "excluir") navigate("/novo-fluxo/admin/candidatos");
       else setCandidato((prev: any) => ({ ...prev, is_active: tipo === "reativar" }));
-      setConfirmacao(null);
+      setConfirmacao(null); setMotivo("");
     } catch {
       toast({ title: "Erro ao executar ação", variant: "destructive" });
     }
@@ -310,13 +312,24 @@ export function AdminCandidatoDetalhe() {
                  confirmacao === "inativar" ? " — O candidato perderá acesso à plataforma." :
                  " — O candidato recuperará o acesso."}
               </p>
-              <div className="flex gap-3">
-                <Button variant="outline" className="flex-1" onClick={() => setConfirmacao(null)}>Cancelar</Button>
-                <Button className={`flex-1 ${
+              <div className="mt-4 text-left">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">Motivo *</label>
+                <textarea
+                  value={motivo}
+                  onChange={e => setMotivo(e.target.value)}
+                  placeholder="Descreva o motivo desta ação para o registro de auditoria..."
+                  rows={3}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                />
+                <p className="text-xs text-gray-400 mt-1">Registrado no log de auditoria com seu usuário e data/hora.</p>
+              </div>
+              <div className="flex gap-3 mt-4">
+                <Button variant="outline" className="flex-1" onClick={() => { setConfirmacao(null); setMotivo(""); }}>Cancelar</Button>
+                <Button disabled={!motivo.trim()} className={`flex-1 disabled:opacity-40 ${
                   confirmacao === "excluir" ? "bg-red-600 hover:bg-red-700" :
                   confirmacao === "inativar" ? "bg-amber-600 hover:bg-amber-700" :
                   "bg-green-600 hover:bg-green-700"}`}
-                  onClick={() => handleAcao(confirmacao)}>
+                  onClick={() => handleAcao(confirmacao!)}>
                   Confirmar
                 </Button>
               </div>

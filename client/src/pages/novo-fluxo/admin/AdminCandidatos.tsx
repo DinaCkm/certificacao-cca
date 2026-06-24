@@ -59,6 +59,7 @@ export function AdminCandidatos() {
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("");
   const [confirmacao, setConfirmacao] = useState<{ tipo: "inativar"|"reativar"|"excluir"; candidato: any } | null>(null);
+  const [motivo, setMotivo] = useState("");
   const [detalhes, setDetalhes] = useState<any | null>(null);
 
   useEffect(() => { carregarCandidatos(); }, []);
@@ -80,18 +81,18 @@ export function AdminCandidatos() {
 
   async function handleInativar(c: any) {
     try {
-      await apiAdmin("PUT", `/candidatos/${c.id}/inativar`);
+      await apiAdmin("PUT", `/candidatos/${c.id}/inativar`, { motivo });
       toast({ title: `${c.full_name} inativado` });
-      setConfirmacao(null);
+      setConfirmacao(null); setMotivo("");
       carregarCandidatos();
     } catch (err: any) { toast({ title: err.message, variant: "destructive" }); }
   }
 
   async function handleReativar(c: any) {
     try {
-      await apiAdmin("PUT", `/candidatos/${c.id}/reativar`);
+      await apiAdmin("PUT", `/candidatos/${c.id}/reativar`, { motivo });
       toast({ title: `${c.full_name} reativado` });
-      setConfirmacao(null);
+      setConfirmacao(null); setMotivo("");
       carregarCandidatos();
     } catch (err: any) { toast({ title: err.message, variant: "destructive" }); }
   }
@@ -100,7 +101,7 @@ export function AdminCandidatos() {
     try {
       await apiAdmin("DELETE", `/candidatos/${c.id}`);
       toast({ title: `${c.full_name} excluído permanentemente` });
-      setConfirmacao(null);
+      setConfirmacao(null); setMotivo("");
       carregarCandidatos();
     } catch (err: any) { toast({ title: err.message, variant: "destructive" }); }
   }
@@ -283,7 +284,7 @@ export function AdminCandidatos() {
                 </p>
               </div>
               <div className="flex gap-3">
-                <Button variant="outline" className="flex-1" onClick={() => setConfirmacao(null)}>Cancelar</Button>
+                <Button variant="outline" className="flex-1" onClick={() => { setConfirmacao(null); setMotivo(""); }}>Cancelar</Button>
                 <Button
                   className={`flex-1 ${confirmacao.tipo === "excluir" ? "bg-red-600 hover:bg-red-700" : confirmacao.tipo === "inativar" ? "bg-amber-600 hover:bg-amber-700" : "bg-green-600 hover:bg-green-700"}`}
                   onClick={() => {

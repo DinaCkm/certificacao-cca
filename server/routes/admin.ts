@@ -609,15 +609,22 @@ adminRouter.get("/candidatos/:id",
 adminRouter.put("/candidatos/:id/inativar",
   requireRole("administrador", "gestor_n1"),
   async (req, res) => {
+    const { motivo } = req.body;
+    const candidatoId = parseInt(req.params.id);
     try {
+      const [candidato] = await db.execute(
+        "SELECT full_name, email FROM users WHERE id = ? AND role_id = 1", [candidatoId]
+      ) as any;
+      if (!candidato.length) return res.status(404).json({ error: "Candidato não encontrado" });
+
       await db.execute(
-        "UPDATE users SET is_active = FALSE WHERE id = ? AND role_id = 1",
-        [parseInt(req.params.id)]
+        "UPDATE users SET is_active = FALSE WHERE id = ? AND role_id = 1", [candidatoId]
       );
+      const descricao = `Candidato ${candidato[0].full_name} (${candidato[0].email}) inativado. Motivo: ${motivo || "Não informado"}. IP: ${req.ip}`;
       await db.execute(
         `INSERT INTO audit_log (user_id, acao, entidade, entidade_id, descricao, resultado)
-         VALUES (?, 'candidato_inativado', 'users', ?, 'Candidato inativado por LGPD', 'sucesso')`,
-        [req.user!.userId, parseInt(req.params.id)]
+         VALUES (?, 'candidato_inativado', 'users', ?, ?, 'sucesso')`,
+        [req.user!.userId, candidatoId, descricao]
       );
       return res.json({ message: "Candidato inativado" });
     } catch (err) {
@@ -630,10 +637,20 @@ adminRouter.put("/candidatos/:id/inativar",
 adminRouter.put("/candidatos/:id/reativar",
   requireRole("administrador", "gestor_n1"),
   async (req, res) => {
+    const { motivo } = req.body;
+    const candidatoId = parseInt(req.params.id);
     try {
+      const [candidato] = await db.execute(
+        "SELECT full_name, email FROM users WHERE id = ? AND role_id = 1", [candidatoId]
+      ) as any;
       await db.execute(
-        "UPDATE users SET is_active = TRUE WHERE id = ? AND role_id = 1",
-        [parseInt(req.params.id)]
+        "UPDATE users SET is_active = TRUE WHERE id = ? AND role_id = 1", [candidatoId]
+      );
+      const descricao = `Candidato ${candidato[0]?.full_name} (${candidato[0]?.email}) reativado. Motivo: ${motivo || "Não informado"}. IP: ${req.ip}`;
+      await db.execute(
+        `INSERT INTO audit_log (user_id, acao, entidade, entidade_id, descricao, resultado)
+         VALUES (?, 'candidato_reativado', 'users', ?, ?, 'sucesso')`,
+        [req.user!.userId, candidatoId, descricao]
       );
       return res.json({ message: "Candidato reativado" });
     } catch (err) {
@@ -654,6 +671,16 @@ adminRouter.delete("/candidatos/:id",
         [id]
       ) as any;
       if (!rows.length) return res.status(404).json({ error: "Candidato não encontrado" });
+
+      const { motivo } = req.body;
+
+      // Registra audit log ANTES de excluir (pois os dados serão removidos)
+      const descricao = `EXCLUSÃO PERMANENTE: ${rows[0].full_name} (ID: ${id}). Motivo: ${motivo || "Não informado"}. IP: ${req.ip}. Esta ação é irreversível.`;
+      await db.execute(
+        `INSERT INTO audit_log (user_id, acao, entidade, entidade_id, descricao, resultado)
+         VALUES (?, 'candidato_excluido_permanentemente', 'users', ?, ?, 'sucesso')`,
+        [req.user!.userId, id, descricao]
+      );
 
       // Exclui dados relacionados em ordem
       await db.execute("DELETE FROM lgpd_aceites WHERE user_id = ?", [id]);
