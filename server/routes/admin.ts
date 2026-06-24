@@ -981,16 +981,20 @@ adminRouter.post("/validacao/:processoId/decisao",
         [novoStatus, novoCaminho, processoId]
       );
 
-      await db.execute(
-        `INSERT INTO audit_log (user_id, processo_id, acao, entidade, entidade_id, descricao, resultado)
-         VALUES (?, ?, 'validacao_documental', 'candidato_processos', ?, ?, 'sucesso')`,
-        [
-          (req as any).user!.userId,
-          processoId,
-          processoId,
-          `Candidato ${processo.full_name} — Caminho ${caminho}. ${parecer_geral || ""}`
-        ]
-      );
+      // Audit log tolerante a falhas
+      try {
+        await db.execute(
+          `INSERT INTO audit_log (user_id, acao, entidade, entidade_id, descricao, resultado)
+           VALUES (?, 'validacao_documental', 'candidato_processos', ?, ?, 'sucesso')`,
+          [
+            (req as any).user!.userId,
+            processoId,
+            `Candidato ${processo.full_name} — Caminho ${caminho}. ${parecer_geral || ""}`
+          ]
+        );
+      } catch (auditErr) {
+        console.warn("Audit log falhou (não crítico):", auditErr);
+      }
 
       return res.json({ message: "Decisão registrada", novo_status: novoStatus, caminho });
     } catch (err) {
