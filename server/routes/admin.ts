@@ -944,6 +944,12 @@ adminRouter.post("/validacao/:processoId/decisao",
     const processoId = parseInt(req.params.processoId);
     const { caminho, parecer_geral } = req.body; // caminho: "A" | "B" | "reprovado"
 
+    console.log("[DECISAO] processoId:", processoId, "caminho:", caminho, "body:", req.body);
+
+    if (isNaN(processoId)) {
+      return res.status(400).json({ error: "processoId inválido" });
+    }
+
     if (!caminho || !["A", "B", "reprovado"].includes(caminho)) {
       return res.status(400).json({ error: "Caminho inválido. Use A, B ou reprovado" });
     }
@@ -967,10 +973,10 @@ adminRouter.post("/validacao/:processoId/decisao",
       if (caminho === "reprovado") {
         novoStatus = "encerrado";
       } else if (caminho === "A") {
-        novoStatus = "entrevista";
+        novoStatus = "agendamento";  // Caminho A → agendamento de entrevista
         novoCaminho = "A";
       } else {
-        novoStatus = "prova";
+        novoStatus = "prova";        // Caminho B → avaliação teórica
         novoCaminho = "B";
       }
 

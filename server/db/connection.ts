@@ -62,6 +62,21 @@ async function runMigrations() {
     `);
 
     console.log("✅ Tabela documentos_candidato OK");
+
+    // Garante que status_geral aceita 'prova' e 'agendamento'
+    try {
+      await db.execute(`
+        ALTER TABLE candidato_processos
+        MODIFY COLUMN status_geral ENUM(
+          'selecao','cadastro','pagamento1','upload','validacao',
+          'agendamento','entrevista','prova','pagamento2','emissao',
+          'concluido','encerrado'
+        ) NOT NULL DEFAULT 'selecao'
+      `);
+      console.log("✅ ENUM status_geral atualizado");
+    } catch (enumErr) {
+      console.warn("⚠️ Não foi possível atualizar ENUM status_geral:", enumErr);
+    }
   } catch (err) {
     console.error("⚠️ Erro na migração:", err);
   }
