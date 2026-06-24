@@ -681,34 +681,27 @@ export function CertificationProvider({ children }: { children: React.ReactNode 
   // Carrega processo do banco ao inicializar se localStorage estiver vazio
   useEffect(() => {
     const token = localStorage.getItem("anefac_token");
-    const saved = localStorage.getItem(STORAGE_KEY_PROCESSO);
-    const savedProcesso = saved ? JSON.parse(saved) : null;
+    if (!token) return;
 
-    // Se não tem certificacaoId no localStorage mas tem token, busca do banco
-    if (token && (!savedProcesso || !savedProcesso.certificacaoId)) {
-      api.processo.atual().then((res: any) => {
-        if (!res?.processo) return;
-        const p = res.processo;
+    // Sempre busca o status atual do banco ao inicializar
+    // (garante que mudanças feitas pelo admin sejam refletidas)
+    (api.processo as any).retomar().then((res: any) => {
+      if (!res?.processo) return;
+      const p = res.processo;
 
-        // Mapeia status do banco para o formato do contexto
-        const statusMap: Record<string, string> = {
-          cadastro: "cadastro", pagamento1: "pagamento1", upload: "upload",
-          validacao: "validacao", entrevista: "entrevista", agendamento: "entrevista",
-          pagamento2: "pagamento2", prova: "prova", concluido: "concluido",
-        };
+      setProcesso((prev) => ({
+        ...prev,
+        certificacaoId: p.certificacaoId || prev.certificacaoId,
+        statusGeral: (p.statusGeral || prev.statusGeral) as any,
+        caminhoAvaliacao: p.caminhoAvaliacao || prev.caminhoAvaliacao,
+        candidatoNome: p.candidatoNome || prev.candidatoNome,
+        candidatoEmail: p.candidatoEmail || prev.candidatoEmail,
+      }));
 
-        setProcesso((prev) => ({
-          ...prev,
-          certificacaoId: p.cert_slug || p.certification_type_id?.toString(),
-          statusGeral: (statusMap[p.status_geral] || p.status_geral) as any,
-          caminhoAvaliacao: p.caminho_avaliacao || null,
-          candidatoNome: p.candidato_nome || "",
-          candidatoEmail: p.candidato_email || "",
-        }));
-
-        localStorage.setItem("anefac_processo_id", String(p.id));
-      }).catch(() => {});
-    }
+      if (p.processo_id) {
+        localStorage.setItem("anefac_processo_id", String(p.processo_id));
+      }
+    }).catch(() => {});
   }, []);
 
   // Persiste no localStorage (cache local) e sincroniza com o banco
