@@ -27,7 +27,23 @@ export async function testConnection() {
 
 async function runMigrations() {
   try {
-    // Cria tabela se não existir
+    // Verifica se a tabela tem as colunas corretas
+    const [cols] = await db.execute(`
+      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'documentos_candidato'
+    `) as any;
+    const existentes: string[] = cols.map((c: any) => c.COLUMN_NAME.toLowerCase());
+
+    const precisaRecriar = !existentes.includes("nome_arquivo") ||
+                           !existentes.includes("tipo_documento") ||
+                           !existentes.includes("caminho_arquivo");
+
+    if (precisaRecriar && existentes.length > 0) {
+      console.log("⚠️ Tabela documentos_candidato com estrutura incorreta — recriando...");
+      await db.execute("DROP TABLE documentos_candidato");
+    }
+
     await db.execute(`
       CREATE TABLE IF NOT EXISTS documentos_candidato (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -38,38 +54,14 @@ async function runMigrations() {
         caminho_arquivo VARCHAR(255) NOT NULL DEFAULT '',
         tamanho_bytes INT NOT NULL DEFAULT 0,
         mime_type VARCHAR(100) NOT NULL DEFAULT 'application/octet-stream',
-        status ENUM('enviado', 'aprovado', 'reprovado') NOT NULL DEFAULT 'enviado',
-        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        status ENUM('enviado','aprovado','reprovado') NOT NULL DEFAULT 'enviado',
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_user_id (user_id),
+        INDEX idx_processo_id (processo_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
 
-    // Busca colunas existentes
-    const [cols] = await db.execute(`
-      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
-      WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'documentos_candidato'
-    `) as any;
-    const existentes = cols.map((c: any) => c.COLUMN_NAME.toLowerCase());
-
-    // Adiciona colunas faltantes
-    const colunasFaltantes: [string, string][] = [
-      ["tipo_documento", "ADD COLUMN tipo_documento VARCHAR(50) NOT NULL DEFAULT 'documento' AFTER user_id"],
-      ["nome_arquivo",   "ADD COLUMN nome_arquivo VARCHAR(255) NOT NULL DEFAULT '' AFTER tipo_documento"],
-      ["caminho_arquivo","ADD COLUMN caminho_arquivo VARCHAR(255) NOT NULL DEFAULT '' AFTER nome_arquivo"],
-      ["tamanho_bytes",  "ADD COLUMN tamanho_bytes INT NOT NULL DEFAULT 0 AFTER caminho_arquivo"],
-      ["mime_type",      "ADD COLUMN mime_type VARCHAR(100) NOT NULL DEFAULT 'application/octet-stream' AFTER tamanho_bytes"],
-      ["status",         "ADD COLUMN status ENUM('enviado','aprovado','reprovado') NOT NULL DEFAULT 'enviado' AFTER mime_type"],
-      ["criado_em",      "ADD COLUMN criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER status"],
-    ];
-
-    for (const [col, alterSql] of colunasFaltantes) {
-      if (!existentes.includes(col)) {
-        await db.execute(`ALTER TABLE documentos_candidato ${alterSql}`);
-        console.log(`✅ Coluna '${col}' adicionada`);
-      }
-    }
-
-    console.log("✅ Tabela documentos_candidato verificada/migrada");
+    console.log("✅ Tabela documentos_candidato OK");
   } catch (err) {
     console.error("⚠️ Erro na migração:", err);
   }
