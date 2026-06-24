@@ -505,25 +505,6 @@ adminRouter.delete("/questoes/:id",
 
 // ── Fale Conosco ──────────────────────────────────────────────────────────────
 
-// POST /api/fale-conosco — público, qualquer pessoa pode enviar
-adminRouter.post("/fale-conosco/enviar", async (req, res) => {
-  const { nome, email, mensagem, pagina_origem } = req.body;
-  if (!nome || !email || !mensagem) {
-    return res.status(400).json({ error: "Nome, e-mail e mensagem são obrigatórios" });
-  }
-  try {
-    const userId = (req as any).user?.userId || null;
-    await db.execute(
-      `INSERT INTO fale_conosco (nome, email, mensagem, user_id, pagina_origem)
-       VALUES (?, ?, ?, ?, ?)`,
-      [nome, email, mensagem, userId, pagina_origem || null]
-    );
-    return res.json({ message: "Mensagem enviada com sucesso!" });
-  } catch (err) {
-    return res.status(500).json({ error: "Erro ao enviar mensagem" });
-  }
-});
-
 // GET /api/admin/fale-conosco — lista mensagens (admin/gestor)
 adminRouter.get("/fale-conosco",
   requireRole("administrador", "gestor_n1", "gestor_n2"),
