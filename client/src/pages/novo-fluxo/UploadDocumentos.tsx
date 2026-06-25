@@ -155,8 +155,8 @@ export function UploadDocumentos() {
       currentStep={3}
       title="Upload de Documentos"
       subtitle={`Envie os documentos exigidos para a ${certAtual.nome}. Todos os arquivos obrigatórios devem ser enviados antes de prosseguir.`}
-      backHref="/novo-fluxo/pagamento-analise"
-      backLabel="← Voltar para pagamento"
+      backHref="/novo-fluxo/aguardando-validacao"
+      backLabel="← Voltar ao acompanhamento"
     >
       {/* Progress */}
       <Card className="mb-6 border-blue-200 bg-blue-50">
@@ -299,7 +299,7 @@ export function UploadDocumentos() {
 
       {/* Actions */}
       <div className="flex justify-between gap-3 pt-6 border-t border-border">
-        <Button variant="outline" onClick={() => navigate("/novo-fluxo/pagamento-analise")}>
+        <Button variant="outline" onClick={() => navigate("/novo-fluxo/aguardando-validacao")}>
           ← Voltar
         </Button>
         <Button
