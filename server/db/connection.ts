@@ -63,8 +63,20 @@ async function runMigrations() {
 
     console.log("✅ Tabela documentos_candidato OK");
 
-    // Garante que status_geral aceita 'prova' e 'agendamento'
+    // Garante que status_geral aceita todos os valores necessários
     try {
+      // Primeiro corrige qualquer valor inválido existente
+      await db.execute(`
+        UPDATE candidato_processos
+        SET status_geral = 'validacao'
+        WHERE status_geral NOT IN (
+          'selecao','cadastro','pagamento1','upload','validacao',
+          'agendamento','entrevista','prova','pagamento2','emissao',
+          'concluido','encerrado'
+        )
+      `);
+
+      // Depois modifica o ENUM
       await db.execute(`
         ALTER TABLE candidato_processos
         MODIFY COLUMN status_geral ENUM(
