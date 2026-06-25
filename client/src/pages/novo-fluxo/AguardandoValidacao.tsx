@@ -55,7 +55,19 @@ export function AguardandoValidacao() {
       const c = res.processo.caminhoAvaliacao;
       setStatusReal(s);
       setCaminhoReal(c);
-      if (s === "agendamento" || s === "prova") carregarSlots();
+      if (s === "agendamento") carregarSlots();
+      // Se já tem entrevista agendada, busca os dados do agendamento existente
+      if (s === "entrevista") {
+        const processoId = localStorage.getItem("anefac_processo_id");
+        const token = localStorage.getItem("anefac_token");
+        if (processoId && token) {
+          fetch(\`/api/processo/agendamento/\${processoId}\`, {
+            headers: { Authorization: \`Bearer \${token}\` }
+          }).then(r => r.json()).then(data => {
+            if (data?.data_hora) setAgendado({ data_hora: data.data_hora });
+          }).catch(() => {});
+        }
+      }
     }).catch(() => {});
   }, [processo.certificacaoId]);
 
@@ -85,6 +97,7 @@ export function AguardandoValidacao() {
     try {
       const result = await api.processo.agendarEntrevista(slotSelecionado.id, parseInt(processoId));
       setAgendado({ data_hora: result.data_hora });
+      setStatusReal("entrevista");
     } catch (err: any) {
       toast({ title: err.message || "Erro ao agendar", variant: "destructive" });
       carregarSlots();

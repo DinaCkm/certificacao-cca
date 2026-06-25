@@ -291,6 +291,27 @@ processoRouter.post("/agendar-entrevista", requireAuth, async (req: Request, res
 // As chamadas de e-mail estão integradas diretamente na rota agendar-entrevista acima
 // via importação lazy para não bloquear a resposta
 
+// ── GET /api/processo/agendamento/:processoId ─────────────────────────────────
+// Retorna o agendamento de entrevista existente para um processo
+
+processoRouter.get("/agendamento/:processoId", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const processoId = parseInt(req.params.processoId);
+    const [rows] = await db.execute(
+      `SELECT datetime_agendado as data_hora, status
+       FROM agendamentos_entrevista
+       WHERE processo_id = ? AND user_id = ?
+       ORDER BY id DESC LIMIT 1`,
+      [processoId, req.user!.userId]
+    ) as any;
+
+    if (!rows.length) return res.json({ data_hora: null });
+    return res.json({ data_hora: rows[0].data_hora, status: rows[0].status });
+  } catch (err) {
+    return res.status(500).json({ error: "Erro ao buscar agendamento" });
+  }
+});
+
 // ── POST /api/processo/sincronizar ────────────────────────────────────────────
 // Recebe o estado completo do processo do frontend e persiste no banco
 // Chamado a cada mudança de status relevante
