@@ -31,7 +31,7 @@ function formatDataHora(dataHora: string) {
 }
 
 export function AguardandoValidacao() {
-  const { processo, getCertificacaoAtual } = useCertification();
+  const { processo, getCertificacaoAtual, atualizarStatus, atualizarCandidato } = useCertification();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const certAtual = getCertificacaoAtual();
@@ -41,19 +41,23 @@ export function AguardandoValidacao() {
   const [slotSelecionado, setSlotSelecionado] = useState<Slot | null>(null);
   const [confirmando, setConfirmando] = useState(false);
   const [agendado, setAgendado] = useState<{ data_hora: string } | null>(null);
+  const [statusReal, setStatusReal] = useState(processo.statusGeral);
+  const [caminhoReal, setCaminhoReal] = useState(processo.caminhoAvaliacao);
 
-  const status = processo.statusGeral;
-  const caminho = processo.caminhoAvaliacao;
-
-  // Redireciona se não tem processo
+  // Sempre busca status atualizado do banco ao carregar a página
   useEffect(() => {
-    if (!processo.certificacaoId) navigate("/novo-fluxo");
+    if (!processo.certificacaoId) { navigate("/novo-fluxo"); return; }
+    const token = localStorage.getItem("anefac_token");
+    if (!token) return;
+    (api.processo as any).retomar().then((res: any) => {
+      if (!res?.processo) return;
+      const s = res.processo.statusGeral;
+      const c = res.processo.caminhoAvaliacao;
+      setStatusReal(s);
+      setCaminhoReal(c);
+      if (s === "agendamento" || s === "prova") carregarSlots();
+    }).catch(() => {});
   }, [processo.certificacaoId]);
-
-  // Carrega slots quando status é agendamento
-  useEffect(() => {
-    if (status === "agendamento") carregarSlots();
-  }, [status]);
 
   async function carregarSlots() {
     setCarregandoSlots(true);
@@ -98,14 +102,14 @@ export function AguardandoValidacao() {
     { key: "pagamento1", label: "Pagamento da taxa de análise" },
     { key: "upload",     label: "Documentos enviados" },
     { key: "validacao",  label: "Validação documental" },
-    { key: caminho === "B" ? "prova" : "agendamento", label: caminho === "B" ? "Prova de competência" : "Agendamento de entrevista" },
+    { key: caminhoReal === "B" ? "prova" : "agendamento", label: caminhoReal === "B" ? "Prova de competência" : "Agendamento de entrevista" },
     { key: "entrevista", label: "Entrevista técnica" },
     { key: "pagamento2", label: "Pagamento da taxa de emissão" },
     { key: "concluido",  label: "Emissão do certificado" },
   ];
 
   const ordemStatus = ["cadastro","pagamento1","upload","validacao","agendamento","prova","entrevista","pagamento2","concluido"];
-  const idxAtual = ordemStatus.indexOf(status);
+  const idxAtual = ordemStatus.indexOf(statusReal);
 
   // ── Título e subtítulo dinâmicos ─────────────────────────────────────────
   const tituloMap: Record<string, string> = {
@@ -124,8 +128,8 @@ export function AguardandoValidacao() {
   return (
     <FluxoLayout
       currentStep={4}
-      title={tituloMap[status] || "Acompanhamento do Processo"}
-      subtitle={subtituloMap[status] || "Acompanhe as etapas do seu processo de certificação."}
+      title={tituloMap[statusReal] || "Acompanhamento do Processo"}
+      subtitle={subtituloMap[statusReal] || "Acompanhe as etapas do seu processo de certificação."}
     >
       <div className="grid lg:grid-cols-3 gap-6">
 
@@ -133,7 +137,7 @@ export function AguardandoValidacao() {
         <div className="lg:col-span-2 space-y-5">
 
           {/* Bloco de status atual */}
-          {status === "validacao" && (
+          {statusReal === "validacao" && (
             <Card className="border-blue-200 bg-blue-50">
               <CardContent className="p-6 flex items-center gap-4">
                 <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
@@ -148,7 +152,7 @@ export function AguardandoValidacao() {
             </Card>
           )}
 
-          {(status === "agendamento" || status === "prova") && (
+          {(statusReal === "agendamento" || statusReal === "prova") && (
             <Card className="border-green-300 bg-green-50">
               <CardContent className="p-6 flex items-center gap-4">
                 <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center shrink-0">
@@ -162,7 +166,7 @@ export function AguardandoValidacao() {
             </Card>
           )}
 
-          {status === "entrevista" && (
+          {statusReal === "entrevista" && (
             <Card className="border-indigo-200 bg-indigo-50">
               <CardContent className="p-6 flex items-center gap-4">
                 <div className="w-14 h-14 bg-indigo-100 rounded-full flex items-center justify-center shrink-0">
@@ -177,7 +181,7 @@ export function AguardandoValidacao() {
           )}
 
           {/* ── Agendamento de entrevista ─────────────────────────────── */}
-          {status === "agendamento" && !agendado && (
+          {statusReal === "agendamento" && !agendado && (
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -249,7 +253,7 @@ export function AguardandoValidacao() {
           )}
 
           {/* ── Confirmação de agendamento ────────────────────────────── */}
-          {status === "agendamento" && agendado && (
+          {statusReal === "agendamento" && agendado && (
             <Card className="border-green-300 bg-green-50">
               <CardContent className="p-6 text-center">
                 <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-3" />
@@ -271,7 +275,7 @@ export function AguardandoValidacao() {
           )}
 
           {/* ── Prova de competência ──────────────────────────────────── */}
-          {status === "prova" && (
+          {statusReal === "prova" && (
             <Card className="border-blue-200">
               <CardContent className="p-6">
                 <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
@@ -289,7 +293,7 @@ export function AguardandoValidacao() {
           )}
 
           {/* ── Entrevista confirmada ─────────────────────────────────── */}
-          {status === "entrevista" && (
+          {statusReal === "entrevista" && (
             <Card className="border-indigo-200">
               <CardContent className="p-6">
                 <div className="flex items-start gap-3 bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-4">
@@ -381,7 +385,7 @@ export function AguardandoValidacao() {
           <Card>
             <CardContent className="p-5">
               <div className="space-y-2">
-                {status === "validacao" && (
+                {statusReal === "validacao" && (
                   <Button variant="outline" size="sm" className="w-full text-xs"
                     onClick={() => navigate("/novo-fluxo/upload-documentos")}>
                     <FileText className="w-3.5 h-3.5 mr-1.5" /> Reenviar documentos
