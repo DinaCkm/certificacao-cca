@@ -68,6 +68,9 @@ export function NovoFluxoCertificacoes() {
     if (certSelecionada) {
       selecionarCertificacao(certSelecionada);
       navigate("/novo-fluxo/lgpd");
+    } else {
+      // Sem certificação selecionada — vai para seleção de certificação
+      navigate("/novo-fluxo/selecionar");
     }
   };
 
