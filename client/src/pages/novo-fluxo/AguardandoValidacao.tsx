@@ -61,8 +61,8 @@ export function AguardandoValidacao() {
         const processoId = localStorage.getItem("anefac_processo_id");
         const token = localStorage.getItem("anefac_token");
         if (processoId && token) {
-          fetch(\`/api/processo/agendamento/\${processoId}\`, {
-            headers: { Authorization: \`Bearer \${token}\` }
+          fetch(`/api/processo/agendamento/${processoId}`, {
+            headers: { Authorization: `Bearer ${token}` }
           }).then(r => r.json()).then(data => {
             if (data?.data_hora) setAgendado({ data_hora: data.data_hora });
           }).catch(() => {});
