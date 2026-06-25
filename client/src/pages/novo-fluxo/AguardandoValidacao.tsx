@@ -40,7 +40,8 @@ export function AguardandoValidacao() {
   const [carregandoSlots, setCarregandoSlots] = useState(false);
   const [slotSelecionado, setSlotSelecionado] = useState<Slot | null>(null);
   const [confirmando, setConfirmando] = useState(false);
-  const [agendado, setAgendado] = useState<{ data_hora: string } | null>(null);
+  const [agendado, setAgendado] = useState<{ data_hora: string; entrevistador_nome?: string } | null>(null);
+  const [countdown, setCountdown] = useState("");
   const [statusReal, setStatusReal] = useState(processo.statusGeral);
   const [caminhoReal, setCaminhoReal] = useState(processo.caminhoAvaliacao);
 
@@ -64,12 +65,35 @@ export function AguardandoValidacao() {
           fetch(`/api/processo/agendamento/${processoId}`, {
             headers: { Authorization: `Bearer ${token}` }
           }).then(r => r.json()).then(data => {
-            if (data?.data_hora) setAgendado({ data_hora: data.data_hora });
+            if (data?.data_hora) setAgendado({
+              data_hora: data.data_hora,
+              entrevistador_nome: data.entrevistador_nome || "Avaliador ANEFAC"
+            });
           }).catch(() => {});
         }
       }
     }).catch(() => {});
   }, [processo.certificacaoId]);
+
+  // Contador regressivo em tempo real
+  useEffect(() => {
+    if (!agendado?.data_hora) return;
+    const update = () => {
+      const diff = new Date(agendado.data_hora).getTime() - Date.now();
+      if (diff <= 0) { setCountdown("🟢 A sala está aberta agora!"); return; }
+      const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const min = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seg = Math.floor((diff % (1000 * 60)) / 1000);
+      setCountdown(
+        (dias > 0 ? `${dias}d ` : "") +
+        `${String(horas).padStart(2,"0")}h ${String(min).padStart(2,"0")}min ${String(seg).padStart(2,"0")}s`
+      );
+    };
+    update();
+    const t = setInterval(update, 1000);
+    return () => clearInterval(t);
+  }, [agendado?.data_hora]);
 
   async function carregarSlots() {
     setCarregandoSlots(true);
@@ -179,53 +203,43 @@ export function AguardandoValidacao() {
             </Card>
           )}
 
-          {statusReal === "entrevista" && agendado && (() => {
-            const dataEntrevista = new Date(agendado.data_hora);
-            const agora = new Date();
-            const diffMs = dataEntrevista.getTime() - agora.getTime();
-            const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-            const diffHoras = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const diffMin = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-            const fmt = formatDataHora(agendado.data_hora);
-            const salaAberta = diffMs <= 0;
-            return (
-              <Card className="border-indigo-200 bg-indigo-50">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center shrink-0">
-                      <Video className="w-6 h-6 text-indigo-600" />
-                    </div>
-                    <div>
-                      <h2 className="font-bold text-indigo-900 text-lg">Entrevista confirmada!</h2>
-                      <p className="text-sm text-indigo-600">Sua entrevista técnica está agendada.</p>
-                    </div>
+          {statusReal === "entrevista" && (
+            <Card className="border-indigo-200 bg-indigo-50">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center shrink-0">
+                    <Video className="w-6 h-6 text-indigo-600" />
                   </div>
-                  <div className="bg-white rounded-xl border border-indigo-200 p-4 mb-4 space-y-2">
-                    <p className="text-sm font-semibold text-foreground capitalize">📅 {fmt.completo}</p>
-                    <p className="text-sm text-foreground">🕐 {fmt.hora} (horário de Brasília)</p>
-                    <p className="text-sm text-foreground">⏱ 60 min · 🎥 Videoconferência</p>
+                  <div>
+                    <h2 className="font-bold text-indigo-900 text-lg">Entrevista confirmada!</h2>
+                    <p className="text-sm text-indigo-600">Sua entrevista técnica está agendada.</p>
                   </div>
-                  {!salaAberta ? (
+                </div>
+                {agendado ? (
+                  <>
+                    <div className="bg-white rounded-xl border border-indigo-200 p-4 mb-4 space-y-2">
+                      <p className="text-sm font-semibold capitalize">📅 {formatDataHora(agendado.data_hora).completo}</p>
+                      <p className="text-sm">🕐 {formatDataHora(agendado.data_hora).hora} (horário de Brasília)</p>
+                      <p className="text-sm">👤 Avaliador: <strong>{agendado.entrevistador_nome}</strong></p>
+                      <p className="text-sm">⏱ 60 min · 🎥 Videoconferência</p>
+                    </div>
                     <div className="bg-indigo-100 rounded-xl p-4 text-center mb-4">
-                      <p className="text-xs text-indigo-700 font-semibold uppercase tracking-wide mb-2">Tempo restante para a entrevista</p>
-                      <p className="text-2xl font-bold text-indigo-900 font-mono">
-                        {diffDias > 0 ? `${diffDias}d ` : ""}{String(diffHoras).padStart(2,"0")}h {String(diffMin).padStart(2,"0")}min
-                      </p>
-                      <p className="text-xs text-indigo-600 mt-1">A sala abrirá automaticamente no horário agendado</p>
+                      <p className="text-xs text-indigo-700 font-semibold uppercase tracking-wide mb-2">Tempo restante</p>
+                      <p className="text-2xl font-bold text-indigo-900 font-mono">{countdown}</p>
                     </div>
-                  ) : (
-                    <div className="bg-green-100 rounded-xl p-3 text-center mb-4">
-                      <p className="text-sm font-bold text-green-800">🟢 A sala está aberta agora!</p>
-                    </div>
-                  )}
-                  <Button className="w-full bg-indigo-900 hover:bg-indigo-800" size="lg"
-                    onClick={() => navigate("/novo-fluxo/sala-entrevista")}>
-                    <Video className="w-4 h-4 mr-2" /> Acessar sala de entrevista →
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })()}
+                  </>
+                ) : (
+                  <div className="bg-white rounded-xl border border-indigo-200 p-4 mb-4">
+                    <p className="text-sm text-indigo-700">Sua entrevista está agendada. Acesse a sala no horário combinado.</p>
+                  </div>
+                )}
+                <Button className="w-full bg-indigo-900 hover:bg-indigo-800" size="lg"
+                  onClick={() => navigate("/novo-fluxo/sala-entrevista")}>
+                  <Video className="w-4 h-4 mr-2" /> Acessar sala de entrevista →
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           {/* ── Agendamento de entrevista ─────────────────────────────── */}
           {statusReal === "agendamento" && !agendado && (

@@ -36,6 +36,7 @@ import { PagamentoEmissao } from "./pages/novo-fluxo/PagamentoEmissao";
 import { EmissaoCertificado } from "./pages/novo-fluxo/EmissaoCertificado";
 import { ProcessoEncerrado } from "./pages/novo-fluxo/ProcessoEncerrado";
 import { AdminValidacaoDocumental } from "./pages/novo-fluxo/admin/ValidacaoDocumental";
+import { AdminEntrevistas } from "./pages/novo-fluxo/admin/AdminEntrevistas";
 import { AdminLogin } from "./pages/novo-fluxo/admin/AdminLogin";
 import { AdminRoute } from "./components/AdminRoute";
 import { AdminDashboard } from "./pages/novo-fluxo/admin/AdminDashboard";
@@ -131,6 +132,7 @@ function Router() {
       <Route path={"/novo-fluxo/admin/login"} component={AdminLogin} />
       <Route path={"/novo-fluxo/admin"} component={() => <AdminRoute component={AdminDashboard} />} />
       <Route path={"/novo-fluxo/admin/validacao"} component={() => <AdminRoute component={AdminValidacaoDocumental} />} />
+      <Route path={"/novo-fluxo/admin/entrevistas"} component={() => <AdminRoute component={AdminEntrevistas} />} />
       <Route path={"/novo-fluxo/admin/certificacoes"} component={() => <AdminRoute component={AdminCertificacoes} />} />
       <Route path={"/novo-fluxo/admin/site"} component={() => <AdminRoute component={AdminSiteConfig} />} />
       <Route path={"/novo-fluxo/admin/institucional"} component={() => <AdminRoute component={AdminInstitucional} />} />

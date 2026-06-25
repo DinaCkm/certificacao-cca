@@ -63,7 +63,7 @@ export function NavbarGlobal() {
             <>
               <a href="/novo-fluxo/admin" className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${location === "/novo-fluxo/admin" ? "bg-white/20 text-white" : "text-white/60 hover:text-white hover:bg-white/10"}`}>Dashboard</a>
               <a href="/novo-fluxo/admin/validacao" className="text-xs px-3 py-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">Validação</a>
-              <a href="/novo-fluxo/admin/resultado-entrevista" className="text-xs px-3 py-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">Entrevistas</a>
+              <a href="/novo-fluxo/admin/entrevistas" className="text-xs px-3 py-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">Entrevistas</a>
               <a href="/novo-fluxo/admin/prova-config" className="text-xs px-3 py-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">Prova</a>
               <a href="/novo-fluxo/admin/usuarios" className="text-xs px-3 py-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">Usuários</a>
               <a href="/novo-fluxo/admin/candidatos" className="text-xs px-3 py-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">Candidatos</a>

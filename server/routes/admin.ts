@@ -1009,3 +1009,29 @@ adminRouter.post("/validacao/:processoId/decisao",
     }
   }
 );
+
+// GET /api/admin/entrevistas/agendadas — lista entrevistas agendadas para o avaliador
+adminRouter.get("/entrevistas/agendadas",
+  requireRole("administrador", "gestor_n1", "entrevistador", "avaliador"),
+  async (req, res) => {
+    try {
+      const [rows] = await db.execute(
+        `SELECT ae.id as agendamento_id, ae.processo_id, ae.datetime_agendado as data_hora, ae.status,
+                u.full_name as candidato_nome, u.email as candidato_email,
+                ct.nome as cert_nome,
+                ue.full_name as entrevistador_nome
+         FROM agendamentos_entrevista ae
+         JOIN candidato_processos cp ON cp.id = ae.processo_id
+         JOIN users u ON u.id = ae.user_id
+         JOIN certification_types ct ON ct.id = cp.certification_type_id
+         LEFT JOIN users ue ON ue.id = ae.entrevistador_id
+         WHERE ae.datetime_agendado >= DATE_SUB(NOW(), INTERVAL 1 DAY)
+         ORDER BY ae.datetime_agendado ASC`
+      ) as any;
+      return res.json({ entrevistas: rows });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao buscar entrevistas" });
+    }
+  }
+);
