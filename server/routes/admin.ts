@@ -1003,9 +1003,9 @@ adminRouter.post("/validacao/:processoId/decisao",
       }
 
       return res.json({ message: "Decisão registrada", novo_status: novoStatus, caminho });
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      return res.status(500).json({ error: "Erro ao registrar decisão" });
+      return res.status(500).json({ error: err?.message || "Erro ao registrar decisão", detail: String(err) });
     }
   }
 );
