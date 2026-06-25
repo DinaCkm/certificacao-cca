@@ -65,18 +65,7 @@ async function runMigrations() {
 
     // Garante que status_geral aceita todos os valores necessários
     try {
-      // Primeiro corrige qualquer valor inválido existente
-      await db.execute(`
-        UPDATE candidato_processos
-        SET status_geral = 'validacao'
-        WHERE status_geral NOT IN (
-          'selecao','cadastro','pagamento1','upload','validacao',
-          'agendamento','entrevista','prova','pagamento2','emissao',
-          'concluido','encerrado'
-        )
-      `);
-
-      // Depois modifica o ENUM
+      // Modifica o ENUM para incluir todos os valores
       await db.execute(`
         ALTER TABLE candidato_processos
         MODIFY COLUMN status_geral ENUM(
@@ -87,7 +76,8 @@ async function runMigrations() {
       `);
       console.log("✅ ENUM status_geral atualizado");
     } catch (enumErr) {
-      console.warn("⚠️ Não foi possível atualizar ENUM status_geral:", enumErr);
+      // Ignora erro se o ENUM já está correto
+      console.warn("⚠️ ALTER TABLE ENUM (pode já estar correto):", (enumErr as any)?.message);
     }
   } catch (err) {
     console.error("⚠️ Erro na migração:", err);
