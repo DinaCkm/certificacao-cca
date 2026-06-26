@@ -1075,7 +1075,7 @@ adminRouter.get("/validacao-dupla/:processoId",
 
       // Avaliação cega: remove dados do outro avaliador (exceto admin)
       const docsParaRetornar = docs.map((d: any) => {
-        if (isAdmin) return d; // admin vê tudo
+        if (isAdmin) return { ...d, av1_nome_real: d.av1_nome_real, av2_nome_real: d.av2_nome_real }; // admin vê tudo
 
         const resultado: any = {
           id: d.id,

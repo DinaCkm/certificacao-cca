@@ -17,6 +17,14 @@ interface DocAvaliacao {
   aprovado: boolean | null;
   parecer: string;
   checklist: ChecklistItem[];
+  // Campos extras para visão do admin
+  av1_aprovado?: boolean | null;
+  av1_nome?: string | null;
+  av1_parecer?: string;
+  av2_aprovado?: boolean | null;
+  av2_nome?: string | null;
+  av2_parecer?: string;
+  status?: string;
 }
 interface Candidato {
   processo_id: number;
@@ -105,11 +113,14 @@ export function AdminValidacaoDocumental() {
         "Código de Conduta ANEFAC assinado",
       ];
 
+      // Admin vê avaliação completa de ambos; avaliador vê só a sua
       const lista: DocAvaliacao[] = nomesDoc.map((nome, idx) => {
         const docExistente = data.documentos?.find((d: any) => d.documento_idx === idx);
-        const minhaAv = docExistente?.minha_avaliacao;
-        // Converte 1/0 do MySQL para true/false
-        const aprovadoVal = minhaAv?.aprovado;
+        // Para admin, monta visão completa com ambos os avaliadores
+        const minhaAv = data.is_admin ? docExistente : docExistente?.minha_avaliacao;
+        const aprovadoVal = data.is_admin
+          ? docExistente?.avaliador1_aprovado  // admin vê av1 por padrão
+          : minhaAv?.aprovado;
         const aprovado = aprovadoVal === null || aprovadoVal === undefined
           ? null
           : Boolean(Number(aprovadoVal));
@@ -117,8 +128,20 @@ export function AdminValidacaoDocumental() {
           documento_idx: idx,
           documento_nome: nome,
           aprovado,
-          parecer: minhaAv?.parecer || "",
-          checklist: minhaAv?.checklist || getChecklist(nome),
+          parecer: data.is_admin ? (docExistente?.avaliador1_parecer || "") : (minhaAv?.parecer || ""),
+          checklist: data.is_admin
+            ? (docExistente?.checklist_av1 || getChecklist(nome))
+            : (minhaAv?.checklist || getChecklist(nome)),
+          // Dados extras para admin ver ambos
+          av1_aprovado: docExistente?.avaliador1_aprovado !== undefined
+            ? Boolean(Number(docExistente.avaliador1_aprovado)) : null,
+          av1_nome: docExistente?.av1_nome_real || docExistente?.avaliador1_nome || null,
+          av1_parecer: docExistente?.avaliador1_parecer || "",
+          av2_aprovado: docExistente?.avaliador2_aprovado !== undefined && docExistente?.avaliador2_aprovado !== null
+            ? Boolean(Number(docExistente.avaliador2_aprovado)) : null,
+          av2_nome: docExistente?.av2_nome_real || docExistente?.avaliador2_nome || null,
+          av2_parecer: docExistente?.avaliador2_parecer || "",
+          status: docExistente?.status || "pendente",
         };
       });
 
@@ -342,6 +365,14 @@ export function AdminValidacaoDocumental() {
                     </p>
                   </div>
                 )}
+                {isAdmin && modoDesempate && (
+                  <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <ShieldAlert className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                    <p className="text-xs text-amber-700">
+                      <strong>Modo desempate:</strong> você está visualizando este documento para tomar a decisão final.
+                    </p>
+                  </div>
+                )}
 
                 {/* Checklist */}
                 <div>
@@ -377,17 +408,26 @@ export function AdminValidacaoDocumental() {
                     rows={3} placeholder="Descreva sua análise..." />
                 </div>
 
-                {/* Decisão */}
-                <div className="flex gap-3 pt-2 border-t">
-                  <Button className="flex-1 bg-green-600 hover:bg-green-700"
-                    onClick={() => registrarDecisaoDoc(docAberto, true)}>
-                    <Check className="w-4 h-4 mr-2" /> Aprovar
-                  </Button>
-                  <Button className="flex-1 bg-red-600 hover:bg-red-700"
-                    onClick={() => registrarDecisaoDoc(docAberto, false)}>
-                    <X className="w-4 h-4 mr-2" /> Reprovar
-                  </Button>
-                </div>
+                {/* Decisão — só para avaliadores, não para admin observando */}
+                {(!isAdmin || modoDesempate) && (
+                  <div className="flex gap-3 pt-2 border-t">
+                    <Button className="flex-1 bg-green-600 hover:bg-green-700"
+                      onClick={() => registrarDecisaoDoc(docAberto, true)}>
+                      <Check className="w-4 h-4 mr-2" /> Aprovar
+                    </Button>
+                    <Button className="flex-1 bg-red-600 hover:bg-red-700"
+                      onClick={() => registrarDecisaoDoc(docAberto, false)}>
+                      <X className="w-4 h-4 mr-2" /> Reprovar
+                    </Button>
+                  </div>
+                )}
+                {isAdmin && !modoDesempate && (
+                  <div className="pt-2 border-t">
+                    <p className="text-xs text-center text-muted-foreground italic">
+                      Modo visualização — o administrador não realiza avaliações
+                    </p>
+                  </div>
+                )}
 
                 {/* Navegação */}
                 <div className="flex gap-2">
@@ -486,36 +526,82 @@ export function AdminValidacaoDocumental() {
         )}
 
         {/* Grid de documentos */}
-        <div className="grid lg:grid-cols-3 gap-4 mb-6">
+        <div className="space-y-3 mb-6">
           {avaliacoes.map((av, idx) => {
             const jaAvaliou = av.aprovado !== null && meuNumero !== null;
+            const discorda = isAdmin && av.av1_aprovado !== null && av.av2_aprovado !== null && av.av1_aprovado !== av.av2_aprovado;
+            const ambosAvaliaram = isAdmin && av.av1_aprovado !== null && av.av2_aprovado !== null;
+
             return (
               <Card key={idx} className={cn("border-2 transition-all",
+                discorda ? "border-amber-400 bg-amber-50" :
+                ambosAvaliaram ? "border-green-300 bg-green-50" :
                 av.aprovado === true ? "border-green-300 bg-green-50" :
-                av.aprovado === false ? "border-red-300 bg-red-50" : "border-gray-200 hover:shadow-md cursor-pointer")}>
+                av.aprovado === false ? "border-red-300 bg-red-50" :
+                "border-gray-200")}>
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    {av.aprovado === true ? <CheckCircle className="w-4 h-4 text-green-600 shrink-0" /> :
-                     av.aprovado === false ? <XCircle className="w-4 h-4 text-red-600 shrink-0" /> :
-                     <div className="w-4 h-4 rounded-full border-2 border-gray-300 shrink-0" />}
-                    <span className="text-xs font-medium text-foreground">{av.documento_nome}</span>
-                  </div>
+                  <p className="text-sm font-semibold text-foreground mb-3">{av.documento_nome}</p>
 
-                  {jaAvaliou ? (
-                    // Já avaliou — mostra resultado sem botão de editar
-                    <div className={cn("rounded-lg p-2.5 mt-2 text-center",
+                  {isAdmin ? (
+                    // ── Visão do Admin: mostra ambos os avaliadores lado a lado ──
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Avaliador 1 */}
+                      <div className={cn("rounded-lg p-3 border",
+                        av.av1_aprovado === true ? "bg-green-50 border-green-200" :
+                        av.av1_aprovado === false ? "bg-red-50 border-red-200" : "bg-gray-50 border-gray-200")}>
+                        <p className="text-xs font-bold text-blue-700 mb-1">Avaliador 1</p>
+                        {av.av1_nome && <p className="text-xs text-muted-foreground mb-2">{av.av1_nome}</p>}
+                        {av.av1_aprovado !== null && av.av1_aprovado !== undefined ? (
+                          <p className={cn("text-xs font-bold", av.av1_aprovado ? "text-green-700" : "text-red-700")}>
+                            {av.av1_aprovado ? "✓ Aprovado" : "✗ Reprovado"}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-gray-400 italic">Aguardando avaliação</p>
+                        )}
+                        {av.av1_parecer && <p className="text-xs text-muted-foreground mt-1 italic">"{av.av1_parecer}"</p>}
+                      </div>
+                      {/* Avaliador 2 */}
+                      <div className={cn("rounded-lg p-3 border",
+                        av.av2_aprovado === true ? "bg-green-50 border-green-200" :
+                        av.av2_aprovado === false ? "bg-red-50 border-red-200" : "bg-gray-50 border-gray-200")}>
+                        <p className="text-xs font-bold text-purple-700 mb-1">Avaliador 2</p>
+                        {av.av2_nome && <p className="text-xs text-muted-foreground mb-2">{av.av2_nome}</p>}
+                        {av.av2_aprovado !== null && av.av2_aprovado !== undefined ? (
+                          <p className={cn("text-xs font-bold", av.av2_aprovado ? "text-green-700" : "text-red-700")}>
+                            {av.av2_aprovado ? "✓ Aprovado" : "✗ Reprovado"}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-gray-400 italic">Aguardando avaliação</p>
+                        )}
+                        {av.av2_parecer && <p className="text-xs text-muted-foreground mt-1 italic">"{av.av2_parecer}"</p>}
+                      </div>
+                      {/* Discordância */}
+                      {discorda && (
+                        <div className="col-span-2 bg-amber-100 rounded-lg p-2 text-center">
+                          <p className="text-xs font-bold text-amber-800">⚠️ Discordância — aguarda decisão do administrador</p>
+                        </div>
+                      )}
+                      {/* Concordância */}
+                      {ambosAvaliaram && !discorda && (
+                        <div className="col-span-2 bg-green-100 rounded-lg p-2 text-center">
+                          <p className="text-xs font-bold text-green-800">✓ Avaliações concordam</p>
+                        </div>
+                      )}
+                    </div>
+                  ) : jaAvaliou ? (
+                    // ── Avaliador: já avaliou — mostra sem botão ──
+                    <div className={cn("rounded-lg p-3 text-center",
                       av.aprovado === true ? "bg-green-100" : "bg-red-100")}>
-                      <p className={cn("text-xs font-bold",
-                        av.aprovado === true ? "text-green-700" : "text-red-700")}>
-                        {av.aprovado === true ? "✓ Aprovado" : "✗ Reprovado"}
+                      <p className={cn("text-xs font-bold", av.aprovado ? "text-green-700" : "text-red-700")}>
+                        {av.aprovado ? "✓ Aprovado" : "✗ Reprovado"}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Validado por <strong>Avaliador {meuNumero}</strong>
                       </p>
                     </div>
                   ) : (
-                    // Ainda não avaliou — mostra botão
-                    <Button size="sm" variant="outline" className="w-full text-xs mt-2"
+                    // ── Avaliador: ainda não avaliou ──
+                    <Button size="sm" variant="outline" className="w-full text-xs"
                       onClick={() => setDocAberto(idx)}>
                       <Eye className="w-3.5 h-3.5 mr-1.5" /> Analisar documento
                     </Button>
