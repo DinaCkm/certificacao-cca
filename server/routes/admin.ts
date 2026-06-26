@@ -1035,3 +1035,332 @@ adminRouter.get("/entrevistas/agendadas",
     }
   }
 );
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// VALIDAÇÃO DUPLA — rotas para avaliação com 2 avaliadores independentes
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// GET /api/admin/validacao-dupla/:processoId
+// Retorna estado completo da validação dupla de um processo
+// Cada avaliador só vê SUA própria avaliação (não a do outro)
+adminRouter.get("/validacao-dupla/:processoId",
+  requireRole("administrador", "gestor_n1", "gestor_n2", "avaliador"),
+  async (req: any, res) => {
+    const processoId = parseInt(req.params.processoId);
+    const userId = req.user!.userId;
+    const isAdmin = ["administrador", "gestor_n1", "gestor_n2"].includes(req.user!.role);
+
+    try {
+      // Descobre qual número de avaliador este user é (se já atribuído)
+      const [atrib] = await db.execute(
+        `SELECT numero_avaliador FROM validacao_avaliadores
+         WHERE processo_id = ? AND user_id = ?`,
+        [processoId, userId]
+      ) as any;
+
+      const meuNumero = atrib[0]?.numero_avaliador || null;
+
+      // Busca avaliações do processo
+      const [docs] = await db.execute(
+        `SELECT vd.*,
+                u1.full_name as av1_nome_real,
+                u2.full_name as av2_nome_real
+         FROM validacao_documental vd
+         LEFT JOIN users u1 ON u1.id = vd.avaliador1_id
+         LEFT JOIN users u2 ON u2.id = vd.avaliador2_id
+         WHERE vd.processo_id = ?
+         ORDER BY vd.documento_idx`,
+        [processoId]
+      ) as any;
+
+      // Avaliação cega: remove dados do outro avaliador (exceto admin)
+      const docsParaRetornar = docs.map((d: any) => {
+        if (isAdmin) return d; // admin vê tudo
+
+        const resultado: any = {
+          id: d.id,
+          processo_id: d.processo_id,
+          documento_idx: d.documento_idx,
+          documento_nome: d.documento_nome,
+          status: d.status,
+        };
+
+        if (meuNumero === 1 || d.avaliador1_id === userId) {
+          resultado.minha_avaliacao = {
+            numero: 1,
+            aprovado: d.avaliador1_aprovado,
+            parecer: d.avaliador1_parecer,
+            checklist: d.checklist_av1,
+            at: d.avaliador1_at,
+            nome: d.av1_nome_real,
+          };
+          resultado.outro_concluiu = d.avaliador2_id !== null;
+        } else if (meuNumero === 2 || d.avaliador2_id === userId) {
+          resultado.minha_avaliacao = {
+            numero: 2,
+            aprovado: d.avaliador2_aprovado,
+            parecer: d.avaliador2_parecer,
+            checklist: d.checklist_av2,
+            at: d.avaliador2_at,
+            nome: d.av2_nome_real,
+          };
+          resultado.outro_concluiu = d.avaliador1_id !== null;
+        } else {
+          // Ainda não atribuído — não mostra nada
+          resultado.minha_avaliacao = null;
+          resultado.outro_concluiu = d.avaliador1_id !== null;
+        }
+
+        return resultado;
+      });
+
+      // Verifica se há discordâncias (só admin e quando ambos concluíram)
+      let discordancias: any[] = [];
+      if (isAdmin) {
+        discordancias = docs.filter((d: any) =>
+          d.avaliador1_aprovado !== null &&
+          d.avaliador2_aprovado !== null &&
+          d.avaliador1_aprovado !== d.avaliador2_aprovado
+        ).map((d: any) => ({ documento_nome: d.documento_nome, documento_idx: d.documento_idx }));
+      }
+
+      return res.json({
+        meu_numero: meuNumero,
+        is_admin: isAdmin,
+        documentos: docsParaRetornar,
+        discordancias,
+      });
+    } catch (err) {
+      console.error("[VALIDACAO-DUPLA GET]", err);
+      return res.status(500).json({ error: "Erro ao buscar validação" });
+    }
+  }
+);
+
+// POST /api/admin/validacao-dupla/:processoId/avaliar
+// Avaliador se auto-atribui e registra sua avaliação de um documento
+adminRouter.post("/validacao-dupla/:processoId/avaliar",
+  requireRole("administrador", "gestor_n1", "gestor_n2", "avaliador"),
+  async (req: any, res) => {
+    const processoId = parseInt(req.params.processoId);
+    const userId = req.user!.userId;
+    const { documento_idx, documento_nome, aprovado, parecer, checklist } = req.body;
+
+    try {
+      // Auto-atribuição: descobre ou atribui número ao avaliador
+      const [atrib] = await db.execute(
+        `SELECT numero_avaliador FROM validacao_avaliadores
+         WHERE processo_id = ? AND user_id = ?`,
+        [processoId, userId]
+      ) as any;
+
+      let meuNumero = atrib[0]?.numero_avaliador;
+
+      if (!meuNumero) {
+        // Verifica quantos avaliadores já estão atribuídos
+        const [existentes] = await db.execute(
+          `SELECT COUNT(*) as total FROM validacao_avaliadores WHERE processo_id = ?`,
+          [processoId]
+        ) as any;
+
+        const total = existentes[0].total;
+        if (total >= 2) {
+          return res.status(400).json({ error: "Já existem 2 avaliadores atribuídos a este processo." });
+        }
+
+        meuNumero = total + 1;
+        await db.execute(
+          `INSERT INTO validacao_avaliadores (processo_id, user_id, numero_avaliador) VALUES (?, ?, ?)`,
+          [processoId, userId, meuNumero]
+        );
+      }
+
+      // Obtém nome do avaliador
+      const [userRows] = await db.execute(
+        `SELECT full_name FROM users WHERE id = ?`, [userId]
+      ) as any;
+      const nomeAvaliador = userRows[0]?.full_name || "Avaliador";
+
+      // Upsert na tabela de validação
+      const [existeDoc] = await db.execute(
+        `SELECT id FROM validacao_documental WHERE processo_id = ? AND documento_idx = ?`,
+        [processoId, documento_idx]
+      ) as any;
+
+      if (existeDoc.length === 0) {
+        // Cria registro
+        await db.execute(
+          `INSERT INTO validacao_documental
+           (processo_id, documento_idx, documento_nome,
+            avaliador${meuNumero}_id, avaliador${meuNumero}_nome,
+            avaliador${meuNumero}_aprovado, avaliador${meuNumero}_parecer,
+            avaliador${meuNumero}_at, checklist_av${meuNumero}, status)
+           VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?, ?)`,
+          [processoId, documento_idx, documento_nome,
+           userId, nomeAvaliador, aprovado ? 1 : 0, parecer,
+           JSON.stringify(checklist),
+           meuNumero === 1 ? "av1_concluido" : "av2_concluido"]
+        );
+      } else {
+        // Atualiza
+        await db.execute(
+          `UPDATE validacao_documental SET
+           avaliador${meuNumero}_id = ?,
+           avaliador${meuNumero}_nome = ?,
+           avaliador${meuNumero}_aprovado = ?,
+           avaliador${meuNumero}_parecer = ?,
+           avaliador${meuNumero}_at = NOW(),
+           checklist_av${meuNumero} = ?,
+           status = IF(avaliador${meuNumero === 1 ? 2 : 1}_id IS NOT NULL, 'av${meuNumero}_concluido', status)
+           WHERE processo_id = ? AND documento_idx = ?`,
+          [userId, nomeAvaliador, aprovado ? 1 : 0, parecer,
+           JSON.stringify(checklist), processoId, documento_idx]
+        );
+      }
+
+      return res.json({ message: "Avaliação registrada", meu_numero: meuNumero });
+    } catch (err: any) {
+      console.error("[VALIDACAO-DUPLA AVALIAR]", err);
+      return res.status(500).json({ error: err.message });
+    }
+  }
+);
+
+// POST /api/admin/validacao-dupla/:processoId/fechar
+// Avaliador 2 fecha a avaliação (ou admin desempata)
+adminRouter.post("/validacao-dupla/:processoId/fechar",
+  requireRole("administrador", "gestor_n1", "gestor_n2", "avaliador"),
+  async (req: any, res) => {
+    const processoId = parseInt(req.params.processoId);
+    const userId = req.user!.userId;
+    const isAdmin = ["administrador", "gestor_n1", "gestor_n2"].includes(req.user!.role);
+    const { caminho, parecer_geral, desempate_docs } = req.body;
+
+    try {
+      const [docs] = await db.execute(
+        `SELECT * FROM validacao_documental WHERE processo_id = ?`,
+        [processoId]
+      ) as any;
+
+      if (!isAdmin) {
+        // Verifica se é o avaliador 2
+        const [atrib] = await db.execute(
+          `SELECT numero_avaliador FROM validacao_avaliadores
+           WHERE processo_id = ? AND user_id = ?`,
+          [processoId, userId]
+        ) as any;
+
+        if (atrib[0]?.numero_avaliador !== 2) {
+          return res.status(403).json({ error: "Somente o Avaliador 2 pode fechar a avaliação." });
+        }
+
+        // Verifica se todos os docs têm ambas as avaliações
+        const incompletos = docs.filter((d: any) => d.avaliador1_id === null || d.avaliador2_id === null);
+        if (incompletos.length > 0) {
+          return res.status(400).json({ error: "Aguardando o Avaliador 1 concluir todos os documentos." });
+        }
+
+        // Verifica discordâncias
+        const discordancias = docs.filter((d: any) =>
+          d.avaliador1_aprovado !== d.avaliador2_aprovado
+        );
+
+        if (discordancias.length > 0) {
+          // Marca como desempate — aguarda admin
+          await db.execute(
+            `UPDATE validacao_documental SET status = 'desempate'
+             WHERE processo_id = ? AND avaliador1_aprovado != avaliador2_aprovado`,
+            [processoId]
+          );
+          await db.execute(
+            `UPDATE candidato_processos SET status_geral = 'validacao', caminho_avaliacao = NULL
+             WHERE id = ?`,
+            [processoId]
+          );
+          return res.json({
+            message: "Discordâncias detectadas — aguardando decisão do administrador.",
+            status: "desempate",
+            discordancias: discordancias.map((d: any) => d.documento_nome),
+          });
+        }
+      } else if (desempate_docs) {
+        // Admin resolvendo desempate — aplica decisões manuais
+        for (const decisao of desempate_docs) {
+          await db.execute(
+            `UPDATE validacao_documental SET
+             avaliador2_aprovado = ?, status = ?,
+             decisao_admin_id = ?, decisao_admin_at = NOW()
+             WHERE processo_id = ? AND documento_idx = ?`,
+            [decisao.aprovado ? 1 : 0,
+             decisao.aprovado ? "aprovado" : "reprovado",
+             userId, processoId, decisao.documento_idx]
+          );
+        }
+      }
+
+      // Fecha a avaliação — determina resultado final
+      const [docsAtualizados] = await db.execute(
+        `SELECT * FROM validacao_documental WHERE processo_id = ?`,
+        [processoId]
+      ) as any;
+
+      const todosAprovados = docsAtualizados.every((d: any) =>
+        (isAdmin ? (d.avaliador2_aprovado ?? d.avaliador1_aprovado) : d.avaliador1_aprovado) === 1
+      );
+
+      // Registra decisão no processo
+      await db.execute(
+        `UPDATE validacao_documental SET status = ?
+         WHERE processo_id = ?`,
+        [todosAprovados ? "aprovado" : "reprovado", processoId]
+      );
+
+      // Avança o processo
+      let novoStatus: string;
+      let novoCaminho: string | null = null;
+
+      if (!todosAprovados) {
+        novoStatus = "encerrado";
+      } else if (caminho === "A") {
+        novoStatus = "agendamento";
+        novoCaminho = "A";
+      } else {
+        novoStatus = "prova";
+        novoCaminho = "B";
+      }
+
+      await db.execute(
+        `UPDATE candidato_processos
+         SET status_geral = ?, caminho_avaliacao = ?, updated_at = NOW()
+         WHERE id = ?`,
+        [novoStatus, novoCaminho, processoId]
+      );
+
+      return res.json({ message: "Avaliação fechada com sucesso", novo_status: novoStatus });
+    } catch (err: any) {
+      console.error("[VALIDACAO-DUPLA FECHAR]", err);
+      return res.status(500).json({ error: err.message });
+    }
+  }
+);
+
+// GET /api/admin/validacao-dupla/pendentes-desempate
+// Lista processos aguardando desempate do admin
+adminRouter.get("/validacao-dupla/pendentes-desempate",
+  requireRole("administrador", "gestor_n1", "gestor_n2"),
+  async (_req, res) => {
+    try {
+      const [rows] = await db.execute(
+        `SELECT DISTINCT cp.id as processo_id, u.full_name, u.email, ct.nome as cert_nome
+         FROM validacao_documental vd
+         JOIN candidato_processos cp ON cp.id = vd.processo_id
+         JOIN users u ON u.id = cp.user_id
+         JOIN certification_types ct ON ct.id = cp.certification_type_id
+         WHERE vd.status = 'desempate'`
+      ) as any;
+      return res.json({ processos: rows });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao buscar desempates" });
+    }
+  }
+);
