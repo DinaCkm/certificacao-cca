@@ -427,6 +427,62 @@ export function AguardandoValidacao() {
             </CardContent>
           </Card>
 
+          {/* Banner Simulação */}
+          <a href="https://certificacao-cca-staging.up.railway.app/simulacao" target="_blank" rel="noopener noreferrer"
+            className="block rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 group">
+            <div className="relative p-5" style={{ background: "linear-gradient(135deg, #1a237e 0%, #283593 50%, #3949ab 100%)" }}>
+              <div className="absolute top-0 right-0 w-24 h-24 opacity-10">
+                <svg viewBox="0 0 100 100" className="w-full h-full text-white fill-current">
+                  <circle cx="80" cy="20" r="40" />
+                  <circle cx="20" cy="80" r="30" />
+                </svg>
+              </div>
+              <div className="relative">
+                <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center mb-3">
+                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                </div>
+                <p className="text-white font-bold text-sm mb-1">Faça uma Simulação</p>
+                <p className="text-blue-200 text-xs leading-relaxed">Teste seus conhecimentos e prepare-se para a prova.</p>
+                <div className="mt-3 flex items-center gap-1 text-blue-300 text-xs font-semibold group-hover:text-white transition-colors">
+                  Acessar simulação
+                  <svg className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </a>
+
+          {/* Banner Cursos */}
+          <a href="https://certificacao-cca-staging.up.railway.app/cursos" target="_blank" rel="noopener noreferrer"
+            className="block rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5 group">
+            <div className="relative p-5" style={{ background: "linear-gradient(135deg, #4a148c 0%, #6a1b9a 50%, #7b1fa2 100%)" }}>
+              <div className="absolute top-0 right-0 w-24 h-24 opacity-10">
+                <svg viewBox="0 0 100 100" className="w-full h-full text-white fill-current">
+                  <circle cx="80" cy="20" r="40" />
+                  <circle cx="20" cy="80" r="30" />
+                </svg>
+              </div>
+              <div className="relative">
+                <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center mb-3">
+                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+                <p className="text-white font-bold text-sm mb-1">Prepare-se para a Certificação</p>
+                <p className="text-purple-200 text-xs leading-relaxed">Acesse os cursos e materiais exclusivos ANEFAC.</p>
+                <div className="mt-3 flex items-center gap-1 text-purple-300 text-xs font-semibold group-hover:text-white transition-colors">
+                  Ver cursos disponíveis
+                  <svg className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </a>
+
           <Card>
             <CardContent className="p-5">
               <h3 className="font-semibold text-foreground mb-3 text-sm flex items-center gap-2">
@@ -452,10 +508,6 @@ export function AguardandoValidacao() {
                     <FileText className="w-3.5 h-3.5 mr-1.5" /> Reenviar documentos
                   </Button>
                 )}
-                <a href="/cursos" target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full text-xs border border-border rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors">
-                  <BookOpen className="w-3.5 h-3.5" /> Cursos ANEFAC
-                </a>
                 <Button variant="ghost" size="sm" className="w-full text-xs text-muted-foreground"
                   onClick={() => navigate("/novo-fluxo")}>
                   <Home className="w-3.5 h-3.5 mr-1.5" /> Voltar ao início
