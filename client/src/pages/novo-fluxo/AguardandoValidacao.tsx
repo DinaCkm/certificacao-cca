@@ -150,16 +150,16 @@ export function AguardandoValidacao() {
 
   // ── Título e subtítulo dinâmicos ─────────────────────────────────────────
   const tituloMap: Record<string, string> = {
-    validacao:   "Aguardando Validação Documental",
-    agendamento: "Documentos Aprovados — Agende sua Entrevista",
-    prova:       "Documentos Aprovados — Realize sua Avaliação",
-    entrevista:  "Entrevista Agendada",
+    validacao:   "Mural do Candidato",
+    agendamento: "Mural do Candidato",
+    prova:       "Mural do Candidato",
+    entrevista:  "Mural do Candidato",
   };
   const subtituloMap: Record<string, string> = {
-    validacao:   "Seu processo foi recebido. Nossa banca analisará seus documentos em breve.",
-    agendamento: "Parabéns! Seus documentos foram validados. Escolha uma data para sua entrevista.",
-    prova:       "Parabéns! Seus documentos foram validados. Realize agora a avaliação teórica.",
-    entrevista:  "Sua entrevista está confirmada. Acesse a sala no dia e horário agendados.",
+    validacao:   "Acompanhe aqui todas as etapas do seu processo de certificação.",
+    agendamento: "Acompanhe aqui todas as etapas do seu processo de certificação.",
+    prova:       "Acompanhe aqui todas as etapas do seu processo de certificação.",
+    entrevista:  "Acompanhe aqui todas as etapas do seu processo de certificação.",
   };
 
   return (
