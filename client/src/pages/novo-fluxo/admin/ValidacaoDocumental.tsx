@@ -158,6 +158,16 @@ export function AdminValidacaoDocumental() {
     }
   }
 
+  const [mostrarEncaminhamento, setMostrarEncaminhamento] = useState(false);
+
+  async function verificarEFechar() {
+    // Primeiro verifica concordância antes de mostrar encaminhamento
+    if (!mostrarEncaminhamento && !modoDesempate) {
+      setMostrarEncaminhamento(true); return;
+    }
+    fecharAvaliacao();
+  }
+
   async function fecharAvaliacao() {
     if (!caminho && !modoDesempate) {
       toast({ title: "Selecione o encaminhamento", variant: "destructive" }); return;
@@ -461,37 +471,75 @@ export function AdminValidacaoDocumental() {
 
         {/* Grid de documentos */}
         <div className="grid lg:grid-cols-3 gap-4 mb-6">
-          {avaliacoes.map((av, idx) => (
-            <Card key={idx} className={cn("border-2 cursor-pointer hover:shadow-md transition-all",
-              av.aprovado === true ? "border-green-300 bg-green-50" :
-              av.aprovado === false ? "border-red-300 bg-red-50" : "border-gray-200")}>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  {av.aprovado === true ? <CheckCircle className="w-4 h-4 text-green-600" /> :
-                   av.aprovado === false ? <XCircle className="w-4 h-4 text-red-600" /> :
-                   <div className="w-4 h-4 rounded-full border-2 border-gray-300" />}
-                  <span className="text-xs font-medium text-foreground truncate">{av.documento_nome}</span>
-                </div>
-                <p className={cn("text-xs font-bold mb-3",
-                  av.aprovado === true ? "text-green-600" : av.aprovado === false ? "text-red-600" : "text-gray-400")}>
-                  {av.aprovado === true ? "Aprovado" : av.aprovado === false ? "Reprovado" : "Pendente"}
-                </p>
-                <Button size="sm" variant="outline" className="w-full text-xs"
-                  onClick={() => setDocAberto(idx)}>
-                  <Eye className="w-3.5 h-3.5 mr-1.5" /> Analisar
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+          {avaliacoes.map((av, idx) => {
+            const jaAvaliou = av.aprovado !== null && meuNumero !== null;
+            return (
+              <Card key={idx} className={cn("border-2 transition-all",
+                av.aprovado === true ? "border-green-300 bg-green-50" :
+                av.aprovado === false ? "border-red-300 bg-red-50" : "border-gray-200 hover:shadow-md cursor-pointer")}>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    {av.aprovado === true ? <CheckCircle className="w-4 h-4 text-green-600 shrink-0" /> :
+                     av.aprovado === false ? <XCircle className="w-4 h-4 text-red-600 shrink-0" /> :
+                     <div className="w-4 h-4 rounded-full border-2 border-gray-300 shrink-0" />}
+                    <span className="text-xs font-medium text-foreground">{av.documento_nome}</span>
+                  </div>
+
+                  {jaAvaliou ? (
+                    // Já avaliou — mostra resultado sem botão de editar
+                    <div className={cn("rounded-lg p-2.5 mt-2 text-center",
+                      av.aprovado === true ? "bg-green-100" : "bg-red-100")}>
+                      <p className={cn("text-xs font-bold",
+                        av.aprovado === true ? "text-green-700" : "text-red-700")}>
+                        {av.aprovado === true ? "✓ Aprovado" : "✗ Reprovado"}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Validado por <strong>Avaliador {meuNumero}</strong>
+                      </p>
+                    </div>
+                  ) : (
+                    // Ainda não avaliou — mostra botão
+                    <Button size="sm" variant="outline" className="w-full text-xs mt-2"
+                      onClick={() => setDocAberto(idx)}>
+                      <Eye className="w-3.5 h-3.5 mr-1.5" /> Analisar documento
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
+        {/* Avaliador 2: resultado da comparação */}
+        {meuNumero === 2 && todosAvaliados && discordancias.length === 0 && !mostrarEncaminhamento && (
+          <Card className="border-2 border-green-300 bg-green-50">
+            <CardContent className="p-6 text-center">
+              <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <CheckCircle className="w-7 h-7 text-green-600" />
+              </div>
+              <p className="font-bold text-green-800 text-lg mb-2">✅ As avaliações coincidem!</p>
+              <p className="text-sm text-green-700 mb-4">
+                Os dois avaliadores chegaram à mesma conclusão em todos os documentos.
+                Agora você pode definir o próximo passo do candidato.
+              </p>
+              <Button className="w-full bg-green-700 hover:bg-green-800" size="lg"
+                onClick={() => setMostrarEncaminhamento(true)}>
+                Definir próximo passo do candidato →
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Fechar avaliação — só Avaliador 2 ou Admin */}
-        {(podeFechar) && todosAvaliados && discordancias.length === 0 && (
+        {(podeFechar) && todosAvaliados && discordancias.length === 0 && mostrarEncaminhamento && (
           <Card className="border-2 border-blue-200">
             <CardContent className="p-6">
-              <h3 className="font-semibold mb-4">
-                {modoDesempate ? "Decisão do Administrador — Desempate" : "Encaminhamento final"}
-              </h3>
+              <div className="flex items-center gap-2 mb-4">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <h3 className="font-semibold">
+                  {modoDesempate ? "Decisão do Administrador — Desempate" : "Qual é o próximo passo do candidato?"}
+                </h3>
+              </div>
               <div className="space-y-3 mb-5">
                 {(["A", "B"] as const).map(op => (
                   <button key={op} onClick={() => setCaminho(op)}
@@ -506,7 +554,7 @@ export function AdminValidacaoDocumental() {
                       </div>
                       <div>
                         <p className="font-semibold text-sm">
-                          {op === "A" ? "Habilitado para Entrevista (Caminho A)" : "Habilitado para Avaliação Teórica (Caminho B)"}
+                          {op === "A" ? "Caminho A — Habilitado para Entrevista" : "Caminho B — Habilitado para Avaliação Teórica"}
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {op === "A" ? "Candidato aprovado — será convidado para entrevista com o Comitê ANEFAC." : "Candidato realizará exame de proficiência antes da entrevista."}
@@ -519,7 +567,45 @@ export function AdminValidacaoDocumental() {
               <Button className="w-full bg-blue-900 hover:bg-blue-800" size="lg"
                 onClick={fecharAvaliacao} disabled={!caminho || enviando}>
                 {enviando ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
-                {modoDesempate ? "Confirmar decisão do administrador" : "Confirmar e enviar ao candidato"}
+                {modoDesempate ? "Confirmar decisão do administrador" : "Confirmar e notificar candidato"}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Avaliador 2: discordância detectada */}
+        {meuNumero === 2 && todosAvaliados && discordancias.length > 0 && (
+          <Card className="border-2 border-amber-400 bg-amber-50">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-3 mb-4">
+                <AlertTriangle className="w-6 h-6 text-amber-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="font-bold text-amber-800 text-lg mb-1">⚠️ As avaliações não coincidem</p>
+                  <p className="text-sm text-amber-700">
+                    Os avaliadores discordaram nos seguintes documentos:
+                  </p>
+                </div>
+              </div>
+              <div className="bg-white rounded-xl border border-amber-200 p-4 mb-4 space-y-2">
+                {discordancias.map((d: any, i: number) => (
+                  <div key={i} className="flex items-center gap-2 text-sm text-amber-800">
+                    <XCircle className="w-4 h-4 text-red-500 shrink-0" />
+                    {typeof d === "string" ? d : d.documento_nome}
+                  </div>
+                ))}
+              </div>
+              <div className="bg-amber-100 rounded-xl p-4 text-center">
+                <p className="text-sm font-semibold text-amber-800 mb-1">
+                  🔒 A solicitação de validação será enviada ao Administrador
+                </p>
+                <p className="text-xs text-amber-700">
+                  Somente o administrador poderá revisar as avaliações e tomar a decisão final.
+                </p>
+              </div>
+              <Button className="w-full bg-amber-600 hover:bg-amber-700 mt-4" size="lg"
+                onClick={fecharAvaliacao} disabled={enviando}>
+                {enviando ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
+                Enviar ao Administrador para decisão
               </Button>
             </CardContent>
           </Card>
@@ -527,11 +613,20 @@ export function AdminValidacaoDocumental() {
 
         {/* Aviso Avaliador 1 — não pode fechar */}
         {meuNumero === 1 && todosAvaliados && !modoDesempate && (
-          <Card className="border-dashed border-2 border-gray-300">
-            <CardContent className="p-5 text-center">
-              <Lock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm font-semibold text-gray-600">Sua avaliação foi registrada</p>
-              <p className="text-xs text-muted-foreground mt-1">Aguardando o Avaliador 2 concluir sua análise independente para fechar o processo.</p>
+          <Card className="border-2 border-blue-200 bg-blue-50">
+            <CardContent className="p-6 text-center">
+              <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Lock className="w-7 h-7 text-blue-600" />
+              </div>
+              <p className="font-bold text-blue-900 mb-1">Sua avaliação foi registrada com sucesso!</p>
+              <p className="text-sm text-blue-700 mb-3">
+                Agora o <strong>Avaliador 2</strong> irá analisar os documentos de forma independente,
+                sem acesso à sua avaliação. Quando ele concluir, o sistema comparará automaticamente
+                as avaliações e encerrará o processo.
+              </p>
+              <div className="bg-white rounded-xl border border-blue-200 p-3 text-xs text-blue-600">
+                ⏳ Aguardando Avaliador 2 concluir a análise...
+              </div>
             </CardContent>
           </Card>
         )}
