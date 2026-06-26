@@ -13,6 +13,7 @@ const NAV_LINKS = [
 export function Navbar() {
   const [location] = useLocation();
   const [menuAberto, setMenuAberto] = useState(false);
+  const token = typeof window !== "undefined" ? localStorage.getItem("anefac_token") : null;
   const [scrolled, setScrolled] = useState(false);
   const { config } = useSiteConfig();
 
@@ -75,6 +76,15 @@ export function Navbar() {
             </Link>
           ))}
           <div className="w-px h-5 bg-gray-300 mx-2" />
+          {token && (
+            <Link href="/novo-fluxo/aguardando-validacao">
+              <a className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold bg-yellow-400 text-blue-900 hover:bg-yellow-300 transition-all shadow-sm">
+                <Star className="w-3.5 h-3.5 fill-current" />
+                Mural do Candidato
+              </a>
+            </Link>
+          )}
+          <div className="w-px h-5 bg-gray-300 mx-2" />
           <Link href="/novo-fluxo/admin">
             <a className={cn(
               "px-4 py-2 rounded-lg text-sm font-medium border transition-all",
@@ -116,6 +126,14 @@ export function Navbar() {
                 Área admin
               </a>
             </Link>
+            {token && (
+              <Link href="/novo-fluxo/aguardando-validacao">
+                <a className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-bold bg-yellow-400 text-blue-900 hover:bg-yellow-300 mt-2">
+                  <Star className="w-3.5 h-3.5 fill-current" />
+                  Mural do Candidato
+                </a>
+              </Link>
+            )}
           </div>
         </div>
       )}
