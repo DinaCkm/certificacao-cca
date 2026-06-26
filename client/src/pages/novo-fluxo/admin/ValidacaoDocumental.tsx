@@ -59,6 +59,7 @@ export function AdminValidacaoDocumental() {
   const [candidatos, setCandidatos] = useState<Candidato[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [candidato, setCandidato] = useState<Candidato | null>(null);
+  const [carregandoValidacao, setCarregandoValidacao] = useState(false);
 
   // Estado da validação dupla
   const [meuNumero, setMeuNumero] = useState<1 | 2 | null>(null);
@@ -84,42 +85,54 @@ export function AdminValidacaoDocumental() {
   }
 
   async function selecionarCandidato(c: Candidato) {
-    setCandidato(c);
+    setCarregandoValidacao(true);
     setDocAberto(null);
     setDiscordancias([]);
     setModoDesempate(false);
+    setMostrarEncaminhamento(false);
+    setCaminho(null);
 
-    // Busca estado da validação dupla
-    const res = await fetch(`/api/admin/validacao-dupla/${c.processo_id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const data = await res.json();
-    setMeuNumero(data.meu_numero);
-    setIsAdmin(data.is_admin);
-    setDiscordancias(data.discordancias || []);
+    try {
+      // Busca estado da validação dupla ANTES de mostrar a tela
+      const res = await fetch(`/api/admin/validacao-dupla/${c.processo_id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
 
-    // Inicializa avaliações com dados existentes ou zerados
-    const nomesDoc = [
-      "Diploma de graduação ou pós-graduação",
-      "Declaração da empresa atual comprovando experiência",
-      "Código de Conduta ANEFAC assinado",
-    ];
+      const nomesDoc = [
+        "Diploma de graduação ou pós-graduação",
+        "Declaração da empresa atual comprovando experiência",
+        "Código de Conduta ANEFAC assinado",
+      ];
 
-    const lista: DocAvaliacao[] = nomesDoc.map((nome, idx) => {
-      const docExistente = data.documentos?.find((d: any) => d.documento_idx === idx);
-      const minhaAv = docExistente?.minha_avaliacao;
-      return {
-        documento_idx: idx,
-        documento_nome: nome,
-        aprovado: minhaAv?.aprovado ?? null,
-        parecer: minhaAv?.parecer || "",
-        checklist: minhaAv?.checklist || getChecklist(nome),
-      };
-    });
-    setAvaliacoes(lista);
+      const lista: DocAvaliacao[] = nomesDoc.map((nome, idx) => {
+        const docExistente = data.documentos?.find((d: any) => d.documento_idx === idx);
+        const minhaAv = docExistente?.minha_avaliacao;
+        // Converte 1/0 do MySQL para true/false
+        const aprovadoVal = minhaAv?.aprovado;
+        const aprovado = aprovadoVal === null || aprovadoVal === undefined
+          ? null
+          : Boolean(Number(aprovadoVal));
+        return {
+          documento_idx: idx,
+          documento_nome: nome,
+          aprovado,
+          parecer: minhaAv?.parecer || "",
+          checklist: minhaAv?.checklist || getChecklist(nome),
+        };
+      });
 
-    // Se há desempate, entra em modo desempate
-    if (data.discordancias?.length > 0 && data.is_admin) setModoDesempate(true);
+      // Só agora atualiza todos os estados e exibe a tela
+      setMeuNumero(data.meu_numero);
+      setIsAdmin(data.is_admin);
+      setDiscordancias(data.discordancias || []);
+      setAvaliacoes(lista);
+      setCandidato(c);
+
+      if (data.discordancias?.length > 0 && data.is_admin) setModoDesempate(true);
+    } finally {
+      setCarregandoValidacao(false);
+    }
   }
 
   const docAtual = docAberto !== null ? avaliacoes[docAberto] : null;
@@ -148,7 +161,7 @@ export function AdminValidacaoDocumental() {
       if (!res.ok) throw new Error(data.error);
 
       // Atualiza local
-      setAvaliacoes(prev => prev.map((a, i) => i === docIdx ? { ...a, aprovado } : a));
+      setAvaliacoes(prev => prev.map((a, i) => i === docIdx ? { ...a, aprovado: Boolean(aprovado) } : a));
       if (!meuNumero) setMeuNumero(data.meu_numero);
       setDocAberto(null);
       toast({ title: aprovado ? "✓ Documento aprovado" : "✗ Documento reprovado",
@@ -247,9 +260,12 @@ export function AdminValidacaoDocumental() {
                     <p className="text-xs text-muted-foreground">{c.email}</p>
                     <p className="text-xs text-blue-700 mt-0.5">{c.cert_nome}</p>
                   </div>
-                  <Button size="sm" className="bg-blue-900 hover:bg-blue-800 shrink-0">
-                    <Eye className="w-3.5 h-3.5 mr-1.5" /> Analisar
-                  </Button>
+                  <Button size="sm" className="bg-blue-900 hover:bg-blue-800 shrink-0"
+                  disabled={carregandoValidacao}>
+                  {carregandoValidacao
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    : <><Eye className="w-3.5 h-3.5 mr-1.5" /> Analisar</>}
+                </Button>
                 </CardContent>
               </Card>
             ))}
