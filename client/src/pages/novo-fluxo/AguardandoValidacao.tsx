@@ -149,24 +149,14 @@ export function AguardandoValidacao() {
   const idxAtual = ordemStatus.indexOf(statusReal);
 
   // ── Título e subtítulo dinâmicos ─────────────────────────────────────────
-  const tituloMap: Record<string, string> = {
-    validacao:   "Mural do Candidato",
-    agendamento: "Mural do Candidato",
-    prova:       "Mural do Candidato",
-    entrevista:  "Mural do Candidato",
-  };
-  const subtituloMap: Record<string, string> = {
-    validacao:   "Acompanhe aqui todas as etapas do seu processo de certificação.",
-    agendamento: "Acompanhe aqui todas as etapas do seu processo de certificação.",
-    prova:       "Acompanhe aqui todas as etapas do seu processo de certificação.",
-    entrevista:  "Acompanhe aqui todas as etapas do seu processo de certificação.",
-  };
+  const titulo = "Mural do Candidato";
+  const subtitulo = "Acompanhe aqui todas as etapas do seu processo de certificação.";
 
   return (
     <FluxoLayout
       currentStep={4}
-      title={tituloMap[statusReal] || "Acompanhamento do Processo"}
-      subtitle={subtituloMap[statusReal] || "Acompanhe as etapas do seu processo de certificação."}
+      title={titulo}
+      subtitle={subtitulo}
     >
       <div className="grid lg:grid-cols-3 gap-6">
 
