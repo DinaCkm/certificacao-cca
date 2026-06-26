@@ -277,15 +277,32 @@ export function AdminValidacaoDocumental() {
             <div className="flex flex-col lg:flex-row">
               {/* Arquivo */}
               <div className="lg:w-1/2 bg-gray-100 min-h-[400px] flex items-center justify-center rounded-bl-2xl">
-                {candidato.documentos[docAberto]?.caminho_arquivo ? (
-                  <img src={`/api/upload/documento/${candidato.documentos[docAberto].caminho_arquivo}`}
-                    alt={docAtual.documento_nome} className="w-full h-full object-contain p-4 max-h-[70vh]" />
-                ) : (
-                  <div className="text-center text-muted-foreground p-8">
-                    <FileText className="w-16 h-16 mx-auto mb-3 opacity-20" />
-                    <p className="text-sm">Nenhum arquivo enviado</p>
-                  </div>
-                )}
+                {(() => {
+                  // Busca o documento pelo tipo_documento (doc-0, doc-1, doc-2)
+                  const tipoKey = `doc-${docAberto}`;
+                  const docEnviado = candidato.documentos.find((d: any) =>
+                    d.tipo_documento === tipoKey
+                  );
+                  const caminho = docEnviado?.caminho_arquivo || docEnviado?.nome_arquivo;
+                  if (!caminho) return (
+                    <div className="text-center text-muted-foreground p-8">
+                      <FileText className="w-16 h-16 mx-auto mb-3 opacity-20" />
+                      <p className="text-sm font-medium">Nenhum arquivo enviado</p>
+                      <p className="text-xs mt-1 opacity-60">O candidato ainda não enviou este documento.</p>
+                    </div>
+                  );
+                  const url = `/api/upload/documento/${caminho}?token=${token}`;
+                  const isPdf = caminho.toLowerCase().endsWith(".pdf");
+                  return isPdf ? (
+                    <iframe src={url} title={docAtual.documento_nome}
+                      className="w-full min-h-[500px] rounded-bl-2xl" style={{ border: "none" }} />
+                  ) : (
+                    <img src={url} alt={docAtual.documento_nome}
+                      className="w-full h-full object-contain p-4 max-h-[70vh]"
+                      onError={e => { (e.target as HTMLImageElement).src = ""; }}
+                    />
+                  );
+                })()}
               </div>
 
               {/* Avaliação */}
