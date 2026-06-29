@@ -64,6 +64,23 @@ async function runMigrations() {
 
     console.log("✅ Tabela documentos_candidato OK");
 
+    // Garante que roles básicos existem
+    const rolesBasicos = [
+      ["administrador", "Administrador", "Acesso total ao sistema"],
+      ["gestor_n1", "Gestor Nível 1", "Gestão de candidatos e validações"],
+      ["gestor_n2", "Gestor Nível 2", "Validação e entrevistas"],
+      ["avaliador", "Avaliador", "Valida documentos dos candidatos"],
+      ["entrevistador", "Entrevistador", "Realiza entrevistas técnicas"],
+      ["candidato", "Candidato", "Candidato à certificação"],
+    ];
+    for (const [code, nome, descricao] of rolesBasicos) {
+      await db.execute(
+        `INSERT IGNORE INTO roles (code, nome, descricao) VALUES (?, ?, ?)`,
+        [code, nome, descricao]
+      );
+    }
+    console.log("✅ Roles básicos verificados");
+
     // Garante que status_geral aceita todos os valores necessários
     try {
       // Modifica o ENUM para incluir todos os valores

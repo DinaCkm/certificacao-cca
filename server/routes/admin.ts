@@ -88,9 +88,9 @@ adminRouter.post(
       );
 
       return res.status(201).json({ id: result.insertId, message: "Usuário criado com sucesso" });
-    } catch (err) {
-      console.error(err);
-      return res.status(500).json({ error: "Erro ao criar usuário" });
+    } catch (err: any) {
+      console.error("[CRIAR USUARIO]", err);
+      return res.status(500).json({ error: err?.message || "Erro ao criar usuário" });
     }
   }
 );
