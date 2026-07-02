@@ -174,10 +174,10 @@ export function AdminSiteConfig() {
                     <div key={n} className="p-4 bg-gray-50 rounded-xl space-y-3">
                       <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Estatística {n}</p>
                       <Field label="Valor">
-                        <TInput value={(draft.hero as Record<string, string>)[`stat${n}Valor`] || ""} onChange={(v) => update(`hero.stat${n}Valor`, v)} placeholder="Ex: 4+" />
+                        <TInput value={(draft.hero as unknown as Record<string, string>)[`stat${n}Valor`] || ""} onChange={(v) => update(`hero.stat${n}Valor`, v)} placeholder="Ex: 4+" />
                       </Field>
                       <Field label="Legenda">
-                        <TInput value={(draft.hero as Record<string, string>)[`stat${n}Label`] || ""} onChange={(v) => update(`hero.stat${n}Label`, v)} placeholder="Ex: certificações" />
+                        <TInput value={(draft.hero as unknown as Record<string, string>)[`stat${n}Label`] || ""} onChange={(v) => update(`hero.stat${n}Label`, v)} placeholder="Ex: certificações" />
                       </Field>
                     </div>
                   ))}
@@ -239,7 +239,7 @@ export function AdminSiteConfig() {
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="font-bold text-gray-900">Etapas do processo</h2>
                   <Button variant="outline" size="sm" onClick={() => {
-                    const etapas = [...(draft.comoFunciona.etapas as Array<Record<string, string>>)];
+                    const etapas = [...(draft.comoFunciona.etapas as unknown as Array<Record<string, string>>)];
                     etapas.push({ numero: String(etapas.length + 1).padStart(2, "0"), titulo: "Nova etapa", descricao: "Descrição da etapa." });
                     update("comoFunciona.etapas", etapas);
                   }} className="rounded-xl text-xs h-8">
@@ -247,7 +247,7 @@ export function AdminSiteConfig() {
                   </Button>
                 </div>
                 <div className="space-y-3">
-                  {(draft.comoFunciona.etapas as Array<Record<string, string>>).map((etapa, i) => (
+                  {(draft.comoFunciona.etapas as unknown as Array<Record<string, string>>).map((etapa, i) => (
                     <div key={i} className="border border-gray-200 rounded-xl overflow-hidden">
                       <button onClick={() => setEtapaExp(etapaExp === i ? null : i)}
                         className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
@@ -256,7 +256,7 @@ export function AdminSiteConfig() {
                           {etapa.titulo || etapa.label}
                         </span>
                         <div className="flex items-center gap-2">
-                          <button onClick={(e) => { e.stopPropagation(); const arr = (draft.comoFunciona.etapas as Array<Record<string, string>>).filter((_, j) => j !== i); update("comoFunciona.etapas", arr); }}
+                          <button onClick={(e) => { e.stopPropagation(); const arr = (draft.comoFunciona.etapas as unknown as Array<Record<string, string>>).filter((_, j) => j !== i); update("comoFunciona.etapas", arr); }}
                             className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -267,17 +267,17 @@ export function AdminSiteConfig() {
                         <div className="px-4 pb-4 space-y-3 border-t border-gray-100 pt-3">
                           <div className="grid sm:grid-cols-2 gap-3">
                             <Field label="Número (ex: 01)">
-                              <TInput value={etapa.numero} onChange={(v) => { const arr = [...(draft.comoFunciona.etapas as Array<Record<string, string>>)]; arr[i] = { ...arr[i], numero: v }; update("comoFunciona.etapas", arr); }} />
+                              <TInput value={etapa.numero} onChange={(v) => { const arr = [...(draft.comoFunciona.etapas as unknown as Array<Record<string, string>>)]; arr[i] = { ...arr[i], numero: v }; update("comoFunciona.etapas", arr); }} />
                             </Field>
                             <Field label="Título">
-                              <TInput value={etapa.titulo || etapa.label || ""} onChange={(v) => { const arr = [...(draft.comoFunciona.etapas as Array<Record<string, string>>)]; arr[i] = { ...arr[i], titulo: v, label: v }; update("comoFunciona.etapas", arr); }} />
+                              <TInput value={etapa.titulo || etapa.label || ""} onChange={(v) => { const arr = [...(draft.comoFunciona.etapas as unknown as Array<Record<string, string>>)]; arr[i] = { ...arr[i], titulo: v, label: v }; update("comoFunciona.etapas", arr); }} />
                             </Field>
                           </div>
                           <Field label="Descrição">
-                            <TArea value={etapa.descricao} onChange={(v) => { const arr = [...(draft.comoFunciona.etapas as Array<Record<string, string>>)]; arr[i] = { ...arr[i], descricao: v }; update("comoFunciona.etapas", arr); }} />
+                            <TArea value={etapa.descricao} onChange={(v) => { const arr = [...(draft.comoFunciona.etapas as unknown as Array<Record<string, string>>)]; arr[i] = { ...arr[i], descricao: v }; update("comoFunciona.etapas", arr); }} />
                           </Field>
                           <Field label="Nota de destaque (opcional)" hint="Aparece como caixa azul abaixo da descrição">
-                            <TInput value={etapa.nota || ""} onChange={(v) => { const arr = [...(draft.comoFunciona.etapas as Array<Record<string, string>>)]; arr[i] = { ...arr[i], nota: v }; update("comoFunciona.etapas", arr); }} placeholder="Ex: Inclui: análise + prova/entrevista" />
+                            <TInput value={etapa.nota || ""} onChange={(v) => { const arr = [...(draft.comoFunciona.etapas as unknown as Array<Record<string, string>>)]; arr[i] = { ...arr[i], nota: v }; update("comoFunciona.etapas", arr); }} placeholder="Ex: Inclui: análise + prova/entrevista" />
                           </Field>
                         </div>
                       )}
@@ -291,19 +291,19 @@ export function AdminSiteConfig() {
                   <div className="space-y-3 p-4 bg-green-50 rounded-xl">
                     <p className="text-xs font-bold text-green-700 uppercase tracking-wide">Caminho A</p>
                     <Field label="Título">
-                      <TInput value={(draft.comoFunciona as Record<string, string>).caminhoATitulo || ""} onChange={(v) => update("comoFunciona.caminhoATitulo", v)} />
+                      <TInput value={(draft.comoFunciona as unknown as Record<string, string>).caminhoATitulo || ""} onChange={(v) => update("comoFunciona.caminhoATitulo", v)} />
                     </Field>
                     <Field label="Descrição">
-                      <TArea value={(draft.comoFunciona as Record<string, string>).caminhoADescricao || ""} onChange={(v) => update("comoFunciona.caminhoADescricao", v)} />
+                      <TArea value={(draft.comoFunciona as unknown as Record<string, string>).caminhoADescricao || ""} onChange={(v) => update("comoFunciona.caminhoADescricao", v)} />
                     </Field>
                   </div>
                   <div className="space-y-3 p-4 bg-orange-50 rounded-xl">
                     <p className="text-xs font-bold text-orange-700 uppercase tracking-wide">Caminho B</p>
                     <Field label="Título">
-                      <TInput value={(draft.comoFunciona as Record<string, string>).caminhoBTitulo || ""} onChange={(v) => update("comoFunciona.caminhoBTitulo", v)} />
+                      <TInput value={(draft.comoFunciona as unknown as Record<string, string>).caminhoBTitulo || ""} onChange={(v) => update("comoFunciona.caminhoBTitulo", v)} />
                     </Field>
                     <Field label="Descrição">
-                      <TArea value={(draft.comoFunciona as Record<string, string>).caminhoBDescricao || ""} onChange={(v) => update("comoFunciona.caminhoBDescricao", v)} />
+                      <TArea value={(draft.comoFunciona as unknown as Record<string, string>).caminhoBDescricao || ""} onChange={(v) => update("comoFunciona.caminhoBDescricao", v)} />
                     </Field>
                   </div>
                 </div>

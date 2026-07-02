@@ -38,6 +38,7 @@ export interface Certification {
   numero: number;                // 1 a 10 — exibido como "Certificação 1", "Certificação 2" etc.
   nome: string;                  // nome completo definido pelo admin
   subtitulo: string;             // subtítulo ou área (ex: "Controladoria")
+  nivel?: string;                // nível opcional (ex: "Nível 1", usado em certificações com múltiplos níveis)
   descricao: string;             // descrição completa para o site
   descricaoBreve: string;        // resumo curto para cards e listagens
   publicoAlvo: string;
@@ -603,6 +604,7 @@ export interface CandidatoProcesso {
     | "upload"
     | "pagamento1"
     | "validacao"
+    | "agendamento"
     | "prova"
     | "entrevista"
     | "pagamento2"

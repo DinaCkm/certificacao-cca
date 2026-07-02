@@ -91,9 +91,11 @@ function CertificationDetailModal({
                 <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border", statusCfg.className)}>
                   {statusCfg.label}
                 </span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                  {cert.nivel}
-                </span>
+                {cert.nivel && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                    {cert.nivel}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -176,7 +178,7 @@ function CertificationDetailModal({
             <Info className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
             <div className="text-xs text-blue-800">
               <strong>Processo de avaliação: </strong>
-              {cert.exigeProva
+              {cert.caminhoDefault === "B"
                 ? "Análise documental → Prova de competência → Entrevista técnica"
                 : "Análise documental → Entrevista técnica (direto, sem prova)"}
             </div>
@@ -273,7 +275,7 @@ function CertificationCard({
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-foreground text-base leading-tight">{cert.nome}</h3>
             <p className="text-xs text-muted-foreground mt-0.5">{cert.subtitulo}</p>
-            <p className="text-xs font-medium text-blue-700 mt-1">{cert.nivel}</p>
+            {cert.nivel && <p className="text-xs font-medium text-blue-700 mt-1">{cert.nivel}</p>}
           </div>
         </div>
       </div>
@@ -307,7 +309,7 @@ function CertificationCard({
 
         {/* Process type */}
         <div className="flex gap-2 flex-wrap">
-          {cert.exigeProva ? (
+          {cert.caminhoDefault === "B" ? (
             <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 border border-blue-200 px-2 py-1 rounded-lg">
               <FileText className="w-3 h-3" /> Inclui prova
             </span>

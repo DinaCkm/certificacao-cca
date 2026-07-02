@@ -92,6 +92,19 @@ export const api = {
         `/processo/${processoId}/definir-caminho`,
         { caminho }
       ),
+
+    slotsDisponiveis: () =>
+      request<{ slots: any[] }>("GET", "/processo/slots-disponiveis"),
+
+    agendarEntrevista: (slot_id: number, processo_id: number) =>
+      request<{ agendamento_id: number; data_hora: string }>("POST", "/processo/agendar-entrevista", { slot_id, processo_id }),
+
+    // Fase 3 — sincronização do processo com o banco
+    sincronizar: (processo: any) =>
+      request<{ processo_id: number; status: string }>("POST", "/processo/sincronizar", processo),
+
+    retomar: () =>
+      request<{ processo: any | null }>("GET", "/processo/retomar"),
   },
 
   health: () => request<{ status: string }>("GET", "/health"),
@@ -104,6 +117,17 @@ export const api = {
     listarSlots: () => request<{ slots: any[] }>("GET", "/admin/slots"),
     criarSlot: (body: { data_hora: string; duracao_minutos?: number }) => request<{ id: number }>("POST", "/admin/slots", body),
     removerSlot: (id: number) => request<{ message: string }>("DELETE", `/admin/slots/${id}`),
+
+    // Carrossel — métodos admin
+    listarCarrossel: () => request<{ imagens: any[] }>("GET", "/admin/carrossel"),
+    criarCarrossel: (body: any) => request<{ id: number }>("POST", "/admin/carrossel", body),
+    editarCarrossel: (id: number, body: any) => request<{ message: string }>("PUT", `/admin/carrossel/${id}`, body),
+    removerCarrossel: (id: number) => request<{ message: string }>("DELETE", `/admin/carrossel/${id}`),
+
+    // Prova config
+    salvarProvaConfig: (body: any) => request<{ message: string }>("POST", "/admin/prova-config", body),
+    adicionarQuestao: (body: any) => request<{ id: number }>("POST", "/admin/questoes", body),
+    removerQuestao: (id: number) => request<{ message: string }>("DELETE", `/admin/questoes/${id}`),
   },
 };
 
@@ -124,40 +148,11 @@ export const adminApi = {
     request<{ roles: any[] }>("GET", "/admin/roles"),
 };
 
-// Slots — adicionados ao objeto api via extensão
-Object.assign(api.admin, {
+// Slots — adicionados ao objeto adminApi (duplicado legado, mantido por compatibilidade)
+Object.assign(adminApi, {
   listarSlots: () => request<{ slots: any[] }>("GET", "/admin/slots"),
   criarSlot: (body: { data_hora: string; duracao_minutos?: number }) =>
     request<{ id: number }>("POST", "/admin/slots", body),
   removerSlot: (id: number) =>
     request<{ message: string }>("DELETE", `/admin/slots/${id}`),
-});
-
-Object.assign(api.processo, {
-  slotsDisponiveis: () => request<{ slots: any[] }>("GET", "/processo/slots-disponiveis"),
-  agendarEntrevista: (slot_id: number, processo_id: number) =>
-    request<{ agendamento_id: number; data_hora: string }>("POST", "/processo/agendar-entrevista", { slot_id, processo_id }),
-});
-
-// Fase 3 — sincronização do processo com o banco
-Object.assign(api.processo, {
-  sincronizar: (processo: any) =>
-    request<{ processo_id: number; status: string }>("POST", "/processo/sincronizar", processo),
-  retomar: () =>
-    request<{ processo: any | null }>("GET", "/processo/retomar"),
-});
-
-// Carrossel — métodos admin
-Object.assign(api.admin, {
-  listarCarrossel: () => request<{ imagens: any[] }>("GET", "/admin/carrossel"),
-  criarCarrossel: (body: any) => request<{ id: number }>("POST", "/admin/carrossel", body),
-  editarCarrossel: (id: number, body: any) => request<{ message: string }>("PUT", `/admin/carrossel/${id}`, body),
-  removerCarrossel: (id: number) => request<{ message: string }>("DELETE", `/admin/carrossel/${id}`),
-});
-
-// Prova config
-Object.assign(api.admin, {
-  salvarProvaConfig: (body: any) => request<{ message: string }>("POST", "/admin/prova-config", body),
-  adicionarQuestao: (body: any) => request<{ id: number }>("POST", "/admin/questoes", body),
-  removerQuestao: (id: number) => request<{ message: string }>("DELETE", `/admin/questoes/${id}`),
 });
