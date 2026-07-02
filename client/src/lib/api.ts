@@ -114,7 +114,7 @@ export const adminApi = {
   listarUsuarios: () =>
     request<{ usuarios: any[] }>("GET", "/admin/usuarios"),
 
-  criarUsuario: (body: { email: string; senha: string; full_name: string; role_code: string }) =>
+  criarUsuario: (body: { email: string; senha: string; full_name: string; cpf: string; role_code: string }) =>
     request<{ id: number; message: string }>("POST", "/admin/usuarios", body),
 
   editarUsuario: (id: number, body: { full_name?: string; role_code?: string; is_active?: boolean; senha?: string }) =>

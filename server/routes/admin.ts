@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { db } from "../db/connection.js";
 
@@ -39,10 +40,19 @@ adminRouter.post(
   "/usuarios",
   requireRole("administrador"),
   async (req: Request, res: Response) => {
-    const { email, senha, full_name, cpf, role_code } = req.body;
+    const { email, full_name, cpf, role_code, senha } = req.body;
 
-    if (!email || !senha || !full_name || !role_code) {
-      return res.status(400).json({ error: "email, senha, full_name e role_code são obrigatórios" });
+    if (!email || !full_name || !role_code || !cpf) {
+      return res.status(400).json({ error: "email, full_name, cpf e role_code são obrigatórios" });
+    }
+
+    const cpf_digits = String(cpf).replace(/\D/g, "");
+    if (cpf_digits.length !== 11) {
+      return res.status(400).json({ error: "CPF inválido" });
+    }
+
+    if (senha && senha.length < 8) {
+      return res.status(400).json({ error: "Senha deve ter no mínimo 8 caracteres" });
     }
 
     // Não permite criar candidatos por aqui
@@ -71,14 +81,75 @@ adminRouter.post(
         return res.status(409).json({ error: "E-mail já cadastrado" });
       }
 
-      const password_hash = await bcrypt.hash(senha, 12);
-      const cpf_final = cpf ? cpf.replace(/\D/g, "") : "00000000000";
+      // Verifica duplicidade de CPF
+      const [existingCpf] = await db.execute(
+        "SELECT id FROM users WHERE cpf = ?", [cpf_digits]
+      ) as any;
+
+      if (existingCpf.length > 0) {
+        return res.status(409).json({ error: "CPF já cadastrado" });
+      }
+
+      const definirSenhaManualmente = !!senha;
+      let password_hash: string;
+      let primeiroAcessoToken: string | null = null;
+      let tokenExpira: Date | null = null;
+
+      if (definirSenhaManualmente) {
+        // Fluxo de teste: admin define a senha diretamente, sem depender de e-mail.
+        password_hash = await bcrypt.hash(senha, 12);
+      } else {
+        // Fluxo padrão: o admin não define senha. Geramos um hash aleatório de
+        // preenchimento (inutilizável para login) e um token de "primeiro acesso"
+        // reaproveitando o mesmo mecanismo de redefinição de senha usado em
+        // /auth/recuperar-senha. O usuário define sua própria senha pelo e-mail.
+        const senhaAleatoria = crypto.randomBytes(32).toString("hex");
+        password_hash = await bcrypt.hash(senhaAleatoria, 12);
+        primeiroAcessoToken = crypto.randomBytes(24).toString("hex");
+        tokenExpira = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 dias
+      }
 
       const [result] = await db.execute(
-        `INSERT INTO users (email, password_hash, full_name, cpf, role_id, email_verified)
-         VALUES (?, ?, ?, ?, ?, TRUE)`,
-        [email, password_hash, full_name, cpf_final, role_id]
+        `INSERT INTO users (email, password_hash, full_name, cpf, role_id, email_verified, reset_token, reset_token_expira)
+         VALUES (?, ?, ?, ?, ?, TRUE, ?, ?)`,
+        [email, password_hash, full_name, cpf_digits, role_id, primeiroAcessoToken, tokenExpira]
       ) as any;
+
+      // Envia e-mail de boas-vindas com link para definir a senha (só no fluxo padrão)
+      if (!definirSenhaManualmente) {
+        try {
+          const appUrl = process.env.APP_URL || "https://certificacao-cca-staging.up.railway.app";
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              from: process.env.FROM_EMAIL || "ANEFAC <noreply@anefac.com.br>",
+              to: [email],
+              subject: "Bem-vindo à Plataforma ANEFAC — Defina sua senha",
+              html: `
+                <div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:20px">
+                  <h2 style="color:#1e3a5f">Bem-vindo(a), ${full_name}!</h2>
+                  <p>Uma conta foi criada para você na Plataforma ANEFAC.</p>
+                  <p>Clique no botão abaixo para definir sua senha de acesso. O link é válido por <strong>7 dias</strong>.</p>
+                  <a href="${appUrl}/novo-fluxo/redefinir-senha?token=${primeiroAcessoToken}"
+                     style="display:inline-block;background:#1e3a5f;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">
+                    Definir minha senha →
+                  </a>
+                  <p style="color:#6b7280;font-size:12px;margin-top:24px">
+                    Se você não esperava este e-mail, ignore-o ou entre em contato com o administrador.
+                  </p>
+                </div>
+              `,
+            }),
+          });
+        } catch (emailErr) {
+          console.error("[CRIAR USUARIO] Falha ao enviar e-mail de primeiro acesso:", emailErr);
+          // Não falha a criação do usuário por causa de erro no envio de e-mail
+        }
+      }
 
       // Audit log
       await db.execute(

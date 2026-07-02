@@ -91,8 +91,10 @@ export function AdminUsuarios() {
   const [form, setForm] = useState({
     full_name: "",
     email: "",
+    cpf: "",
     senha: "",
     role_code: "",
+    definirSenhaManual: false,
   });
 
   // Modal de permissões
@@ -124,13 +126,13 @@ export function AdminUsuarios() {
 
   function abrirCriar() {
     setEditando(null);
-    setForm({ full_name: "", email: "", senha: "", role_code: "" });
+    setForm({ full_name: "", email: "", cpf: "", senha: "", role_code: "", definirSenhaManual: false });
     setModalAberto(true);
   }
 
   function abrirEditar(u: Usuario) {
     setEditando(u);
-    setForm({ full_name: u.full_name, email: u.email, senha: "", role_code: u.role });
+    setForm({ full_name: u.full_name, email: u.email, cpf: (u as any).cpf || "", senha: "", role_code: u.role, definirSenhaManual: false });
     setModalAberto(true);
   }
 
@@ -139,11 +141,20 @@ export function AdminUsuarios() {
       toast({ title: "Preencha nome e perfil", variant: "destructive" });
       return;
     }
-    if (!editando && (!form.email || !form.senha)) {
-      toast({ title: "E-mail e senha são obrigatórios para novo usuário", variant: "destructive" });
+    if (!editando && (!form.email || !form.cpf)) {
+      toast({ title: "E-mail e CPF são obrigatórios para novo usuário", variant: "destructive" });
       return;
     }
-    if (!editando && form.senha.length < 8) {
+    const cpfDigits = form.cpf.replace(/\D/g, "");
+    if (!editando && cpfDigits.length !== 11) {
+      toast({ title: "CPF inválido", variant: "destructive" });
+      return;
+    }
+    if (!editando && form.definirSenhaManual && form.senha.length < 8) {
+      toast({ title: "Senha deve ter no mínimo 8 caracteres", variant: "destructive" });
+      return;
+    }
+    if (editando && form.senha && form.senha.length < 8) {
       toast({ title: "Senha deve ter no mínimo 8 caracteres", variant: "destructive" });
       return;
     }
@@ -160,11 +171,16 @@ export function AdminUsuarios() {
       } else {
         await api.admin.criarUsuario({
           email: form.email,
-          senha: form.senha,
           full_name: form.full_name,
+          cpf: cpfDigits,
           role_code: form.role_code,
+          ...(form.definirSenhaManual ? { senha: form.senha } : {}),
         });
-        toast({ title: "Usuário criado com sucesso!" });
+        toast({
+          title: form.definirSenhaManual
+            ? "Usuário criado com a senha definida!"
+            : "Usuário criado! Um e-mail foi enviado para definir a senha.",
+        });
       }
       setModalAberto(false);
       carregarDados();
@@ -345,25 +361,68 @@ export function AdminUsuarios() {
                   </div>
                 )}
 
-                <div>
-                  <Label>{editando ? "Nova senha (deixe em branco para não alterar)" : "Senha *"}</Label>
-                  <div className="relative">
+                {!editando && (
+                  <div>
+                    <Label>CPF *</Label>
                     <Input
-                      type={mostrarSenha ? "text" : "password"}
-                      value={form.senha}
-                      onChange={(e) => setForm({ ...form, senha: e.target.value })}
-                      placeholder="Mínimo 8 caracteres"
-                      className="pr-10"
+                      value={form.cpf}
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
+                        const formatted = digits
+                          .replace(/(\d{3})(\d)/, "$1.$2")
+                          .replace(/(\d{3})(\d)/, "$1.$2")
+                          .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+                        setForm({ ...form, cpf: formatted });
+                      }}
+                      placeholder="000.000.000-00"
+                      maxLength={14}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setMostrarSenha(!mostrarSenha)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                    >
-                      {mostrarSenha ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
                   </div>
+                )}
+
+                {!editando && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="definirSenhaManual"
+                      type="checkbox"
+                      checked={form.definirSenhaManual}
+                      onChange={(e) => setForm({ ...form, definirSenhaManual: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <Label htmlFor="definirSenhaManual" className="cursor-pointer font-normal">
+                      Definir senha manualmente (útil para usuários de teste)
+                    </Label>
+                  </div>
+                )}
+
+                {(editando || form.definirSenhaManual) && (
+                  <div>
+                    <Label>{editando ? "Nova senha (deixe em branco para não alterar)" : "Senha *"}</Label>
+                    <div className="relative">
+                      <Input
+                        type={mostrarSenha ? "text" : "password"}
+                        value={form.senha}
+                        onChange={(e) => setForm({ ...form, senha: e.target.value })}
+                        placeholder="Mínimo 8 caracteres"
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setMostrarSenha(!mostrarSenha)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                      >
+                        {mostrarSenha ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+
                 </div>
+                )}
+
+                {!editando && !form.definirSenhaManual && (
+                  <p className="text-xs text-gray-500 -mt-2">
+                    O usuário receberá um e-mail para definir a própria senha no primeiro acesso.
+                  </p>
+                )}
 
                 <div>
                   <Label>Perfil de acesso *</Label>
