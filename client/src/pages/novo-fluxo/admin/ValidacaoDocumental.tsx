@@ -221,6 +221,21 @@ export function AdminValidacaoDocumental() {
 
   async function registrarDecisaoDoc(docIdx: number, aprovado: boolean) {
     const doc = avaliacoes[docIdx];
+
+    // Admin em modo desempate: a decisão é só local por enquanto — ela é
+    // persistida de fato quando ele clicar em "Confirmar decisão do
+    // administrador" (que envia todos os desempate_docs de uma vez para
+    // /fechar). Chamar /avaliar aqui falharia, pois esse endpoint tenta
+    // auto-atribuir o admin como um 3º avaliador do processo.
+    if (isAdmin && modoDesempate) {
+      setAvaliacoes(prev => prev.map((a, i) => i === docIdx ? { ...a, aprovado: Boolean(aprovado) } : a));
+      setDocAberto(null);
+      toast({ title: aprovado ? "✓ Marcado como aprovado" : "✗ Marcado como reprovado",
+              description: "Confirme a decisão final no botão abaixo para salvar.",
+              variant: aprovado ? "default" : "destructive" });
+      return;
+    }
+
     try {
       const res = await fetch(`/api/admin/validacao-dupla/${candidato!.processo_id}/avaliar`, {
         method: "POST",
@@ -800,6 +815,27 @@ export function AdminValidacaoDocumental() {
                           <p className="text-xs font-bold text-green-800">✓ Avaliações concordam</p>
                         </div>
                       )}
+                      {/* Decisão do administrador já registrada localmente (ainda não confirmada) */}
+                      {modoDesempate && av.aprovado !== null && (
+                        <div className={cn("col-span-2 rounded-lg p-2 text-center",
+                          av.aprovado ? "bg-green-100" : "bg-red-100")}>
+                          <p className={cn("text-xs font-bold", av.aprovado ? "text-green-800" : "text-red-800")}>
+                            Sua decisão: {av.aprovado ? "✓ Aprovado" : "✗ Reprovado"} (confirme abaixo para salvar)
+                          </p>
+                        </div>
+                      )}
+                      {/* Botão para o admin abrir e visualizar o documento — disponível
+                          para qualquer candidato em validação, não só durante desempate.
+                          Fora do modo desempate é só visualização (sem Aprovar/Reprovar). */}
+                      <div className="col-span-2">
+                        <Button size="sm" variant="outline" className="w-full text-xs mt-1"
+                          onClick={() => setDocAberto(idx)}>
+                          <Eye className="w-3.5 h-3.5 mr-1.5" />
+                          {modoDesempate
+                            ? (av.aprovado !== null ? "Ver documento e alterar decisão" : "Ver documento e decidir")
+                            : "Ver documento"}
+                        </Button>
+                      </div>
                     </div>
                   ) : jaAvaliou ? (
                     // ── Avaliador: já avaliou — mostra sem botão ──
