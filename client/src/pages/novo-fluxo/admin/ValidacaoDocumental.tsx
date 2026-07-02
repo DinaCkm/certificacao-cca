@@ -240,8 +240,18 @@ export function AdminValidacaoDocumental() {
       setAvaliacoes(prev => prev.map((a, i) => i === docIdx ? { ...a, aprovado: Boolean(aprovado) } : a));
       if (!meuNumero) setMeuNumero(data.meu_numero);
       setDocAberto(null);
-      toast({ title: aprovado ? "✓ Documento aprovado" : "✗ Documento reprovado",
-              variant: aprovado ? "default" : "destructive" });
+
+      // O backend já detecta e notifica o administrador automaticamente assim que
+      // os dois avaliadores concluem todos os documentos — não depende de clique
+      // extra, do mesmo jeito que o e-mail ao candidato sai junto da confirmação
+      // do Caminho A/B.
+      if (data.discordancia_detectada) {
+        setDiscordancias(data.discordancias || []);
+        toast({ title: "⚠️ Discordância detectada", description: "O administrador já foi notificado por e-mail automaticamente.", variant: "destructive" });
+      } else {
+        toast({ title: aprovado ? "✓ Documento aprovado" : "✗ Documento reprovado",
+                variant: aprovado ? "default" : "destructive" });
+      }
     } catch (err: any) {
       toast({ title: "Erro ao registrar", description: err.message, variant: "destructive" });
     }
@@ -877,7 +887,9 @@ export function AdminValidacaoDocumental() {
           </Card>
         )}
 
-        {/* Avaliador 2: discordância detectada */}
+        {/* Avaliador 2: discordância detectada — o e-mail ao administrador já foi
+            disparado automaticamente pelo backend ao concluir o último documento,
+            sem precisar de nenhum clique adicional aqui */}
         {meuNumero === 2 && todosAvaliados && discordancias.length > 0 && (
           <Card className="border-2 border-amber-400 bg-amber-50">
             <CardContent className="p-6">
@@ -900,16 +912,16 @@ export function AdminValidacaoDocumental() {
               </div>
               <div className="bg-amber-100 rounded-xl p-4 text-center">
                 <p className="text-sm font-semibold text-amber-800 mb-1">
-                  🔒 A solicitação de validação será enviada ao Administrador
+                  ✅ O administrador já foi notificado por e-mail automaticamente
                 </p>
                 <p className="text-xs text-amber-700">
                   Somente o administrador poderá revisar as avaliações e tomar a decisão final.
+                  Você não precisa fazer mais nada — pode voltar à lista.
                 </p>
               </div>
-              <Button className="w-full bg-amber-600 hover:bg-amber-700 mt-4" size="lg"
-                onClick={fecharAvaliacao} disabled={enviando}>
-                {enviando ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
-                Enviar ao Administrador para decisão
+              <Button variant="outline" className="w-full mt-4" size="lg"
+                onClick={() => setCandidato(null)}>
+                ← Voltar à lista
               </Button>
             </CardContent>
           </Card>

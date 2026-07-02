@@ -1312,7 +1312,106 @@ adminRouter.post("/validacao-dupla/:processoId/avaliar",
         );
       }
 
-      return res.json({ message: "Avaliação registrada", meu_numero: meuNumero });
+      // ── Detecção automática de discordância ────────────────────────────────
+      // Assim que os DOIS avaliadores tiverem concluído TODOS os documentos,
+      // verificamos automaticamente se há discordância — sem depender de o
+      // avaliador clicar em nenhum botão adicional, do mesmo jeito que o
+      // e-mail ao candidato sai assim que o avaliador confirma o Caminho A/B.
+      let discordanciaDetectada = false;
+      let discordanciasAtuais: { documento_nome: string; documento_idx: number }[] = [];
+
+      const [docsAtuais] = await db.execute(
+        `SELECT * FROM validacao_documental WHERE processo_id = ?`,
+        [processoId]
+      ) as any;
+
+      const todosCompletos = docsAtuais.length > 0 &&
+        docsAtuais.every((d: any) => d.avaliador1_id !== null && d.avaliador2_id !== null);
+
+      if (todosCompletos) {
+        discordanciasAtuais = docsAtuais.filter((d: any) =>
+          d.avaliador1_aprovado !== null &&
+          d.avaliador2_aprovado !== null &&
+          d.avaliador1_aprovado !== d.avaliador2_aprovado
+        ).map((d: any) => ({ documento_nome: d.documento_nome, documento_idx: d.documento_idx }));
+
+        // Só dispara uma vez: se nenhum doc já está marcado 'desempate', é a
+        // primeira vez que detectamos essa discordância nesta rodada.
+        const jaProcessado = docsAtuais.some((d: any) => d.status === "desempate");
+
+        if (discordanciasAtuais.length > 0 && !jaProcessado) {
+          discordanciaDetectada = true;
+
+          await db.execute(
+            `UPDATE validacao_documental SET status = 'desempate'
+             WHERE processo_id = ? AND avaliador1_aprovado != avaliador2_aprovado`,
+            [processoId]
+          );
+          await db.execute(
+            `UPDATE candidato_processos SET status_geral = 'validacao', caminho_avaliacao = NULL
+             WHERE id = ?`,
+            [processoId]
+          );
+
+          try {
+            const [proc] = await db.execute(
+              `SELECT candidato_nome FROM candidato_processos WHERE id = ?`,
+              [processoId]
+            ) as any;
+            const candidatoNome = proc[0]?.candidato_nome || `processo #${processoId}`;
+
+            const [destinatarios] = await db.execute(
+              `SELECT u.email FROM users u
+               JOIN roles r ON r.id = u.role_id
+               WHERE r.code IN ('administrador', 'gestor_n1', 'gestor_n2') AND u.is_active = TRUE`
+            ) as any;
+
+            if (destinatarios.length > 0) {
+              const appUrl = process.env.APP_URL || "https://certificacao-cca-staging.up.railway.app";
+              await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: {
+                  "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  from: process.env.FROM_EMAIL || "ANEFAC <noreply@anefac.com.br>",
+                  to: destinatarios.map((d: any) => d.email),
+                  subject: `ANEFAC — Discordância entre avaliadores: ${candidatoNome}`,
+                  html: `
+                    <div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:20px">
+                      <h2 style="color:#b45309">⚠️ Discordância entre avaliadores</h2>
+                      <p>Os dois avaliadores divergiram na validação documental de
+                         <strong>${candidatoNome}</strong> nos seguintes documentos:</p>
+                      <ul style="color:#374151;font-size:14px">
+                        ${discordanciasAtuais.map((d) => `<li>${d.documento_nome}</li>`).join("")}
+                      </ul>
+                      <p>É necessária a decisão de um administrador para desempate.</p>
+                      <a href="${appUrl}/novo-fluxo/admin/validacao"
+                         style="display:inline-block;background:#1e3a5f;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">
+                        Resolver desempate →
+                      </a>
+                    </div>
+                  `,
+                }),
+              });
+            }
+          } catch (emailErr) {
+            console.error("[AVALIAR] Falha ao notificar administradores automaticamente:", emailErr);
+            // Não falha o registro da avaliação por causa de erro no envio de e-mail
+          }
+        } else if (discordanciasAtuais.length > 0 && jaProcessado) {
+          // Já tinha sido enviado antes — só informa o estado atual, sem reenviar e-mail
+          discordanciaDetectada = true;
+        }
+      }
+
+      return res.json({
+        message: "Avaliação registrada",
+        meu_numero: meuNumero,
+        discordancia_detectada: discordanciaDetectada,
+        discordancias: discordanciasAtuais,
+      });
     } catch (err: any) {
       console.error("[VALIDACAO-DUPLA AVALIAR]", err);
       return res.status(500).json({ error: err.message });
@@ -1360,6 +1459,12 @@ adminRouter.post("/validacao-dupla/:processoId/fechar",
         );
 
         if (discordancias.length > 0) {
+          // Guarda de idempotência: a discordância já é detectada e o e-mail já é
+          // disparado automaticamente em /avaliar assim que o 2º avaliador conclui
+          // o último documento. Se algum doc já está 'desempate', o e-mail já saiu
+          // — não reenviamos aqui para não duplicar a notificação.
+          const jaProcessado = docs.some((d: any) => d.status === "desempate");
+
           // Marca como desempate — aguarda admin
           await db.execute(
             `UPDATE validacao_documental SET status = 'desempate'
@@ -1372,9 +1477,8 @@ adminRouter.post("/validacao-dupla/:processoId/fechar",
             [processoId]
           );
 
-          // Notifica administradores e gestores por e-mail — antes a tela dizia que
-          // isso aconteceria, mas nenhum e-mail era realmente enviado.
-          try {
+          // Notifica administradores e gestores por e-mail — só se ainda não notificou
+          if (!jaProcessado) try {
             const [proc] = await db.execute(
               `SELECT candidato_nome FROM candidato_processos WHERE id = ?`,
               [processoId]
