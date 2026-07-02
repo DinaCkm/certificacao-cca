@@ -88,6 +88,7 @@ export function AdminValidacaoDocumental() {
   const [enviandoSolicitacao, setEnviandoSolicitacao] = useState(false);
   const [docsComplementaresAtendidos, setDocsComplementaresAtendidos] =
     useState<{ id: number; mensagem: string; atendida_em: string }[]>([]);
+  const [avaliadoresCompletos, setAvaliadoresCompletos] = useState(false);
 
   // Fecha o zoom da imagem ao pressionar ESC
   useEffect(() => {
@@ -151,6 +152,7 @@ export function AdminValidacaoDocumental() {
     setModoDesempate(false);
     setMostrarEncaminhamento(false);
     setCaminho(null);
+    setAvaliadoresCompletos(false);
     setDocsComplementaresAtendidos(c.documentos_complementares_atendidos || []);
 
     try {
@@ -202,6 +204,7 @@ export function AdminValidacaoDocumental() {
       setMeuNumero(data.meu_numero);
       setIsAdmin(data.is_admin);
       setDiscordancias(data.discordancias || []);
+      setAvaliadoresCompletos(!!data.avaliadores_completos);
       setAvaliacoes(lista);
       setCandidato(c);
 
@@ -714,6 +717,22 @@ export function AdminValidacaoDocumental() {
           </Card>
         )}
 
+        {/* Aviso: avaliador não atribuído — este candidato já tem os 2 avaliadores dele */}
+        {!isAdmin && !meuNumero && avaliadoresCompletos && (
+          <Card className="border-2 border-gray-300 bg-gray-50 mb-6">
+            <CardContent className="p-5 flex items-start gap-3">
+              <Lock className="w-5 h-5 text-gray-500 mt-0.5 shrink-0" />
+              <div>
+                <p className="font-bold text-gray-700 mb-1">Este candidato já tem 2 avaliadores atribuídos</p>
+                <p className="text-sm text-gray-600">
+                  A validação documental deste candidato já está sendo feita por outros dois avaliadores.
+                  Você pode visualizar o andamento, mas não pode analisar os documentos dele.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Aviso de desempate */}
         {discordancias.length > 0 && (
           <Card className="border-2 border-amber-400 bg-amber-50 mb-6">
@@ -846,6 +865,13 @@ export function AdminValidacaoDocumental() {
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Validado por <strong>Avaliador {meuNumero}</strong>
+                      </p>
+                    </div>
+                  ) : avaliadoresCompletos ? (
+                    // ── Avaliador não atribuído: este candidato já tem os 2 avaliadores dele ──
+                    <div className="rounded-lg p-3 text-center bg-gray-100">
+                      <p className="text-xs font-medium text-gray-500">
+                        🔒 Este candidato já tem 2 avaliadores atribuídos — você não é um deles
                       </p>
                     </div>
                   ) : (

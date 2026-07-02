@@ -1153,6 +1153,16 @@ adminRouter.get("/validacao-dupla/:processoId",
 
       const meuNumero = atrib[0]?.numero_avaliador || null;
 
+      // Quantos avaliadores já estão atribuídos a este processo (máximo 2).
+      // Usado para o frontend distinguir "ainda não avaliei" de "não sou um
+      // dos 2 avaliadores deste candidato" — evitar mostrar botão de analisar
+      // documento para um avaliador que não está de fato atribuído a este caso.
+      const [totalAvaliadoresRows] = await db.execute(
+        `SELECT COUNT(*) as total FROM validacao_avaliadores WHERE processo_id = ?`,
+        [processoId]
+      ) as any;
+      const avaliadoresCompletos = totalAvaliadoresRows[0].total >= 2 && meuNumero === null;
+
       // Busca avaliações do processo
       const [docs] = await db.execute(
         `SELECT vd.*,
@@ -1223,6 +1233,7 @@ adminRouter.get("/validacao-dupla/:processoId",
         is_admin: isAdmin,
         documentos: docsParaRetornar,
         discordancias,
+        avaliadores_completos: avaliadoresCompletos,
       });
     } catch (err) {
       console.error("[VALIDACAO-DUPLA GET]", err);
