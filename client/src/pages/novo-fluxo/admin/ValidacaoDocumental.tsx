@@ -258,7 +258,10 @@ export function AdminValidacaoDocumental() {
   }
 
   async function fecharAvaliacao() {
-    if (!caminho && !modoDesempate) {
+    // Quando já existe discordância detectada, este clique só está enviando
+    // ao administrador para desempate — não é o avaliador quem escolhe o
+    // caminho (A/B) nesse caso, então não faz sentido exigir essa seleção.
+    if (!caminho && !modoDesempate && discordancias.length === 0) {
       toast({ title: "Selecione o encaminhamento", variant: "destructive" }); return;
     }
     setEnviando(true);
