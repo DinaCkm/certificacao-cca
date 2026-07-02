@@ -567,6 +567,20 @@ export function AdminValidacaoDocumental() {
                   </div>
                 </div>
 
+                {/* Solicitar documentos complementares — só durante a análise, antes de
+                    fechar a avaliação. Uma vez que todos os documentos foram avaliados
+                    (coincidência ou discordância já processada), essa opção some, pois
+                    o avaliador não pode mais pedir novos documentos nesse ponto. */}
+                {!isAdmin && !modoDesempate && !todosAvaliados && (
+                  <div>
+                    <Button variant="outline" size="sm" className="w-full border-blue-300 text-blue-800 hover:bg-blue-50"
+                      onClick={() => setSolicitarDocsAberto(true)}>
+                      <MailPlus className="w-4 h-4 mr-2" />
+                      Solicitar documentos complementares ao candidato
+                    </Button>
+                  </div>
+                )}
+
                 {/* Parecer */}
                 <div>
                   <label className="text-sm font-semibold block mb-2">Meu parecer</label>
@@ -654,19 +668,6 @@ export function AdminValidacaoDocumental() {
             </span>
           )}
         </div>
-
-        {/* Ação: solicitar documentos complementares ao candidato — disponível para
-            o avaliador antes de fechar o parecer, sem precisar de anexo por e-mail */}
-        {!isAdmin && (
-          <div className="mb-6">
-            <Button variant="outline" size="sm"
-              className="border-blue-300 text-blue-800 hover:bg-blue-50"
-              onClick={() => setSolicitarDocsAberto(true)}>
-              <MailPlus className="w-4 h-4 mr-2" />
-              Solicitar documentos complementares ao candidato
-            </Button>
-          </div>
-        )}
 
         {/* Aviso: candidato enviou os documentos complementares que este avaliador pediu */}
         {docsComplementaresAtendidos.length > 0 && (
