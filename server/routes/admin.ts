@@ -1725,8 +1725,10 @@ adminRouter.post("/validacao/:processoId/solicitacoes-documentos/revisar",
 
 // GET /api/admin/roles/menu-permissoes
 // Lista todos os perfis com os itens de menu que cada um pode ver
+// Somente Administrador — consistente com o resto da tela de Gestão de
+// Usuários, que já é restrita a esse perfil.
 adminRouter.get("/roles/menu-permissoes",
-  requireRole("administrador", "gestor_n1"),
+  requireRole("administrador"),
   async (_req: Request, res: Response) => {
     try {
       const [rows] = await db.execute(
@@ -1749,9 +1751,9 @@ adminRouter.get("/roles/menu-permissoes",
 );
 
 // PUT /api/admin/roles/:roleCode/menu-permissoes
-// Atualiza quais itens de menu um perfil pode ver
+// Atualiza quais itens de menu um perfil pode ver — somente Administrador
 adminRouter.put("/roles/:roleCode/menu-permissoes",
-  requireRole("administrador", "gestor_n1"),
+  requireRole("administrador"),
   async (req: Request, res: Response) => {
     const { roleCode } = req.params;
     const { itens } = req.body;
