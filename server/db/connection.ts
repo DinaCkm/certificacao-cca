@@ -82,6 +82,32 @@ async function runMigrations() {
     }
     console.log("✅ Roles básicos verificados");
 
+    // ── Permissões de menu por perfil ────────────────────────────────────────
+    // Controla quais itens do menu (Ações Rápidas + navbar admin) cada perfil
+    // enxerga. NULL = ainda não configurado; nesse caso o backend aplica um
+    // padrão sensato na primeira leitura (ver GET /admin/roles/menu-permissoes).
+    try {
+      await db.execute(`ALTER TABLE roles ADD COLUMN IF NOT EXISTS menu_permissoes JSON NULL`);
+    } catch (alterErr) {
+      console.warn("⚠️ ALTER TABLE roles (menu_permissoes pode já existir):", (alterErr as any)?.message);
+    }
+
+    const defaultsPorRole: Record<string, string[]> = {
+      administrador: ["validacao", "resultado_entrevista", "entrevistas", "fale_conosco", "candidatos", "perfis", "prova", "usuarios", "carrossel", "certificacoes", "site", "institucional", "cursos"],
+      gestor_n1: ["validacao", "resultado_entrevista", "entrevistas", "fale_conosco", "candidatos", "perfis", "prova", "usuarios", "carrossel", "certificacoes", "site", "institucional", "cursos"],
+      gestor_n2: ["validacao", "resultado_entrevista", "entrevistas", "fale_conosco", "candidatos", "certificacoes"],
+      avaliador: ["validacao"],
+      entrevistador: ["entrevistas", "resultado_entrevista"],
+      candidato: [],
+    };
+    for (const [code, itens] of Object.entries(defaultsPorRole)) {
+      await db.execute(
+        `UPDATE roles SET menu_permissoes = ? WHERE code = ? AND menu_permissoes IS NULL`,
+        [JSON.stringify(itens), code]
+      );
+    }
+    console.log("✅ Permissões de menu padrão verificadas");
+
     // Garante que status_geral aceita todos os valores necessários
     try {
       // Modifica o ENUM para incluir todos os valores

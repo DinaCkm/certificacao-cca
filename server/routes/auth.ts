@@ -73,7 +73,7 @@ authRouter.get("/me", requireAuth, async (req: Request, res: Response) => {
   try {
     const [rows] = await db.execute(
       `SELECT u.id, u.email, u.full_name, u.cpf, u.phone, u.created_at,
-              r.code as role, r.nome as role_nome
+              r.code as role, r.nome as role_nome, r.menu_permissoes
        FROM users u
        JOIN roles r ON r.id = u.role_id
        WHERE u.id = ? AND u.is_active = TRUE`,
@@ -84,7 +84,13 @@ authRouter.get("/me", requireAuth, async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Usuário não encontrado" });
     }
 
-    return res.json({ user: rows[0] });
+    const row = rows[0];
+    const menu_permissoes = row.menu_permissoes
+      ? (typeof row.menu_permissoes === "string" ? JSON.parse(row.menu_permissoes) : row.menu_permissoes)
+      : [];
+    delete row.menu_permissoes;
+
+    return res.json({ user: { ...row, menu_permissoes } });
   } catch (err) {
     console.error("Erro no /me:", err);
     return res.status(500).json({ error: "Erro interno no servidor" });

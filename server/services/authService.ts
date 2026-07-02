@@ -50,7 +50,7 @@ export async function registerUser(data: {
 export async function loginUser(email: string, password: string) {
   const [rows] = await db.execute(
     `SELECT u.id, u.email, u.password_hash, u.full_name, u.is_active,
-            r.code as role, r.id as role_id
+            r.code as role, r.id as role_id, r.menu_permissoes
      FROM users u
      JOIN roles r ON r.id = u.role_id
      WHERE u.email = ?`,
@@ -82,6 +82,10 @@ export async function loginUser(email: string, password: string) {
     roleId: user.role_id,
   });
 
+  const menu_permissoes = user.menu_permissoes
+    ? (typeof user.menu_permissoes === "string" ? JSON.parse(user.menu_permissoes) : user.menu_permissoes)
+    : [];
+
   return {
     token,
     user: {
@@ -89,6 +93,7 @@ export async function loginUser(email: string, password: string) {
       email: user.email,
       full_name: user.full_name,
       role: user.role,
+      menu_permissoes,
     },
   };
 }

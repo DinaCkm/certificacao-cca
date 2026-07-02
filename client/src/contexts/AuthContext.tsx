@@ -6,6 +6,7 @@ interface AuthUser {
   email: string;
   full_name: string;
   role: string;
+  menu_permissoes?: string[];
 }
 
 interface AuthContextType {
@@ -17,6 +18,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   isAvaliador: boolean;
+  podeVerMenuItem: (key: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -58,6 +60,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
+  // Se o perfil ainda não terminou de carregar (menu_permissoes indefinido),
+  // libera a exibição por padrão para não "piscar" um menu vazio — assim que
+  // o /auth/me responder, a lista real passa a filtrar de verdade. As rotas
+  // continuam protegidas no backend independentemente disso.
+  const podeVerMenuItem = (key: string) => {
+    if (!user) return false;
+    if (!user.menu_permissoes) return true;
+    return user.menu_permissoes.includes(key);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -69,6 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: !!user,
         isAdmin: user?.role === "administrador",
         isAvaliador: user?.role === "avaliador" || user?.role === "administrador",
+        podeVerMenuItem,
       }}
     >
       {children}

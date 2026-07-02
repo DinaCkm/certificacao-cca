@@ -1722,6 +1722,70 @@ adminRouter.post("/validacao/:processoId/solicitacoes-documentos/revisar",
     }
   }
 );
+
+// GET /api/admin/roles/menu-permissoes
+// Lista todos os perfis com os itens de menu que cada um pode ver
+adminRouter.get("/roles/menu-permissoes",
+  requireRole("administrador", "gestor_n1"),
+  async (_req: Request, res: Response) => {
+    try {
+      const [rows] = await db.execute(
+        `SELECT id, code, nome, menu_permissoes FROM roles ORDER BY id`
+      ) as any;
+      const roles = rows.map((r: any) => ({
+        id: r.id,
+        code: r.code,
+        nome: r.nome,
+        itens: r.menu_permissoes
+          ? (typeof r.menu_permissoes === "string" ? JSON.parse(r.menu_permissoes) : r.menu_permissoes)
+          : [],
+      }));
+      return res.json({ roles });
+    } catch (err) {
+      console.error("[MENU PERMISSOES GET]", err);
+      return res.status(500).json({ error: "Erro ao buscar permissões de menu" });
+    }
+  }
+);
+
+// PUT /api/admin/roles/:roleCode/menu-permissoes
+// Atualiza quais itens de menu um perfil pode ver
+adminRouter.put("/roles/:roleCode/menu-permissoes",
+  requireRole("administrador", "gestor_n1"),
+  async (req: Request, res: Response) => {
+    const { roleCode } = req.params;
+    const { itens } = req.body;
+
+    if (!Array.isArray(itens)) {
+      return res.status(400).json({ error: "'itens' deve ser uma lista de chaves do menu" });
+    }
+
+    // Nunca permite remover o próprio acesso de administrador ao gerenciamento
+    // de usuários/perfis, para evitar que o admin se tranque para fora do sistema.
+    if (roleCode === "administrador" && (!itens.includes("usuarios") || !itens.includes("perfis"))) {
+      return res.status(400).json({
+        error: "O perfil Administrador deve sempre manter acesso a 'Gestão de Usuários' e 'Perfis e Permissões'."
+      });
+    }
+
+    try {
+      const [result] = await db.execute(
+        `UPDATE roles SET menu_permissoes = ? WHERE code = ?`,
+        [JSON.stringify(itens), roleCode]
+      ) as any;
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ error: "Perfil não encontrado" });
+      }
+
+      return res.json({ message: "Permissões de menu atualizadas" });
+    } catch (err) {
+      console.error("[MENU PERMISSOES PUT]", err);
+      return res.status(500).json({ error: "Erro ao salvar permissões de menu" });
+    }
+  }
+);
+
 // Lista processos aguardando desempate do admin
 adminRouter.get("/validacao-dupla/pendentes-desempate",
   requireRole("administrador", "gestor_n1", "gestor_n2"),

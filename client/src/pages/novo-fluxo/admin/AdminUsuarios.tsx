@@ -9,6 +9,7 @@ import {
   Shield, Eye, EyeOff, Search
 } from "lucide-react";
 import { api } from "@/lib/api";
+import { MENU_ITEMS } from "@/lib/menuItems";
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -99,11 +100,53 @@ export function AdminUsuarios() {
 
   // Modal de permissões
   const [permissaoAberta, setPermissaoAberta] = useState<Usuario | null>(null);
+  const [menuPermissoesPorRole, setMenuPermissoesPorRole] = useState<Record<string, string[]>>({});
+  const [itensEditando, setItensEditando] = useState<string[]>([]);
+  const [salvandoPermissoes, setSalvandoPermissoes] = useState(false);
+
+  async function carregarMenuPermissoes() {
+    try {
+      const { roles: rolesComMenu } = await api.admin.listarMenuPermissoes();
+      const mapa: Record<string, string[]> = {};
+      rolesComMenu.forEach(r => { mapa[r.code] = r.itens; });
+      setMenuPermissoesPorRole(mapa);
+    } catch {
+      // silencioso — o modal simplesmente mostra tudo desmarcado se falhar
+    }
+  }
+
+  // Quando o modal de permissões abre para um perfil, inicializa os checkboxes
+  // com o que já está salvo para aquele perfil
+  useEffect(() => {
+    if (permissaoAberta) {
+      setItensEditando(menuPermissoesPorRole[permissaoAberta.role] || []);
+    }
+  }, [permissaoAberta, menuPermissoesPorRole]);
+
+  function toggleItemMenu(key: string) {
+    setItensEditando(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
+  }
+
+  async function salvarPermissoesMenu() {
+    if (!permissaoAberta) return;
+    setSalvandoPermissoes(true);
+    try {
+      await api.admin.salvarMenuPermissoes(permissaoAberta.role, itensEditando);
+      setMenuPermissoesPorRole(prev => ({ ...prev, [permissaoAberta.role]: itensEditando }));
+      toast({ title: "✅ Permissões de menu salvas" });
+      setPermissaoAberta(null);
+    } catch (err: any) {
+      toast({ title: "Erro ao salvar permissões", description: err.message, variant: "destructive" });
+    } finally {
+      setSalvandoPermissoes(false);
+    }
+  }
 
   // ── Carrega dados ────────────────────────────────────────────────────────────
 
   useEffect(() => {
     carregarDados();
+    carregarMenuPermissoes();
   }, []);
 
   async function carregarDados() {
@@ -467,13 +510,13 @@ export function AdminUsuarios() {
         </div>
       )}
 
-      {/* ── Modal de permissões ───────────────────────────────────────────────── */}
+      {/* ── Modal de permissões de menu ───────────────────────────────────────── */}
       {permissaoAberta && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-sm shadow-2xl">
+          <Card className="w-full max-w-md shadow-2xl">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-bold text-gray-900">Permissões do Perfil</h2>
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-base font-bold text-gray-900">Permissões de Menu</h2>
                 <button onClick={() => setPermissaoAberta(null)} className="text-gray-400 hover:text-gray-600">
                   <X className="w-5 h-5" />
                 </button>
@@ -481,17 +524,32 @@ export function AdminUsuarios() {
               <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border mb-4 ${ROLE_CORES[permissaoAberta.role] || "bg-gray-100 text-gray-700"}`}>
                 {permissaoAberta.role_nome}
               </span>
-              <ul className="space-y-2">
-                {(ROLE_PERMISSOES[permissaoAberta.role] || ["Permissões não definidas"]).map((p) => (
-                  <li key={p} className="flex items-start gap-2 text-sm text-gray-700">
-                    <Check className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
-                    {p}
-                  </li>
+              <p className="text-xs text-gray-500 mb-3">
+                Marque os itens do menu que este perfil pode ver e acessar. "Dashboard" fica sempre
+                visível para qualquer perfil com acesso à área administrativa.
+              </p>
+              <div className="space-y-1 max-h-80 overflow-y-auto border border-gray-100 rounded-lg p-2">
+                {MENU_ITEMS.map(item => (
+                  <label key={item.key}
+                    className="flex items-center gap-2.5 text-sm text-gray-700 py-2 px-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4"
+                      checked={itensEditando.includes(item.key)}
+                      onChange={() => toggleItemMenu(item.key)}
+                    />
+                    {item.label}
+                  </label>
                 ))}
-              </ul>
-              <Button variant="outline" className="w-full mt-5" onClick={() => setPermissaoAberta(null)}>
-                Fechar
-              </Button>
+              </div>
+              <div className="flex gap-3 mt-5">
+                <Button variant="outline" className="flex-1" onClick={() => setPermissaoAberta(null)} disabled={salvandoPermissoes}>
+                  Cancelar
+                </Button>
+                <Button className="flex-1 bg-blue-900 hover:bg-blue-800" onClick={salvarPermissoesMenu} disabled={salvandoPermissoes}>
+                  {salvandoPermissoes ? "Salvando..." : "Salvar permissões"}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

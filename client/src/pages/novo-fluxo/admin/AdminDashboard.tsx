@@ -3,6 +3,8 @@ import { Link, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCertification } from "@/contexts/CertificationContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { MENU_ITEMS } from "@/lib/menuItems";
 import {
   Users, FileText, Award, DollarSign, CheckCircle, Clock,
   XCircle, BarChart3, Settings, ChevronRight, AlertCircle, Globe, BookOpen
@@ -29,6 +31,7 @@ const STATUS_LABEL_DASH: Record<string, { label: string; cor: string }> = {
 
 export function AdminDashboard() {
   const { processo, getCertificacaoAtual } = useCertification();
+  const { podeVerMenuItem } = useAuth();
   const [, navigate] = useLocation();
   const certAtual = getCertificacaoAtual();
   const [candidatos, setCandidatos] = useState<any[]>([]);
@@ -187,19 +190,19 @@ export function AdminDashboard() {
                 <h3 className="font-semibold text-foreground mb-4 text-sm">Ações rápidas</h3>
                 <div className="space-y-2">
                   {[
-                    { label: "Validar documentos", href: "/novo-fluxo/admin/validacao", icon: FileText, color: "text-yellow-600" },
-                    { label: "Resultado de Entrevistas", href: "/novo-fluxo/admin/resultado-entrevista", icon: Award, color: "text-green-600" },
-                    { label: "Fale Conosco", href: "/novo-fluxo/admin/fale-conosco", icon: FileText, color: "text-green-600" },
-                    { label: "Todos os Candidatos", href: "/novo-fluxo/admin/candidatos", icon: FileText, color: "text-cyan-600" },
-                    { label: "Perfis e Permissões", href: "/novo-fluxo/admin/perfis", icon: Settings, color: "text-violet-600" },
-                    { label: "Parametrizar Prova", href: "/novo-fluxo/admin/prova-config", icon: FileText, color: "text-purple-600" },
-                    { label: "Gestão de Usuários", href: "/novo-fluxo/admin/usuarios", icon: Settings, color: "text-blue-600" },
-                    { label: "Carrossel de Imagens", href: "/novo-fluxo/admin/carrossel", icon: Globe, color: "text-pink-600" },
-                    { label: "Certificações ativas", href: "/novo-fluxo/admin/certificacoes", icon: Award, color: "text-blue-600" },
-                    { label: "Configurar site", href: "/novo-fluxo/admin/site", icon: Globe, color: "text-indigo-600" },
-                    { label: "Documentos & Comitê", href: "/novo-fluxo/admin/institucional", icon: BookOpen, color: "text-teal-600" },
-                    { label: "Cursos e Pacotes", href: "/novo-fluxo/admin/cursos", icon: BookOpen, color: "text-amber-600" },
-                  ].map(({ label, href, icon: Icon, color }) => (
+                    { key: "validacao", label: "Validar documentos", href: "/novo-fluxo/admin/validacao", icon: FileText, color: "text-yellow-600" },
+                    { key: "resultado_entrevista", label: "Resultado de Entrevistas", href: "/novo-fluxo/admin/resultado-entrevista", icon: Award, color: "text-green-600" },
+                    { key: "fale_conosco", label: "Fale Conosco", href: "/novo-fluxo/admin/fale-conosco", icon: FileText, color: "text-green-600" },
+                    { key: "candidatos", label: "Todos os Candidatos", href: "/novo-fluxo/admin/candidatos", icon: FileText, color: "text-cyan-600" },
+                    { key: "perfis", label: "Perfis e Permissões", href: "/novo-fluxo/admin/perfis", icon: Settings, color: "text-violet-600" },
+                    { key: "prova", label: "Parametrizar Prova", href: "/novo-fluxo/admin/prova-config", icon: FileText, color: "text-purple-600" },
+                    { key: "usuarios", label: "Gestão de Usuários", href: "/novo-fluxo/admin/usuarios", icon: Settings, color: "text-blue-600" },
+                    { key: "carrossel", label: "Carrossel de Imagens", href: "/novo-fluxo/admin/carrossel", icon: Globe, color: "text-pink-600" },
+                    { key: "certificacoes", label: "Certificações ativas", href: "/novo-fluxo/admin/certificacoes", icon: Award, color: "text-blue-600" },
+                    { key: "site", label: "Configurar site", href: "/novo-fluxo/admin/site", icon: Globe, color: "text-indigo-600" },
+                    { key: "institucional", label: "Documentos & Comitê", href: "/novo-fluxo/admin/institucional", icon: BookOpen, color: "text-teal-600" },
+                    { key: "cursos", label: "Cursos e Pacotes", href: "/novo-fluxo/admin/cursos", icon: BookOpen, color: "text-amber-600" },
+                  ].filter(item => podeVerMenuItem(item.key)).map(({ label, href, icon: Icon, color }) => (
                     <Link key={label} href={href}>
                       <a className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors group">
                         <Icon className={`w-4 h-4 ${color} shrink-0`} />

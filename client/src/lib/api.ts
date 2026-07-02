@@ -141,6 +141,12 @@ export const api = {
       request<{ id: number; message: string }>("POST", `/admin/validacao/${processoId}/solicitar-documentos`, { mensagem }),
     listarSolicitacoesDocumentos: (processoId: number) =>
       request<{ solicitacoes: any[] }>("GET", `/admin/validacao/${processoId}/solicitacoes-documentos`),
+
+    // Permissões de menu por perfil
+    listarMenuPermissoes: () =>
+      request<{ roles: { id: number; code: string; nome: string; itens: string[] }[] }>("GET", "/admin/roles/menu-permissoes"),
+    salvarMenuPermissoes: (roleCode: string, itens: string[]) =>
+      request<{ message: string }>("PUT", `/admin/roles/${roleCode}/menu-permissoes`, { itens }),
   },
 };
 
