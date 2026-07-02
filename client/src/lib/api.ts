@@ -105,6 +105,13 @@ export const api = {
 
     retomar: () =>
       request<{ processo: any | null }>("GET", "/processo/retomar"),
+
+    // Documentos complementares solicitados pelo avaliador — fluxo do candidato
+    solicitacoesDocumentos: () =>
+      request<{ solicitacoes: any[] }>("GET", "/processo/solicitacoes-documentos"),
+
+    concluirSolicitacaoDocumentos: (id: number) =>
+      request<{ message: string }>("POST", `/processo/solicitacoes-documentos/${id}/concluir`),
   },
 
   health: () => request<{ status: string }>("GET", "/health"),
@@ -128,6 +135,12 @@ export const api = {
     salvarProvaConfig: (body: any) => request<{ message: string }>("POST", "/admin/prova-config", body),
     adicionarQuestao: (body: any) => request<{ id: number }>("POST", "/admin/questoes", body),
     removerQuestao: (id: number) => request<{ message: string }>("DELETE", `/admin/questoes/${id}`),
+
+    // Documentos complementares — avaliador solicita ao candidato dentro do sistema
+    solicitarDocumentos: (processoId: number, mensagem: string) =>
+      request<{ id: number; message: string }>("POST", `/admin/validacao/${processoId}/solicitar-documentos`, { mensagem }),
+    listarSolicitacoesDocumentos: (processoId: number) =>
+      request<{ solicitacoes: any[] }>("GET", `/admin/validacao/${processoId}/solicitacoes-documentos`),
   },
 };
 

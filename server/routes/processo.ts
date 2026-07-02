@@ -435,3 +435,94 @@ processoRouter.get("/retomar", requireAuth, async (req: Request, res: Response) 
     return res.status(500).json({ error: "Erro ao retomar processo" });
   }
 });
+
+// ── GET /api/processo/solicitacoes-documentos ───────────────────────────────────
+// Lista solicitações de documentos complementares PENDENTES do candidato autenticado.
+// Usado pela área do candidato para exibir o botão "Incluir documentos complementares".
+
+processoRouter.get("/solicitacoes-documentos", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const [rows] = await db.execute(
+      `SELECT sd.id, sd.processo_id, sd.mensagem, sd.status, sd.criado_em, sd.solicitado_por_nome
+       FROM solicitacoes_documentos sd
+       JOIN candidato_processos cp ON cp.id = sd.processo_id
+       WHERE cp.user_id = ? AND sd.status = 'pendente'
+       ORDER BY sd.criado_em DESC`,
+      [req.user!.userId]
+    ) as any;
+    return res.json({ solicitacoes: rows });
+  } catch (err) {
+    console.error("Erro ao buscar solicitações de documentos:", err);
+    return res.status(500).json({ error: "Erro ao buscar solicitações" });
+  }
+});
+
+// ── POST /api/processo/solicitacoes-documentos/:id/concluir ─────────────────────
+// Candidato confirma que enviou os documentos complementares solicitados.
+// O upload em si usa o endpoint já existente /api/upload/documento
+// (com tipo_documento = "complementar-<timestamp>"); esta rota só fecha o pedido.
+
+processoRouter.post("/solicitacoes-documentos/:id/concluir", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id);
+
+    // Garante que a solicitação pertence a um processo do candidato autenticado
+    // e traz os dados necessários para notificar o avaliador que pediu os documentos
+    const [rows] = await db.execute(
+      `SELECT sd.id, sd.processo_id, sd.solicitado_por_id, sd.mensagem,
+              cp.candidato_nome, u.email as avaliador_email, u.full_name as avaliador_nome
+       FROM solicitacoes_documentos sd
+       JOIN candidato_processos cp ON cp.id = sd.processo_id
+       JOIN users u ON u.id = sd.solicitado_por_id
+       WHERE sd.id = ? AND cp.user_id = ? AND sd.status = 'pendente'`,
+      [id, req.user!.userId]
+    ) as any;
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Solicitação não encontrada ou já atendida" });
+    }
+    const solicitacao = rows[0];
+
+    await db.execute(
+      `UPDATE solicitacoes_documentos SET status = 'atendida', atendida_em = NOW() WHERE id = ?`,
+      [id]
+    );
+
+    // Notifica por e-mail o avaliador específico que pediu os documentos —
+    // o processo fica pendente com ele até que reabra o candidato e revise.
+    try {
+      const appUrl = process.env.APP_URL || "https://certificacao-cca-staging.up.railway.app";
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: process.env.FROM_EMAIL || "ANEFAC <noreply@anefac.com.br>",
+          to: [solicitacao.avaliador_email],
+          subject: `ANEFAC — ${solicitacao.candidato_nome} enviou os documentos solicitados`,
+          html: `
+            <div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:20px">
+              <h2 style="color:#1e3a5f">Olá, ${solicitacao.avaliador_nome}!</h2>
+              <p><strong>${solicitacao.candidato_nome}</strong> enviou os documentos complementares que você solicitou.</p>
+              <p>Acesse a plataforma para retomar a validação deste candidato.</p>
+              <a href="${appUrl}/novo-fluxo/admin/validacao"
+                 style="display:inline-block;background:#1e3a5f;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">
+                Continuar validação →
+              </a>
+            </div>
+          `,
+        }),
+      });
+    } catch (emailErr) {
+      console.error("[CONCLUIR SOLICITACAO] Falha ao notificar avaliador:", emailErr);
+      // Não falha a confirmação por causa de erro no envio de e-mail
+    }
+
+    return res.json({ message: "Documentos complementares registrados com sucesso" });
+  } catch (err) {
+    console.error("Erro ao concluir solicitação de documentos:", err);
+    return res.status(500).json({ error: "Erro ao concluir solicitação" });
+  }
+});

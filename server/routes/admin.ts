@@ -972,7 +972,7 @@ adminRouter.get("/entrevista/pendentes",
 // GET /api/admin/validacao/pendentes — candidatos aguardando validação documental com seus docs
 adminRouter.get("/validacao/pendentes",
   requireRole("administrador", "gestor_n1", "gestor_n2", "avaliador"),
-  async (_req, res) => {
+  async (req: any, res) => {
     try {
       const [candidatos] = await db.execute(
         `SELECT cp.id as processo_id, cp.user_id, cp.status_geral,
@@ -986,7 +986,10 @@ adminRouter.get("/validacao/pendentes",
          ORDER BY cp.updated_at ASC`
       ) as any;
 
-      // Para cada candidato, busca os documentos enviados
+      // Para cada candidato, busca os documentos enviados e eventuais solicitações
+      // de documentos complementares que o AVALIADOR ATUAL pediu e que já foram
+      // atendidas pelo candidato — precisam ser revisadas antes de continuar.
+      const userId = req.user!.userId;
       const resultado = await Promise.all(
         candidatos.map(async (c: any) => {
           const [docs] = await db.execute(
@@ -996,7 +999,26 @@ adminRouter.get("/validacao/pendentes",
              ORDER BY criado_em DESC`,
             [c.user_id]
           ) as any;
-          return { ...c, documentos: docs };
+
+          const [solicitacoesAtendidas] = await db.execute(
+            `SELECT id, mensagem, atendida_em FROM solicitacoes_documentos
+             WHERE processo_id = ? AND solicitado_por_id = ? AND status = 'atendida'
+             ORDER BY atendida_em DESC`,
+            [c.processo_id, userId]
+          ) as any;
+
+          const [solicitacoesPendentes] = await db.execute(
+            `SELECT id FROM solicitacoes_documentos
+             WHERE processo_id = ? AND status = 'pendente'`,
+            [c.processo_id]
+          ) as any;
+
+          return {
+            ...c,
+            documentos: docs,
+            documentos_complementares_atendidos: solicitacoesAtendidas,
+            tem_solicitacao_pendente: solicitacoesPendentes.length > 0,
+          };
         })
       );
 
@@ -1185,15 +1207,16 @@ adminRouter.get("/validacao-dupla/:processoId",
         return resultado;
       });
 
-      // Verifica se há discordâncias (só admin e quando ambos concluíram)
-      let discordancias: any[] = [];
-      if (isAdmin) {
-        discordancias = docs.filter((d: any) =>
-          d.avaliador1_aprovado !== null &&
-          d.avaliador2_aprovado !== null &&
-          d.avaliador1_aprovado !== d.avaliador2_aprovado
-        ).map((d: any) => ({ documento_nome: d.documento_nome, documento_idx: d.documento_idx }));
-      }
+      // Verifica se há discordâncias entre os dois avaliadores (quando ambos concluíram).
+      // Antes, esse cálculo só rodava para o admin — para o avaliador, `discordancias`
+      // sempre voltava vazio, então a tela SEMPRE mostrava "as avaliações coincidem",
+      // mesmo quando os pareceres realmente divergiam. Mantemos a avaliação cega:
+      // expomos apenas o nome do documento em disputa, nunca o parecer do outro avaliador.
+      const discordancias = docs.filter((d: any) =>
+        d.avaliador1_aprovado !== null &&
+        d.avaliador2_aprovado !== null &&
+        d.avaliador1_aprovado !== d.avaliador2_aprovado
+      ).map((d: any) => ({ documento_nome: d.documento_nome, documento_idx: d.documento_idx }));
 
       return res.json({
         meu_numero: meuNumero,
@@ -1348,6 +1371,57 @@ adminRouter.post("/validacao-dupla/:processoId/fechar",
              WHERE id = ?`,
             [processoId]
           );
+
+          // Notifica administradores e gestores por e-mail — antes a tela dizia que
+          // isso aconteceria, mas nenhum e-mail era realmente enviado.
+          try {
+            const [proc] = await db.execute(
+              `SELECT candidato_nome FROM candidato_processos WHERE id = ?`,
+              [processoId]
+            ) as any;
+            const candidatoNome = proc[0]?.candidato_nome || `processo #${processoId}`;
+
+            const [destinatarios] = await db.execute(
+              `SELECT u.email FROM users u
+               JOIN roles r ON r.id = u.role_id
+               WHERE r.code IN ('administrador', 'gestor_n1', 'gestor_n2') AND u.is_active = TRUE`
+            ) as any;
+
+            if (destinatarios.length > 0) {
+              const appUrl = process.env.APP_URL || "https://certificacao-cca-staging.up.railway.app";
+              await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: {
+                  "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  from: process.env.FROM_EMAIL || "ANEFAC <noreply@anefac.com.br>",
+                  to: destinatarios.map((d: any) => d.email),
+                  subject: `ANEFAC — Discordância entre avaliadores: ${candidatoNome}`,
+                  html: `
+                    <div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:20px">
+                      <h2 style="color:#b45309">⚠️ Discordância entre avaliadores</h2>
+                      <p>Os dois avaliadores divergiram na validação documental de
+                         <strong>${candidatoNome}</strong> nos seguintes documentos:</p>
+                      <ul style="color:#374151;font-size:14px">
+                        ${discordancias.map((d: any) => `<li>${d.documento_nome}</li>`).join("")}
+                      </ul>
+                      <p>É necessária a decisão de um administrador para desempate.</p>
+                      <a href="${appUrl}/novo-fluxo/admin/validacao"
+                         style="display:inline-block;background:#1e3a5f;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">
+                        Resolver desempate →
+                      </a>
+                    </div>
+                  `,
+                }),
+              });
+            }
+          } catch (emailErr) {
+            console.error("[FECHAR AVALIACAO] Falha ao notificar administradores:", emailErr);
+            // Não falha o fechamento por causa de erro no envio de e-mail
+          }
+
           return res.json({
             message: "Discordâncias detectadas — aguardando decisão do administrador.",
             status: "desempate",
@@ -1415,7 +1489,135 @@ adminRouter.post("/validacao-dupla/:processoId/fechar",
   }
 );
 
-// GET /api/admin/validacao-dupla/pendentes-desempate
+// POST /api/admin/validacao/:processoId/solicitar-documentos
+// Avaliador/gestor/admin solicita, dentro do sistema, que o candidato envie
+// documentos complementares antes de fechar o parecer. Envia e-mail avisando
+// o candidato a acessar a plataforma — o upload em si acontece só pelo sistema,
+// nunca por anexo de e-mail.
+adminRouter.post("/validacao/:processoId/solicitar-documentos",
+  requireRole("administrador", "gestor_n1", "gestor_n2", "avaliador"),
+  async (req: any, res: Response) => {
+    const processoId = parseInt(req.params.processoId);
+    const { mensagem } = req.body;
+
+    if (!mensagem || !String(mensagem).trim()) {
+      return res.status(400).json({ error: "Descreva quais documentos complementares são necessários" });
+    }
+
+    try {
+      const [procRows] = await db.execute(
+        `SELECT id, candidato_nome, candidato_email FROM candidato_processos WHERE id = ?`,
+        [processoId]
+      ) as any;
+
+      if (procRows.length === 0) {
+        return res.status(404).json({ error: "Processo não encontrado" });
+      }
+      const processo = procRows[0];
+
+      const [userRows] = await db.execute(
+        `SELECT full_name FROM users WHERE id = ?`, [req.user!.userId]
+      ) as any;
+      const nomeSolicitante = userRows[0]?.full_name || "Avaliador ANEFAC";
+      const mensagemLimpa = String(mensagem).trim();
+
+      const [result] = await db.execute(
+        `INSERT INTO solicitacoes_documentos (processo_id, solicitado_por_id, solicitado_por_nome, mensagem)
+         VALUES (?, ?, ?, ?)`,
+        [processoId, req.user!.userId, nomeSolicitante, mensagemLimpa]
+      ) as any;
+
+      // E-mail avisando o candidato — sem anexos, só direcionando para a plataforma
+      try {
+        const appUrl = process.env.APP_URL || "https://certificacao-cca-staging.up.railway.app";
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: process.env.FROM_EMAIL || "ANEFAC <noreply@anefac.com.br>",
+            to: [processo.candidato_email],
+            subject: "ANEFAC — Documentos complementares solicitados",
+            html: `
+              <div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:20px">
+                <h2 style="color:#1e3a5f">Olá, ${processo.candidato_nome}!</h2>
+                <p>Durante a análise do seu processo de certificação, identificamos a necessidade de
+                   documentos complementares:</p>
+                <div style="background:#f3f4f6;border-radius:8px;padding:14px;margin:16px 0;font-size:14px;color:#374151">
+                  ${mensagemLimpa.replace(/</g, "&lt;")}
+                </div>
+                <p>Acesse a plataforma e envie os documentos solicitados na área "Incluir documentos complementares".</p>
+                <a href="${appUrl}/novo-fluxo/aguardando-validacao"
+                   style="display:inline-block;background:#1e3a5f;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">
+                  Acessar minha área →
+                </a>
+                <p style="color:#6b7280;font-size:12px;margin-top:24px">
+                  Envie os documentos apenas pela plataforma — a ANEFAC nunca solicita envio por e-mail.
+                </p>
+              </div>
+            `,
+          }),
+        });
+      } catch (emailErr) {
+        console.error("[SOLICITAR DOCUMENTOS] Falha ao enviar e-mail:", emailErr);
+        // Não falha a solicitação por causa de erro no envio de e-mail
+      }
+
+      // Audit log
+      await db.execute(
+        `INSERT INTO audit_log (user_id, acao, entidade, entidade_id, descricao, resultado)
+         VALUES (?, 'documentos_complementares_solicitados', 'candidato_processos', ?, ?, 'sucesso')`,
+        [req.user!.userId, processoId,
+         `Documentos complementares solicitados para ${processo.candidato_nome}: ${mensagemLimpa.slice(0, 200)}`]
+      );
+
+      return res.status(201).json({ id: result.insertId, message: "Solicitação enviada ao candidato" });
+    } catch (err: any) {
+      console.error("[SOLICITAR DOCUMENTOS]", err);
+      return res.status(500).json({ error: err.message || "Erro ao solicitar documentos" });
+    }
+  }
+);
+
+// GET /api/admin/validacao/:processoId/solicitacoes-documentos
+// Lista o histórico de solicitações de documentos complementares de um processo
+adminRouter.get("/validacao/:processoId/solicitacoes-documentos",
+  requireRole("administrador", "gestor_n1", "gestor_n2", "avaliador"),
+  async (req: Request, res: Response) => {
+    try {
+      const [rows] = await db.execute(
+        `SELECT id, solicitado_por_nome, mensagem, status, criado_em, atendida_em
+         FROM solicitacoes_documentos WHERE processo_id = ? ORDER BY criado_em DESC`,
+        [parseInt(req.params.processoId)]
+      ) as any;
+      return res.json({ solicitacoes: rows });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao buscar solicitações" });
+    }
+  }
+);
+
+// POST /api/admin/validacao/:processoId/solicitacoes-documentos/revisar
+// O avaliador que solicitou os documentos complementares marca como revisado
+// ao reabrir o candidato — some do "aguardando revisão" na lista dele.
+adminRouter.post("/validacao/:processoId/solicitacoes-documentos/revisar",
+  requireRole("administrador", "gestor_n1", "gestor_n2", "avaliador"),
+  async (req: any, res: Response) => {
+    const processoId = parseInt(req.params.processoId);
+    try {
+      await db.execute(
+        `UPDATE solicitacoes_documentos SET status = 'revisada', revisada_em = NOW()
+         WHERE processo_id = ? AND solicitado_por_id = ? AND status = 'atendida'`,
+        [processoId, req.user!.userId]
+      );
+      return res.json({ message: "Solicitações marcadas como revisadas" });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao marcar como revisado" });
+    }
+  }
+);
 // Lista processos aguardando desempate do admin
 adminRouter.get("/validacao-dupla/pendentes-desempate",
   requireRole("administrador", "gestor_n1", "gestor_n2"),

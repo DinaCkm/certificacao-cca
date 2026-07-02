@@ -20,6 +20,7 @@ export async function testConnection() {
     console.log("✅ MySQL conectado com sucesso");
     await runMigrations();
     await runValidacaoMigrations();
+    await runSolicitacaoDocumentosMigrations();
   } catch (err) {
     console.error("❌ Erro ao conectar ao MySQL:", err);
     process.exit(1);
@@ -160,5 +161,46 @@ export async function runValidacaoMigrations() {
     console.log("✅ Tabelas de validação dupla verificadas/criadas");
   } catch (err) {
     console.warn("⚠️ Erro nas migrações de validação dupla:", err);
+  }
+}
+
+// ─── Solicitação de documentos complementares ───────────────────────────────────
+// Permite ao avaliador pedir, dentro do sistema, que o candidato envie documentos
+// adicionais antes de fechar o parecer — sem depender de anexo por e-mail.
+export async function runSolicitacaoDocumentosMigrations() {
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS solicitacoes_documentos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        processo_id INT NOT NULL,
+        solicitado_por_id INT NOT NULL,
+        solicitado_por_nome VARCHAR(255) NOT NULL,
+        mensagem TEXT NOT NULL,
+        status ENUM('pendente','atendida','revisada') NOT NULL DEFAULT 'pendente',
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        atendida_em TIMESTAMP NULL,
+        revisada_em TIMESTAMP NULL,
+        INDEX idx_processo_id (processo_id),
+        INDEX idx_status (status),
+        INDEX idx_solicitado_por (solicitado_por_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    console.log("✅ Tabela solicitacoes_documentos verificada/criada");
+
+    // Garante que instalações antigas (antes da coluna 'revisada') sejam atualizadas
+    try {
+      await db.execute(`
+        ALTER TABLE solicitacoes_documentos
+        MODIFY COLUMN status ENUM('pendente','atendida','revisada') NOT NULL DEFAULT 'pendente'
+      `);
+      await db.execute(`
+        ALTER TABLE solicitacoes_documentos
+        ADD COLUMN IF NOT EXISTS revisada_em TIMESTAMP NULL
+      `);
+    } catch (alterErr) {
+      console.warn("⚠️ ALTER TABLE solicitacoes_documentos (pode já estar correto):", (alterErr as any)?.message);
+    }
+  } catch (err) {
+    console.warn("⚠️ Erro na migração de solicitacoes_documentos:", err);
   }
 }

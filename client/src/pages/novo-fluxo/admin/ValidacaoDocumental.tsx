@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
   CheckCircle, XCircle, FileText, User, Eye, X, Check,
-  Send, Loader2, AlertTriangle, ShieldAlert, Lock
+  Send, Loader2, AlertTriangle, ShieldAlert, Lock,
+  ExternalLink, Maximize2, MailPlus, FileWarning
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 interface ChecklistItem { id: string; label: string; checked: boolean | null; }
@@ -33,6 +35,8 @@ interface Candidato {
   email: string;
   cert_nome: string;
   documentos: any[];
+  documentos_complementares_atendidos?: { id: number; mensagem: string; atendida_em: string }[];
+  tem_solicitacao_pendente?: boolean;
 }
 
 function getChecklist(nome: string): ChecklistItem[] {
@@ -78,6 +82,54 @@ export function AdminValidacaoDocumental() {
   const [enviando, setEnviando] = useState(false);
   const [discordancias, setDiscordancias] = useState<any[]>([]);
   const [modoDesempate, setModoDesempate] = useState(false);
+  const [zoomImagem, setZoomImagem] = useState<string | null>(null); // URL da imagem em tela cheia, ou null se fechado
+  const [solicitarDocsAberto, setSolicitarDocsAberto] = useState(false);
+  const [mensagemSolicitacao, setMensagemSolicitacao] = useState("");
+  const [enviandoSolicitacao, setEnviandoSolicitacao] = useState(false);
+  const [docsComplementaresAtendidos, setDocsComplementaresAtendidos] =
+    useState<{ id: number; mensagem: string; atendida_em: string }[]>([]);
+
+  // Fecha o zoom da imagem ao pressionar ESC
+  useEffect(() => {
+    if (!zoomImagem) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setZoomImagem(null);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [zoomImagem]);
+
+  async function enviarSolicitacaoDocumentos() {
+    if (!candidato || !mensagemSolicitacao.trim()) {
+      toast({ title: "Descreva quais documentos são necessários", variant: "destructive" });
+      return;
+    }
+    setEnviandoSolicitacao(true);
+    try {
+      await api.admin.solicitarDocumentos(candidato.processo_id, mensagemSolicitacao.trim());
+      toast({ title: "✅ Solicitação enviada ao candidato por e-mail" });
+      setSolicitarDocsAberto(false);
+      setMensagemSolicitacao("");
+    } catch (err: any) {
+      toast({ title: "Erro ao solicitar documentos", description: err.message, variant: "destructive" });
+    } finally {
+      setEnviandoSolicitacao(false);
+    }
+  }
+
+  async function marcarDocumentosComoRevisados() {
+    if (!candidato) return;
+    try {
+      await fetch(`/api/admin/validacao/${candidato.processo_id}/solicitacoes-documentos/revisar`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setDocsComplementaresAtendidos([]);
+      toast({ title: "Documentos marcados como revisados" });
+    } catch {
+      toast({ title: "Erro ao marcar como revisado", variant: "destructive" });
+    }
+  }
 
   useEffect(() => { carregarCandidatos(); }, []);
 
@@ -99,6 +151,7 @@ export function AdminValidacaoDocumental() {
     setModoDesempate(false);
     setMostrarEncaminhamento(false);
     setCaminho(null);
+    setDocsComplementaresAtendidos(c.documentos_complementares_atendidos || []);
 
     try {
       // Busca estado da validação dupla ANTES de mostrar a tela
@@ -282,6 +335,16 @@ export function AdminValidacaoDocumental() {
                     <p className="font-semibold">{c.full_name}</p>
                     <p className="text-xs text-muted-foreground">{c.email}</p>
                     <p className="text-xs text-blue-700 mt-0.5">{c.cert_nome}</p>
+                    {(c.documentos_complementares_atendidos?.length ?? 0) > 0 && (
+                      <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-800 border border-green-200 px-2 py-0.5 rounded-full mt-1.5">
+                        <FileWarning className="w-3 h-3" /> Documentos enviados — revisar
+                      </span>
+                    )}
+                    {!c.documentos_complementares_atendidos?.length && c.tem_solicitacao_pendente && (
+                      <span className="inline-flex items-center gap-1 text-xs bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full mt-1.5">
+                        <MailPlus className="w-3 h-3" /> Aguardando candidato enviar documentos
+                      </span>
+                    )}
                   </div>
                   <Button size="sm" className="bg-blue-900 hover:bg-blue-800 shrink-0"
                   disabled={carregandoValidacao}>
@@ -302,6 +365,69 @@ export function AdminValidacaoDocumental() {
   return (
     <div className="min-h-screen bg-gray-50">
 
+      {/* Zoom em tela cheia da imagem do documento — fecha com ESC, X ou clique fora */}
+      {zoomImagem && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4"
+          onClick={() => setZoomImagem(null)}
+        >
+          <button
+            onClick={() => setZoomImagem(null)}
+            title="Fechar (Esc)"
+            className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
+          <img
+            src={zoomImagem}
+            alt="Documento em tela cheia"
+            className="max-w-full max-h-full object-contain"
+            onClick={e => e.stopPropagation()}
+          />
+        </div>
+      )}
+
+      {/* Modal: solicitar documentos complementares ao candidato */}
+      {solicitarDocsAberto && candidato && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+            <div className="flex items-center justify-between px-6 py-4 border-b bg-blue-900 rounded-t-2xl">
+              <div className="flex items-center gap-2">
+                <MailPlus className="w-4 h-4 text-blue-200" />
+                <span className="font-semibold text-white text-sm">Solicitar documentos complementares</span>
+              </div>
+              <button onClick={() => setSolicitarDocsAberto(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-blue-800">
+                <X className="w-4 h-4 text-white" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Descreva quais documentos complementares <strong>{candidato.full_name}</strong> precisa enviar.
+                Um e-mail será enviado avisando para acessar a plataforma — o envio do arquivo em si
+                acontece sempre pelo sistema, nunca por anexo de e-mail.
+              </p>
+              <textarea
+                value={mensagemSolicitacao}
+                onChange={e => setMensagemSolicitacao(e.target.value)}
+                className="w-full border border-border rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                rows={4}
+                placeholder="Ex: O diploma enviado está ilegível. Envie uma nova cópia digitalizada em melhor qualidade."
+              />
+              <div className="flex gap-3">
+                <Button variant="outline" className="flex-1" onClick={() => setSolicitarDocsAberto(false)} disabled={enviandoSolicitacao}>
+                  Cancelar
+                </Button>
+                <Button className="flex-1 bg-blue-900 hover:bg-blue-800"
+                  onClick={enviarSolicitacaoDocumentos} disabled={enviandoSolicitacao || !mensagemSolicitacao.trim()}>
+                  {enviandoSolicitacao ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
+                  Enviar solicitação
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal do documento */}
       {docAberto !== null && docAtual && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 p-4 overflow-y-auto">
@@ -318,9 +444,27 @@ export function AdminValidacaoDocumental() {
                   </span>
                 )}
               </div>
-              <button onClick={() => setDocAberto(null)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-blue-800">
-                <X className="w-4 h-4 text-white" />
-              </button>
+              <div className="flex items-center gap-1">
+                {(() => {
+                  const tipoKey = `doc-${docAberto}`;
+                  const docEnviado = candidato.documentos.find((d: any) => d.tipo_documento === tipoKey);
+                  const caminhoArq = docEnviado?.caminho_arquivo || docEnviado?.nome_arquivo;
+                  if (!caminhoArq) return null;
+                  const urlArquivo = `/api/upload/documento/${caminhoArq}?token=${token}`;
+                  return (
+                    <button
+                      onClick={() => window.open(urlArquivo, "_blank", "noopener,noreferrer")}
+                      title="Abrir documento em nova janela"
+                      className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-blue-800"
+                    >
+                      <ExternalLink className="w-4 h-4 text-white" />
+                    </button>
+                  );
+                })()}
+                <button onClick={() => setDocAberto(null)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-blue-800">
+                  <X className="w-4 h-4 text-white" />
+                </button>
+              </div>
             </div>
 
             <div className="flex flex-col lg:flex-row">
@@ -346,10 +490,22 @@ export function AdminValidacaoDocumental() {
                     <iframe src={url} title={docAtual.documento_nome}
                       className="w-full min-h-[500px] rounded-bl-2xl" style={{ border: "none" }} />
                   ) : (
-                    <img src={url} alt={docAtual.documento_nome}
-                      className="w-full h-full object-contain p-4 max-h-[70vh]"
-                      onError={e => { (e.target as HTMLImageElement).src = ""; }}
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setZoomImagem(url)}
+                      className="relative w-full h-full flex items-center justify-center group cursor-zoom-in"
+                      title="Clique para ver em tela cheia"
+                    >
+                      <img src={url} alt={docAtual.documento_nome}
+                        className="w-full h-full object-contain p-4 max-h-[70vh]"
+                        onError={e => { (e.target as HTMLImageElement).src = ""; }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/10 transition-colors">
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 rounded-full p-3">
+                          <Maximize2 className="w-6 h-6 text-white" />
+                        </div>
+                      </div>
+                    </button>
                   );
                 })()}
               </div>
@@ -485,6 +641,49 @@ export function AdminValidacaoDocumental() {
             </span>
           )}
         </div>
+
+        {/* Ação: solicitar documentos complementares ao candidato — disponível para
+            o avaliador antes de fechar o parecer, sem precisar de anexo por e-mail */}
+        {!isAdmin && (
+          <div className="mb-6">
+            <Button variant="outline" size="sm"
+              className="border-blue-300 text-blue-800 hover:bg-blue-50"
+              onClick={() => setSolicitarDocsAberto(true)}>
+              <MailPlus className="w-4 h-4 mr-2" />
+              Solicitar documentos complementares ao candidato
+            </Button>
+          </div>
+        )}
+
+        {/* Aviso: candidato enviou os documentos complementares que este avaliador pediu */}
+        {docsComplementaresAtendidos.length > 0 && (
+          <Card className="border-2 border-green-300 bg-green-50 mb-6">
+            <CardContent className="p-5">
+              <div className="flex items-start gap-3">
+                <FileWarning className="w-5 h-5 text-green-700 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="font-bold text-green-800 mb-1">
+                    ✅ O candidato enviou os documentos complementares solicitados
+                  </p>
+                  <div className="space-y-2 mt-2">
+                    {docsComplementaresAtendidos.map(s => (
+                      <div key={s.id} className="bg-white rounded-lg border border-green-200 p-3 text-sm text-green-900">
+                        <p className="italic">"{s.mensagem}"</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-sm text-green-700 mt-3">
+                    Revise os novos documentos enviados abaixo e continue a avaliação.
+                  </p>
+                  <Button size="sm" className="bg-green-700 hover:bg-green-800 mt-3"
+                    onClick={marcarDocumentosComoRevisados}>
+                    <Check className="w-4 h-4 mr-2" /> Marcar como revisado
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Aviso de desempate */}
         {discordancias.length > 0 && (

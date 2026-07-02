@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Clock, CheckCircle, Mail, FileText, Phone, HelpCircle,
   BookOpen, Home, Calendar, Video, AlertCircle, RefreshCw,
-  Award, ArrowRight
+  Award, ArrowRight, Upload, Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +18,14 @@ interface Slot {
   data_hora: string;
   duracao_minutos: number;
   entrevistador_nome: string;
+}
+
+interface SolicitacaoDocumento {
+  id: number;
+  processo_id: number;
+  mensagem: string;
+  solicitado_por_nome: string;
+  criado_em: string;
 }
 
 function formatDataHora(dataHora: string) {
@@ -44,12 +52,57 @@ export function AguardandoValidacao() {
   const [countdown, setCountdown] = useState("");
   const [statusReal, setStatusReal] = useState(processo.statusGeral);
   const [caminhoReal, setCaminhoReal] = useState(processo.caminhoAvaliacao);
+  const [solicitacoesDocs, setSolicitacoesDocs] = useState<SolicitacaoDocumento[]>([]);
+  const [enviandoDocComplementar, setEnviandoDocComplementar] = useState<number | null>(null);
+
+  async function carregarSolicitacoesDocumentos() {
+    try {
+      const { solicitacoes } = await api.processo.solicitacoesDocumentos();
+      setSolicitacoesDocs(solicitacoes || []);
+    } catch {
+      // silencioso — não bloqueia a tela por falha nessa checagem
+    }
+  }
+
+  async function enviarDocumentoComplementar(solicitacao: SolicitacaoDocumento, file: File | null) {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: "Arquivo muito grande", description: "O arquivo deve ter no máximo 10MB.", variant: "destructive" });
+      return;
+    }
+    setEnviandoDocComplementar(solicitacao.id);
+    try {
+      const token = localStorage.getItem("anefac_token");
+      const formData = new FormData();
+      formData.append("arquivo", file);
+      formData.append("tipo_documento", `complementar-${solicitacao.id}`);
+      formData.append("processo_id", String(solicitacao.processo_id));
+
+      const resUpload = await fetch("/api/upload/documento", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const dataUpload = await resUpload.json();
+      if (!resUpload.ok) throw new Error(dataUpload.error || "Erro ao enviar arquivo");
+
+      await api.processo.concluirSolicitacaoDocumentos(solicitacao.id);
+
+      setSolicitacoesDocs(prev => prev.filter(s => s.id !== solicitacao.id));
+      toast({ title: `✅ ${file.name} enviado! O avaliador foi notificado.` });
+    } catch (err: any) {
+      toast({ title: "Erro ao enviar documento", description: err.message, variant: "destructive" });
+    } finally {
+      setEnviandoDocComplementar(null);
+    }
+  }
 
   // Sempre busca status atualizado do banco ao carregar a página
   useEffect(() => {
     if (!processo.certificacaoId) { navigate("/novo-fluxo"); return; }
     const token = localStorage.getItem("anefac_token");
     if (!token) return;
+    carregarSolicitacoesDocumentos();
     (api.processo as any).retomar().then((res: any) => {
       if (!res?.processo) return;
       const s = res.processo.statusGeral;
@@ -178,6 +231,42 @@ export function AguardandoValidacao() {
               </CardContent>
             </Card>
           )}
+
+          {/* Documentos complementares solicitados pelo avaliador — envio direto pelo sistema */}
+          {solicitacoesDocs.map(s => (
+            <Card key={s.id} className="border-amber-300 bg-amber-50">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center shrink-0">
+                    <AlertCircle className="w-6 h-6 text-amber-700" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h2 className="font-bold text-amber-900 text-lg mb-1">Documentos complementares solicitados</h2>
+                    <p className="text-sm text-amber-800 bg-white rounded-lg border border-amber-200 p-3 mb-3">
+                      "{s.mensagem}"
+                    </p>
+                    <label className="cursor-pointer inline-block">
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        disabled={enviandoDocComplementar === s.id}
+                        onChange={e => enviarDocumentoComplementar(s, e.target.files?.[0] || null)}
+                      />
+                      <Button className="bg-amber-600 hover:bg-amber-700" asChild>
+                        <span>
+                          {enviandoDocComplementar === s.id
+                            ? <Loader2 className="w-4 h-4 mr-2 animate-spin inline" />
+                            : <Upload className="w-4 h-4 mr-2 inline" />}
+                          Incluir documentos complementares solicitados
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
 
           {(statusReal === "agendamento" || statusReal === "prova") && (
             <Card className="border-green-300 bg-green-50">
