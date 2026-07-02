@@ -89,6 +89,7 @@ export function AdminValidacaoDocumental() {
   const [docsComplementaresAtendidos, setDocsComplementaresAtendidos] =
     useState<{ id: number; mensagem: string; atendida_em: string }[]>([]);
   const [avaliadoresCompletos, setAvaliadoresCompletos] = useState(false);
+  const [avaliadoresNomes, setAvaliadoresNomes] = useState<{ av1: string | null; av2: string | null } | null>(null);
 
   // Fecha o zoom da imagem ao pressionar ESC
   useEffect(() => {
@@ -153,6 +154,7 @@ export function AdminValidacaoDocumental() {
     setMostrarEncaminhamento(false);
     setCaminho(null);
     setAvaliadoresCompletos(false);
+    setAvaliadoresNomes(null);
     setDocsComplementaresAtendidos(c.documentos_complementares_atendidos || []);
 
     try {
@@ -205,6 +207,7 @@ export function AdminValidacaoDocumental() {
       setIsAdmin(data.is_admin);
       setDiscordancias(data.discordancias || []);
       setAvaliadoresCompletos(!!data.avaliadores_completos);
+      setAvaliadoresNomes(data.avaliadores_nomes || null);
       setAvaliacoes(lista);
       setCandidato(c);
 
@@ -724,10 +727,16 @@ export function AdminValidacaoDocumental() {
               <Lock className="w-5 h-5 text-gray-500 mt-0.5 shrink-0" />
               <div>
                 <p className="font-bold text-gray-700 mb-1">Este candidato já tem 2 avaliadores atribuídos</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 mb-2">
                   A validação documental deste candidato já está sendo feita por outros dois avaliadores.
                   Você pode visualizar o andamento, mas não pode analisar os documentos dele.
                 </p>
+                {avaliadoresNomes && (avaliadoresNomes.av1 || avaliadoresNomes.av2) && (
+                  <div className="text-sm text-gray-700 bg-white rounded-lg border border-gray-200 p-3 inline-block">
+                    <p><strong>Avaliador 1:</strong> {avaliadoresNomes.av1 || "—"}</p>
+                    <p><strong>Avaliador 2:</strong> {avaliadoresNomes.av2 || "—"}</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

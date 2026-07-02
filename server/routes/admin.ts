@@ -1163,6 +1163,24 @@ adminRouter.get("/validacao-dupla/:processoId",
       ) as any;
       const avaliadoresCompletos = totalAvaliadoresRows[0].total >= 2 && meuNumero === null;
 
+      // Nomes dos 2 avaliadores atribuídos — só faz sentido buscar/mostrar quando
+      // quem está vendo NÃO é um deles (não há problema de avaliação cega aqui,
+      // já que nenhum dos dois avaliadores reais está olhando essa informação).
+      let avaliadoresNomes: { av1: string | null; av2: string | null } | null = null;
+      if (avaliadoresCompletos) {
+        const [nomesRows] = await db.execute(
+          `SELECT va.numero_avaliador, u.full_name
+           FROM validacao_avaliadores va
+           JOIN users u ON u.id = va.user_id
+           WHERE va.processo_id = ?`,
+          [processoId]
+        ) as any;
+        avaliadoresNomes = {
+          av1: nomesRows.find((r: any) => r.numero_avaliador === 1)?.full_name || null,
+          av2: nomesRows.find((r: any) => r.numero_avaliador === 2)?.full_name || null,
+        };
+      }
+
       // Busca avaliações do processo
       const [docs] = await db.execute(
         `SELECT vd.*,
@@ -1234,6 +1252,7 @@ adminRouter.get("/validacao-dupla/:processoId",
         documentos: docsParaRetornar,
         discordancias,
         avaliadores_completos: avaliadoresCompletos,
+        avaliadores_nomes: avaliadoresNomes,
       });
     } catch (err) {
       console.error("[VALIDACAO-DUPLA GET]", err);
