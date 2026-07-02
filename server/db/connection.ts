@@ -86,10 +86,22 @@ async function runMigrations() {
     // Controla quais itens do menu (Ações Rápidas + navbar admin) cada perfil
     // enxerga. NULL = ainda não configurado; nesse caso o backend aplica um
     // padrão sensato na primeira leitura (ver GET /admin/roles/menu-permissoes).
+    // Usa checagem via INFORMATION_SCHEMA em vez de "ADD COLUMN IF NOT EXISTS"
+    // porque essa sintaxe só existe a partir do MySQL 8.0.29 — em versões
+    // anteriores ela gera erro de sintaxe, que ficava mascarado pelo try/catch
+    // e deixava a coluna ausente, quebrando o login (SELECT com coluna inexistente).
     try {
-      await db.execute(`ALTER TABLE roles ADD COLUMN IF NOT EXISTS menu_permissoes JSON NULL`);
+      const [colsRoles] = await db.execute(`
+        SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'roles'
+      `) as any;
+      const colunasRoles: string[] = colsRoles.map((c: any) => c.COLUMN_NAME.toLowerCase());
+      if (!colunasRoles.includes("menu_permissoes")) {
+        await db.execute(`ALTER TABLE roles ADD COLUMN menu_permissoes JSON NULL`);
+        console.log("✅ Coluna roles.menu_permissoes criada");
+      }
     } catch (alterErr) {
-      console.warn("⚠️ ALTER TABLE roles (menu_permissoes pode já existir):", (alterErr as any)?.message);
+      console.error("❌ Erro ao criar coluna roles.menu_permissoes:", (alterErr as any)?.message);
     }
 
     const defaultsPorRole: Record<string, string[]> = {
@@ -219,10 +231,16 @@ export async function runSolicitacaoDocumentosMigrations() {
         ALTER TABLE solicitacoes_documentos
         MODIFY COLUMN status ENUM('pendente','atendida','revisada') NOT NULL DEFAULT 'pendente'
       `);
-      await db.execute(`
-        ALTER TABLE solicitacoes_documentos
-        ADD COLUMN IF NOT EXISTS revisada_em TIMESTAMP NULL
-      `);
+
+      const [colsSolic] = await db.execute(`
+        SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'solicitacoes_documentos'
+      `) as any;
+      const colunasSolic: string[] = colsSolic.map((c: any) => c.COLUMN_NAME.toLowerCase());
+      if (!colunasSolic.includes("revisada_em")) {
+        await db.execute(`ALTER TABLE solicitacoes_documentos ADD COLUMN revisada_em TIMESTAMP NULL`);
+        console.log("✅ Coluna solicitacoes_documentos.revisada_em criada");
+      }
     } catch (alterErr) {
       console.warn("⚠️ ALTER TABLE solicitacoes_documentos (pode já estar correto):", (alterErr as any)?.message);
     }
