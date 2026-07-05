@@ -345,7 +345,7 @@ export function AreaCandidato() {
             style={{ background: "linear-gradient(to bottom, transparent, #0a1f5e)" }} />
 
           {/* Logo sobreposto ao banner */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <div className="absolute inset-0 flex flex-col items-center justify-start pt-10 sm:pt-14 pointer-events-none">
             <div className="bg-white/10 backdrop-blur-md rounded-2xl px-8 py-5 text-center border border-white/20 shadow-2xl">
               <img src="/logo-anefac.png" alt="ANEFAC" className="h-16 mx-auto mb-2 drop-shadow-xl"
                 onError={e => {
