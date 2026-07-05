@@ -48,7 +48,13 @@ function Carrossel({ imagens }: { imagens: CarrosselImagem[] }) {
     return () => clearInterval(timerRef.current);
   }, [imagens.length]);
 
-  const ir = (idx: number) => { clearInterval(timerRef.current); setAtual(idx); };
+  const ir = (idx: number) => {
+    clearInterval(timerRef.current);
+    setAtual(idx);
+    if (imagens.length > 1) {
+      timerRef.current = setInterval(() => setAtual(p => (p + 1) % imagens.length), 15000);
+    }
+  };
 
   if (imagens.length === 0) {
     return (
