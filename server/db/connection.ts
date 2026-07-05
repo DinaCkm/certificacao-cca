@@ -21,6 +21,7 @@ export async function testConnection() {
     await runMigrations();
     await runValidacaoMigrations();
     await runSolicitacaoDocumentosMigrations();
+    await runCursosMigrations();
   } catch (err) {
     console.error("❌ Erro ao conectar ao MySQL:", err);
     process.exit(1);
@@ -246,5 +247,83 @@ export async function runSolicitacaoDocumentosMigrations() {
     }
   } catch (err) {
     console.warn("⚠️ Erro na migração de solicitacoes_documentos:", err);
+  }
+}
+
+// ─── Cursos, Pacotes e rastreamento de cliques de compra ───────────────────────
+// Antes esses dados viviam só no localStorage do navegador (cada admin via uma
+// versão diferente, e o link de compra nunca chegava no navegador do aluno).
+// Agora tudo fica no banco, e cada clique em "Comprar" é registrado — seja o
+// curso interno (nossa página de pagamento) ou externo (Hotmart/Kiwify/Eduzz) —
+// para alimentar o relatório de acesso/compra no admin.
+export async function runCursosMigrations() {
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS cursos (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        titulo VARCHAR(255) NOT NULL,
+        descricao TEXT NULL,
+        descricao_breve VARCHAR(500) NULL,
+        categoria ENUM('controller','lideranca','financas','outros') NOT NULL DEFAULT 'outros',
+        nivel ENUM('iniciante','intermediario','avancado') NOT NULL DEFAULT 'iniciante',
+        duracao VARCHAR(50) NULL,
+        instrutor VARCHAR(255) NULL,
+        imagem_url VARCHAR(500) NULL,
+        tipo ENUM('interno','externo') NOT NULL DEFAULT 'externo',
+        link_compra VARCHAR(500) NULL COMMENT 'obrigatório quando tipo=externo',
+        preco DECIMAL(10,2) NOT NULL DEFAULT 0,
+        certificacao_relacionada VARCHAR(50) NULL,
+        destaque TINYINT(1) NOT NULL DEFAULT 0,
+        ativo TINYINT(1) NOT NULL DEFAULT 1,
+        ordem INT NOT NULL DEFAULT 0,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_ativo (ativo),
+        INDEX idx_categoria (categoria)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS pacotes (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nome VARCHAR(255) NOT NULL,
+        descricao TEXT NULL,
+        preco DECIMAL(10,2) NOT NULL DEFAULT 0,
+        tipo ENUM('interno','externo') NOT NULL DEFAULT 'externo',
+        link_compra VARCHAR(500) NULL,
+        curso_ids JSON NULL COMMENT 'array de IDs de cursos incluídos',
+        ativo TINYINT(1) NOT NULL DEFAULT 1,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    // Registro de cada clique em "Comprar" — candidato logado OU visitante anônimo
+    // (identificado por sessao_id gerado no navegador). Para curso externo nunca
+    // sabemos se a compra de fato aconteceu (fica registrado só o redirecionamento).
+    // Para curso interno, comprou é atualizado quando o pagamento simulado é concluído.
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS curso_cliques (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        curso_id INT NULL,
+        curso_titulo VARCHAR(255) NOT NULL COMMENT 'snapshot do título no momento do clique',
+        tipo_destino ENUM('interno','externo') NOT NULL,
+        link_destino VARCHAR(500) NULL,
+        candidato_id INT NULL COMMENT 'preenchido se o clique veio de um usuário logado',
+        sessao_id VARCHAR(64) NULL COMMENT 'identifica visitante anônimo (sem login)',
+        comprou TINYINT(1) NULL COMMENT 'NULL = indefinido/externo, 0 = não comprou, 1 = comprou (só curso interno)',
+        data_compra TIMESTAMP NULL,
+        ip VARCHAR(64) NULL,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_curso_id (curso_id),
+        INDEX idx_candidato_id (candidato_id),
+        INDEX idx_tipo_destino (tipo_destino),
+        INDEX idx_criado_em (criado_em)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    console.log("✅ Tabelas de cursos, pacotes e cliques verificadas/criadas");
+  } catch (err) {
+    console.warn("⚠️ Erro na migração de cursos/pacotes/cliques:", err);
   }
 }

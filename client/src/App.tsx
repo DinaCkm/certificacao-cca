@@ -46,7 +46,9 @@ import { AdminInstitucional } from "./pages/novo-fluxo/admin/AdminInstitucional"
 import { InstitucionalProvider } from "./contexts/InstitucionalContext";
 import { CourseProvider } from "./contexts/CourseContext";
 import { Cursos } from "./pages/site/Cursos";
+import { ComprarCurso } from "./pages/site/ComprarCurso";
 import { AdminCursos } from "./pages/novo-fluxo/admin/AdminCursos";
+import { AdminRelatorioCursos } from "./pages/novo-fluxo/admin/AdminRelatorioCursos";
 import { AdminUsuarios } from "./pages/novo-fluxo/admin/AdminUsuarios";
 import { AdminCarrossel } from "./pages/novo-fluxo/admin/AdminCarrossel";
 import { AdminProvaConfig } from "./pages/novo-fluxo/admin/AdminProvaConfig";
@@ -72,6 +74,7 @@ function Router() {
       <Route path={"/como-funciona/lideranca"} component={ComoFuncionaLideranca} />
       <Route path={"/simulacao"} component={Simulacao} />
       <Route path={"/cursos"} component={Cursos} />
+      <Route path={"/cursos/comprar/:id"} component={ComprarCurso} />
       {/* ARQUIVADO: <Route path={"/home"} component={Home} /> */}
       {/* ARQUIVADO: <Route path={"/select-certification-type"} component={SelectCertificationType} /> */}
 
@@ -137,6 +140,7 @@ function Router() {
       <Route path={"/novo-fluxo/admin/site"} component={() => <AdminRoute component={AdminSiteConfig} />} />
       <Route path={"/novo-fluxo/admin/institucional"} component={() => <AdminRoute component={AdminInstitucional} />} />
       <Route path={"/novo-fluxo/admin/cursos"} component={() => <AdminRoute component={AdminCursos} />} />
+      <Route path={"/novo-fluxo/admin/relatorio-cursos"} component={() => <AdminRoute component={AdminRelatorioCursos} />} />
       <Route path={"/novo-fluxo/admin/usuarios"} component={() => <AdminRoute component={AdminUsuarios} />} />
       <Route path={"/novo-fluxo/admin/carrossel"} component={() => <AdminRoute component={AdminCarrossel} />} />
       <Route path={"/novo-fluxo/admin/prova-config"} component={() => <AdminRoute component={AdminProvaConfig} />} />

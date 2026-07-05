@@ -28,6 +28,7 @@ export const MENU_ITEMS: MenuItemDef[] = [
   { key: "site", label: "Configurar site", href: "/novo-fluxo/admin/site" },
   { key: "institucional", label: "Documentos & Comitê", href: "/novo-fluxo/admin/institucional" },
   { key: "cursos", label: "Cursos e Pacotes", href: "/novo-fluxo/admin/cursos" },
+  { key: "relatorio_cursos", label: "Relatório de Cursos (acessos/compras)", href: "/novo-fluxo/admin/relatorio-cursos" },
 ];
 
 export const MENU_ITEM_LABELS: Record<string, string> = Object.fromEntries(

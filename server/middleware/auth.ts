@@ -49,3 +49,21 @@ export function requireRole(...roles: string[]) {
     next();
   };
 }
+
+// ── Autenticação opcional ─────────────────────────────────────────────────────
+// Usada em rotas públicas que precisam saber SE existe um candidato logado
+// (para registrar cliques/eventos), mas não podem bloquear visitantes anônimos.
+export function optionalAuth(req: Request, _res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.split(" ")[1];
+    try {
+      req.user = verifyToken(token);
+    } catch {
+      // token inválido/expirado — segue como anônimo, sem erro
+    }
+  }
+
+  next();
+}

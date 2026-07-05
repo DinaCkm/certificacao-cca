@@ -15,6 +15,18 @@ export function clearToken() {
   localStorage.removeItem("anefac_token");
 }
 
+// Identifica visitantes anônimos (sem login) para o rastreamento de cliques
+// em cursos. Gerado uma vez por navegador e reaproveitado nas próximas visitas.
+const SESSAO_KEY = "anefac_sessao_id";
+export function getSessaoId(): string {
+  let id = localStorage.getItem(SESSAO_KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(SESSAO_KEY, id);
+  }
+  return id;
+}
+
 async function request<T>(
   method: string,
   path: string,
@@ -153,7 +165,7 @@ export const api = {
 // ── Admin ─────────────────────────────────────────────────────────────────────
 // Adicionado ao objeto api existente via extensão do módulo
 
-export const adminApi = {
+export const adminApi: Record<string, (...args: any[]) => Promise<any>> = {
   listarUsuarios: () =>
     request<{ usuarios: any[] }>("GET", "/admin/usuarios"),
 
@@ -174,4 +186,53 @@ Object.assign(adminApi, {
     request<{ id: number }>("POST", "/admin/slots", body),
   removerSlot: (id: number) =>
     request<{ message: string }>("DELETE", `/admin/slots/${id}`),
+});
+
+// ── Cursos (público) ────────────────────────────────────────────────────────────
+
+export const cursosApi = {
+  publico: () =>
+    request<{ cursos: any[]; pacotes: any[] }>("GET", "/cursos/publico"),
+
+  registrarClique: (body: {
+    curso_id?: number;
+    curso_titulo: string;
+    tipo_destino: "interno" | "externo";
+    link_destino?: string;
+    sessao_id?: string;
+  }) => request<{ id: number }>("POST", "/cursos/clique", body),
+
+  confirmarCompra: (cliqueId: number) =>
+    request<{ ok: boolean }>("POST", `/cursos/clique/${cliqueId}/confirmar-compra`),
+};
+
+// ── Cursos e Pacotes (admin) ─────────────────────────────────────────────────────
+
+Object.assign(adminApi, {
+  listarCursos: () => request<{ cursos: any[] }>("GET", "/admin/cursos"),
+  criarCurso: (body: any) => request<{ id: number }>("POST", "/admin/cursos", body),
+  editarCurso: (id: number, body: any) => request<{ message: string }>("PUT", `/admin/cursos/${id}`, body),
+  removerCurso: (id: number) => request<{ message: string }>("DELETE", `/admin/cursos/${id}`),
+
+  listarPacotes: () => request<{ pacotes: any[] }>("GET", "/admin/pacotes"),
+  criarPacote: (body: any) => request<{ id: number }>("POST", "/admin/pacotes", body),
+  editarPacote: (id: number, body: any) => request<{ message: string }>("PUT", `/admin/pacotes/${id}`, body),
+  removerPacote: (id: number) => request<{ message: string }>("DELETE", `/admin/pacotes/${id}`),
+
+  relatorioCursosCliques: (filtros?: {
+    tipo_destino?: "interno" | "externo";
+    comprou?: "sim" | "nao";
+    curso_id?: number;
+    data_inicio?: string;
+    data_fim?: string;
+  }) => {
+    const params = new URLSearchParams();
+    if (filtros) {
+      Object.entries(filtros).forEach(([k, v]) => {
+        if (v !== undefined && v !== "") params.set(k, String(v));
+      });
+    }
+    const qs = params.toString();
+    return request<{ cliques: any[]; resumo: any }>("GET", `/admin/relatorios/cursos-cliques${qs ? `?${qs}` : ""}`);
+  },
 });

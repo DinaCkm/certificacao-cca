@@ -1,17 +1,83 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import {
-  useCourses,
   Curso,
   Pacote,
   CategoriaCurso,
   NivelCurso,
+  TipoCurso,
 } from "@/contexts/CourseContext";
+import { adminApi } from "@/lib/api";
 import {
   BookOpen, Package, Plus, Pencil, Trash2, ExternalLink,
   Star, Eye, EyeOff, ArrowLeft, Save, X, ChevronDown, ChevronUp,
   DollarSign, Clock, BarChart2, Link as LinkIcon, Image, Tag,
 } from "lucide-react";
+
+// ── Mapeamento API (admin vê todos, inclusive inativos) ────────────────────────
+
+function cursoDaApiAdmin(c: any): Curso {
+  return {
+    id: c.id,
+    titulo: c.titulo,
+    descricao: c.descricao || "",
+    descricaoBreve: c.descricao_breve || "",
+    categoria: c.categoria,
+    nivel: c.nivel,
+    duracao: c.duracao || "",
+    instrutor: c.instrutor || "",
+    imagemUrl: c.imagem_url || "",
+    tipo: c.tipo || "externo",
+    linkCompra: c.link_compra || "",
+    preco: Number(c.preco) || 0,
+    certificacaoRelacionada: c.certificacao_relacionada || "",
+    destaque: !!c.destaque,
+    ativo: !!c.ativo,
+    ordem: c.ordem ?? 0,
+  };
+}
+
+function cursoParaApiAdmin(c: Partial<Curso>) {
+  return {
+    titulo: c.titulo,
+    descricao: c.descricao,
+    descricao_breve: c.descricaoBreve,
+    categoria: c.categoria,
+    nivel: c.nivel,
+    duracao: c.duracao,
+    instrutor: c.instrutor,
+    imagem_url: c.imagemUrl,
+    tipo: c.tipo,
+    link_compra: c.linkCompra,
+    preco: c.preco,
+    certificacao_relacionada: c.certificacaoRelacionada,
+    destaque: c.destaque,
+    ativo: c.ativo,
+  };
+}
+
+function pacoteDaApiAdmin(p: any): Pacote {
+  return {
+    id: p.id,
+    nome: p.nome,
+    descricao: p.descricao || "",
+    preco: Number(p.preco) || 0,
+    tipo: p.tipo || "externo",
+    linkCompra: p.link_compra || "",
+    cursoIds: p.curso_ids || [],
+  };
+}
+
+function pacoteParaApiAdmin(p: Partial<Pacote>) {
+  return {
+    nome: p.nome,
+    descricao: p.descricao,
+    preco: p.preco,
+    tipo: p.tipo,
+    link_compra: p.linkCompra,
+    curso_ids: p.cursoIds,
+  };
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -58,6 +124,7 @@ const cursoVazio: CursoForm = {
   duracao: "",
   instrutor: "ANEFAC",
   imagemUrl: "",
+  tipo: "externo",
   linkCompra: "",
   preco: 0,
   certificacaoRelacionada: "",
@@ -192,17 +259,49 @@ function CursoEditor({
           </select>
         </div>
 
-        {/* Link de compra */}
+        {/* Tipo do curso: interno x externo */}
         <div className="md:col-span-2">
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Link de compra (URL da plataforma externa) *</label>
-          <input
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={form.linkCompra}
-            onChange={(e) => set("linkCompra", e.target.value)}
-            placeholder="https://hotmart.com/produto/..."
-          />
-          <p className="text-xs text-gray-400 mt-1">Cole aqui o link da Hotmart, Kiwify, Eduzz ou outra plataforma. O candidato será redirecionado para lá ao clicar em "Comprar".</p>
+          <label className="block text-xs font-semibold text-gray-600 mb-2">Onde o aluno compra este curso? *</label>
+          <div className="flex gap-3">
+            <label className={`flex-1 flex items-center gap-2 cursor-pointer p-3 rounded-xl border-2 transition-colors ${form.tipo === "interno" ? "border-blue-500 bg-blue-50" : "border-gray-200"}`}>
+              <input
+                type="radio"
+                checked={form.tipo === "interno"}
+                onChange={() => set("tipo", "interno" as TipoCurso)}
+                className="w-4 h-4 accent-blue-600"
+              />
+              <span className="text-sm font-medium text-gray-700">Curso interno (nossa página de pagamento)</span>
+            </label>
+            <label className={`flex-1 flex items-center gap-2 cursor-pointer p-3 rounded-xl border-2 transition-colors ${form.tipo === "externo" ? "border-blue-500 bg-blue-50" : "border-gray-200"}`}>
+              <input
+                type="radio"
+                checked={form.tipo === "externo"}
+                onChange={() => set("tipo", "externo" as TipoCurso)}
+                className="w-4 h-4 accent-blue-600"
+              />
+              <span className="text-sm font-medium text-gray-700">Plataforma externa (Hotmart, Kiwify...)</span>
+            </label>
+          </div>
         </div>
+
+        {/* Link de compra — só para curso externo */}
+        {form.tipo === "externo" && (
+          <div className="md:col-span-2">
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Link de compra (URL da plataforma externa) *</label>
+            <input
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={form.linkCompra}
+              onChange={(e) => set("linkCompra", e.target.value)}
+              placeholder="https://hotmart.com/produto/..."
+            />
+            <p className="text-xs text-gray-400 mt-1">Cole aqui o link da Hotmart, Kiwify, Eduzz ou outra plataforma. O candidato será redirecionado para lá ao clicar em "Comprar" — esse redirecionamento fica registrado no relatório de cliques.</p>
+          </div>
+        )}
+        {form.tipo === "interno" && (
+          <div className="md:col-span-2 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+            <p className="text-xs text-blue-800">Ao clicar em "Comprar", o candidato será levado para a nossa página de pagamento interna. A compra fica registrada no relatório de cliques com o status de "comprou" ou "não comprou".</p>
+          </div>
+        )}
 
         {/* URL da imagem */}
         <div className="md:col-span-2">
@@ -242,7 +341,7 @@ function CursoEditor({
       <div className="flex gap-3 pt-2 border-t border-gray-100">
         <button
           onClick={() => onSalvar(form)}
-          disabled={!form.titulo || !form.linkCompra}
+          disabled={!form.titulo || (form.tipo === "externo" && !form.linkCompra)}
           className="flex items-center gap-2 bg-[#1e3a6e] text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-[#162d55] transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm"
         >
           <Save className="w-4 h-4" /> Salvar curso
@@ -266,6 +365,7 @@ const pacoteVazio: PacoteForm = {
   nome: "",
   descricao: "",
   preco: 0,
+  tipo: "externo",
   linkCompra: "",
   cursoIds: [],
 };
@@ -334,16 +434,33 @@ function PacoteEditor({
           />
         </div>
 
-        {/* Link de compra */}
+        {/* Tipo do pacote: interno x externo */}
         <div>
-          <label className="block text-xs font-semibold text-gray-600 mb-1">Link de compra do pacote *</label>
-          <input
-            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={form.linkCompra}
-            onChange={(e) => set("linkCompra", e.target.value)}
-            placeholder="https://hotmart.com/produto/..."
-          />
+          <label className="block text-xs font-semibold text-gray-600 mb-1">Onde compra este pacote? *</label>
+          <div className="flex gap-2">
+            <label className={`flex-1 flex items-center gap-1.5 cursor-pointer p-2 rounded-lg border-2 text-xs font-medium transition-colors ${form.tipo === "interno" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-600"}`}>
+              <input type="radio" checked={form.tipo === "interno"} onChange={() => set("tipo", "interno" as TipoCurso)} className="w-3.5 h-3.5 accent-blue-600" />
+              Interno
+            </label>
+            <label className={`flex-1 flex items-center gap-1.5 cursor-pointer p-2 rounded-lg border-2 text-xs font-medium transition-colors ${form.tipo === "externo" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-600"}`}>
+              <input type="radio" checked={form.tipo === "externo"} onChange={() => set("tipo", "externo" as TipoCurso)} className="w-3.5 h-3.5 accent-blue-600" />
+              Externo
+            </label>
+          </div>
         </div>
+
+        {/* Link de compra — só para pacote externo */}
+        {form.tipo === "externo" && (
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Link de compra do pacote *</label>
+            <input
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={form.linkCompra}
+              onChange={(e) => set("linkCompra", e.target.value)}
+              placeholder="https://hotmart.com/produto/..."
+            />
+          </div>
+        )}
 
         {/* Cursos incluídos */}
         <div className="md:col-span-2">
@@ -353,8 +470,8 @@ function PacoteEditor({
               <label key={c.id} className="flex items-center gap-2 cursor-pointer p-2.5 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
                 <input
                   type="checkbox"
-                  checked={form.cursoIds.includes(c.id)}
-                  onChange={() => toggleCurso(c.id)}
+                  checked={form.cursoIds.includes(String(c.id))}
+                  onChange={() => toggleCurso(String(c.id))}
                   className="w-4 h-4 accent-blue-600"
                 />
                 <span className="text-sm text-gray-700 line-clamp-1">{c.titulo}</span>
@@ -367,11 +484,11 @@ function PacoteEditor({
           {form.cursoIds.length > 0 && (
             <p className="text-xs text-gray-400 mt-2">
               Preço individual somado: R$ {cursosAtivos
-                .filter((c) => form.cursoIds.includes(c.id))
+                .filter((c) => form.cursoIds.includes(String(c.id)))
                 .reduce((s, c) => s + c.preco, 0)
                 .toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
               {" "}— Economia: R$ {Math.max(0, cursosAtivos
-                .filter((c) => form.cursoIds.includes(c.id))
+                .filter((c) => form.cursoIds.includes(String(c.id)))
                 .reduce((s, c) => s + c.preco, 0) - form.preco)
                 .toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
             </p>
@@ -383,7 +500,7 @@ function PacoteEditor({
       <div className="flex gap-3 pt-2 border-t border-gray-100">
         <button
           onClick={() => onSalvar(form)}
-          disabled={!form.nome || !form.linkCompra}
+          disabled={!form.nome || (form.tipo === "externo" && !form.linkCompra)}
           className="flex items-center gap-2 bg-[#1e3a6e] text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-[#162d55] transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm"
         >
           <Save className="w-4 h-4" /> Salvar pacote
@@ -404,17 +521,42 @@ function PacoteEditor({
 type Aba = "cursos" | "pacotes";
 
 export function AdminCursos() {
-  const {
-    cursos, pacotes,
-    adicionarCurso, atualizarCurso, removerCurso,
-    adicionarPacote, atualizarPacote, removerPacote,
-    cursosAtivos,
-  } = useCourses();
+  const [cursos, setCursos] = useState<Curso[]>([]);
+  const [pacotes, setPacotes] = useState<Pacote[]>([]);
+  const [carregando, setCarregando] = useState(true);
+
+  const recarregar = async () => {
+    try {
+      const [{ cursos: c }, { pacotes: p }] = await Promise.all([
+        adminApi.listarCursos() as Promise<{ cursos: any[] }>,
+        adminApi.listarPacotes() as Promise<{ pacotes: any[] }>,
+      ]);
+      setCursos(c.map(cursoDaApiAdmin));
+      setPacotes(p.map(pacoteDaApiAdmin));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  useEffect(() => { recarregar(); }, []);
+
+  const adicionarCurso = async (dados: CursoForm) => { await adminApi.criarCurso(cursoParaApiAdmin(dados)); await recarregar(); };
+  const atualizarCurso = async (id: string | number, dados: Partial<Curso>) => {
+    const atual = cursos.find((c) => c.id === id);
+    await adminApi.editarCurso(Number(id), cursoParaApiAdmin({ ...atual, ...dados }));
+    await recarregar();
+  };
+  const removerCurso = async (id: string | number) => { await adminApi.removerCurso(Number(id)); await recarregar(); };
+  const adicionarPacote = async (dados: PacoteForm) => { await adminApi.criarPacote(pacoteParaApiAdmin(dados)); await recarregar(); };
+  const atualizarPacote = async (id: string | number, dados: PacoteForm) => { await adminApi.editarPacote(Number(id), pacoteParaApiAdmin(dados)); await recarregar(); };
+  const removerPacote = async (id: string | number) => { await adminApi.removerPacote(Number(id)); await recarregar(); };
 
   const [aba, setAba] = useState<Aba>("cursos");
-  const [editandoCursoId, setEditandoCursoId] = useState<string | "novo" | null>(null);
-  const [editandoPacoteId, setEditandoPacoteId] = useState<string | "novo" | null>(null);
-  const [confirmarExcluir, setConfirmarExcluir] = useState<{ tipo: "curso" | "pacote"; id: string } | null>(null);
+  const [editandoCursoId, setEditandoCursoId] = useState<string | number | "novo" | null>(null);
+  const [editandoPacoteId, setEditandoPacoteId] = useState<string | number | "novo" | null>(null);
+  const [confirmarExcluir, setConfirmarExcluir] = useState<{ tipo: "curso" | "pacote"; id: string | number } | null>(null);
 
   // ── Cursos ────────────────────────────────────────────────────────────────
 
@@ -427,8 +569,11 @@ export function AdminCursos() {
     setEditandoCursoId(null);
   };
 
-  const excluirCurso = (id: string) => {
-    removerCurso(id);
+  const excluirCurso = (id: string | number) => {
+    excluirCursoAsync(id);
+  };
+  const excluirCursoAsync = async (id: string | number) => {
+    await removerCurso(id);
     setConfirmarExcluir(null);
   };
 
@@ -443,10 +588,18 @@ export function AdminCursos() {
     setEditandoPacoteId(null);
   };
 
-  const excluirPacote = (id: string) => {
-    removerPacote(id);
+  const excluirPacote = (id: string | number) => {
+    excluirPacoteAsync(id);
+  };
+  const excluirPacoteAsync = async (id: string | number) => {
+    await removerPacote(id);
     setConfirmarExcluir(null);
   };
+
+  if (carregando) {
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400 text-sm">Carregando cursos...</div>;
+  }
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -625,7 +778,7 @@ export function AdminCursos() {
               </div>
             ) : (
               pacotes.map((pacote) => {
-                const cursosIncluidos = cursos.filter((c) => pacote.cursoIds.includes(c.id));
+                const cursosIncluidos = cursos.filter((c) => pacote.cursoIds.includes(String(c.id)));
                 return (
                   <div key={pacote.id}>
                     {editandoPacoteId === pacote.id ? (

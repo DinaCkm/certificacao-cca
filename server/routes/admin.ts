@@ -1837,3 +1837,250 @@ adminRouter.get("/validacao-dupla/pendentes-desempate",
     }
   }
 );
+
+// ══════════════════════════════════════════════════════════════════════════
+// Cursos e Pacotes — CRUD admin
+// ══════════════════════════════════════════════════════════════════════════
+
+// ── GET /api/admin/cursos ─────────────────────────────────────────────────────
+adminRouter.get("/cursos",
+  requireRole("administrador", "gestor_n1", "gestor_n2"),
+  async (_req, res) => {
+    try {
+      const [rows] = await db.execute("SELECT * FROM cursos ORDER BY ordem ASC, id ASC") as any;
+      return res.json({ cursos: rows });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao buscar cursos" });
+    }
+  }
+);
+
+// ── POST /api/admin/cursos ────────────────────────────────────────────────────
+adminRouter.post("/cursos",
+  requireRole("administrador", "gestor_n1"),
+  async (req: Request, res: Response) => {
+    const {
+      titulo, descricao, descricao_breve, categoria, nivel, duracao, instrutor,
+      imagem_url, tipo, link_compra, preco, certificacao_relacionada, destaque, ativo,
+    } = req.body;
+
+    if (!titulo) return res.status(400).json({ error: "Título é obrigatório" });
+    if (tipo === "externo" && !link_compra) {
+      return res.status(400).json({ error: "Link de compra é obrigatório para curso externo" });
+    }
+
+    try {
+      const [maxOrdem] = await db.execute("SELECT COALESCE(MAX(ordem),0) as m FROM cursos") as any;
+      const ordem = (maxOrdem[0]?.m || 0) + 1;
+
+      const [result] = await db.execute(
+        `INSERT INTO cursos
+          (titulo, descricao, descricao_breve, categoria, nivel, duracao, instrutor,
+           imagem_url, tipo, link_compra, preco, certificacao_relacionada, destaque, ativo, ordem)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        [
+          titulo, descricao || null, descricao_breve || null, categoria || "outros",
+          nivel || "iniciante", duracao || null, instrutor || null, imagem_url || null,
+          tipo === "interno" ? "interno" : "externo", tipo === "interno" ? null : link_compra,
+          preco || 0, certificacao_relacionada || null, destaque ? 1 : 0, ativo === false ? 0 : 1, ordem,
+        ]
+      ) as any;
+
+      return res.json({ id: result.insertId });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao criar curso" });
+    }
+  }
+);
+
+// ── PUT /api/admin/cursos/:id ─────────────────────────────────────────────────
+adminRouter.put("/cursos/:id",
+  requireRole("administrador", "gestor_n1"),
+  async (req: Request, res: Response) => {
+    const {
+      titulo, descricao, descricao_breve, categoria, nivel, duracao, instrutor,
+      imagem_url, tipo, link_compra, preco, certificacao_relacionada, destaque, ativo, ordem,
+    } = req.body;
+
+    if (tipo === "externo" && !link_compra) {
+      return res.status(400).json({ error: "Link de compra é obrigatório para curso externo" });
+    }
+
+    try {
+      await db.execute(
+        `UPDATE cursos SET
+          titulo=?, descricao=?, descricao_breve=?, categoria=?, nivel=?, duracao=?, instrutor=?,
+          imagem_url=?, tipo=?, link_compra=?, preco=?, certificacao_relacionada=?, destaque=?, ativo=?, ordem=?
+         WHERE id=?`,
+        [
+          titulo, descricao || null, descricao_breve || null, categoria || "outros",
+          nivel || "iniciante", duracao || null, instrutor || null, imagem_url || null,
+          tipo === "interno" ? "interno" : "externo", tipo === "interno" ? null : link_compra,
+          preco || 0, certificacao_relacionada || null, destaque ? 1 : 0, ativo ? 1 : 0,
+          ordem ?? 0, parseInt(req.params.id),
+        ]
+      );
+      return res.json({ message: "Curso atualizado" });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao atualizar curso" });
+    }
+  }
+);
+
+// ── DELETE /api/admin/cursos/:id ──────────────────────────────────────────────
+adminRouter.delete("/cursos/:id",
+  requireRole("administrador", "gestor_n1"),
+  async (req: Request, res: Response) => {
+    try {
+      await db.execute("DELETE FROM cursos WHERE id=?", [parseInt(req.params.id)]);
+      return res.json({ message: "Curso removido" });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao remover curso" });
+    }
+  }
+);
+
+// ── GET /api/admin/pacotes ─────────────────────────────────────────────────────
+adminRouter.get("/pacotes",
+  requireRole("administrador", "gestor_n1", "gestor_n2"),
+  async (_req, res) => {
+    try {
+      const [rows] = await db.execute("SELECT * FROM pacotes ORDER BY id ASC") as any;
+      return res.json({
+        pacotes: rows.map((p: any) => ({
+          ...p,
+          curso_ids: typeof p.curso_ids === "string" ? JSON.parse(p.curso_ids) : (p.curso_ids || []),
+        })),
+      });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao buscar pacotes" });
+    }
+  }
+);
+
+// ── POST /api/admin/pacotes ───────────────────────────────────────────────────
+adminRouter.post("/pacotes",
+  requireRole("administrador", "gestor_n1"),
+  async (req: Request, res: Response) => {
+    const { nome, descricao, preco, tipo, link_compra, curso_ids, ativo } = req.body;
+    if (!nome) return res.status(400).json({ error: "Nome é obrigatório" });
+    if (tipo === "externo" && !link_compra) {
+      return res.status(400).json({ error: "Link de compra é obrigatório para pacote externo" });
+    }
+    try {
+      const [result] = await db.execute(
+        `INSERT INTO pacotes (nome, descricao, preco, tipo, link_compra, curso_ids, ativo)
+         VALUES (?,?,?,?,?,?,?)`,
+        [
+          nome, descricao || null, preco || 0, tipo === "interno" ? "interno" : "externo",
+          tipo === "interno" ? null : link_compra, JSON.stringify(curso_ids || []), ativo === false ? 0 : 1,
+        ]
+      ) as any;
+      return res.json({ id: result.insertId });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao criar pacote" });
+    }
+  }
+);
+
+// ── PUT /api/admin/pacotes/:id ────────────────────────────────────────────────
+adminRouter.put("/pacotes/:id",
+  requireRole("administrador", "gestor_n1"),
+  async (req: Request, res: Response) => {
+    const { nome, descricao, preco, tipo, link_compra, curso_ids, ativo } = req.body;
+    if (tipo === "externo" && !link_compra) {
+      return res.status(400).json({ error: "Link de compra é obrigatório para pacote externo" });
+    }
+    try {
+      await db.execute(
+        `UPDATE pacotes SET nome=?, descricao=?, preco=?, tipo=?, link_compra=?, curso_ids=?, ativo=? WHERE id=?`,
+        [
+          nome, descricao || null, preco || 0, tipo === "interno" ? "interno" : "externo",
+          tipo === "interno" ? null : link_compra, JSON.stringify(curso_ids || []),
+          ativo ? 1 : 0, parseInt(req.params.id),
+        ]
+      );
+      return res.json({ message: "Pacote atualizado" });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao atualizar pacote" });
+    }
+  }
+);
+
+// ── DELETE /api/admin/pacotes/:id ─────────────────────────────────────────────
+adminRouter.delete("/pacotes/:id",
+  requireRole("administrador", "gestor_n1"),
+  async (req: Request, res: Response) => {
+    try {
+      await db.execute("DELETE FROM pacotes WHERE id=?", [parseInt(req.params.id)]);
+      return res.json({ message: "Pacote removido" });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao remover pacote" });
+    }
+  }
+);
+
+// ══════════════════════════════════════════════════════════════════════════
+// Relatório de cliques em cursos — acessos à área de compra, quem comprou
+// (curso interno), e quem foi redirecionado para plataforma externa
+// ══════════════════════════════════════════════════════════════════════════
+
+adminRouter.get("/relatorios/cursos-cliques",
+  requireRole("administrador", "gestor_n1", "gestor_n2"),
+  async (req: Request, res: Response) => {
+    const { tipo_destino, comprou, curso_id, data_inicio, data_fim } = req.query as Record<string, string>;
+
+    const where: string[] = [];
+    const params: any[] = [];
+
+    if (tipo_destino && ["interno", "externo"].includes(tipo_destino)) {
+      where.push("cc.tipo_destino = ?");
+      params.push(tipo_destino);
+    }
+    if (comprou === "sim") { where.push("cc.comprou = 1"); }
+    if (comprou === "nao") { where.push("(cc.comprou = 0 OR cc.comprou IS NULL)"); }
+    if (curso_id) { where.push("cc.curso_id = ?"); params.push(parseInt(curso_id)); }
+    if (data_inicio) { where.push("cc.criado_em >= ?"); params.push(data_inicio); }
+    if (data_fim) { where.push("cc.criado_em <= ?"); params.push(data_fim + " 23:59:59"); }
+
+    const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+
+    try {
+      const [rows] = await db.execute(
+        `SELECT cc.id, cc.curso_id, cc.curso_titulo, cc.tipo_destino, cc.link_destino,
+                cc.comprou, cc.data_compra, cc.criado_em, cc.sessao_id,
+                cc.candidato_id, u.full_name as candidato_nome, u.email as candidato_email
+         FROM curso_cliques cc
+         LEFT JOIN users u ON u.id = cc.candidato_id
+         ${whereSql}
+         ORDER BY cc.criado_em DESC
+         LIMIT 1000`,
+        params
+      ) as any;
+
+      const [resumo] = await db.execute(
+        `SELECT
+           COUNT(*) as total_acessos,
+           SUM(CASE WHEN tipo_destino='externo' THEN 1 ELSE 0 END) as total_externo,
+           SUM(CASE WHEN tipo_destino='interno' THEN 1 ELSE 0 END) as total_interno,
+           SUM(CASE WHEN tipo_destino='interno' AND comprou=1 THEN 1 ELSE 0 END) as total_comprou,
+           SUM(CASE WHEN tipo_destino='interno' AND (comprou=0 OR comprou IS NULL) THEN 1 ELSE 0 END) as total_nao_comprou
+         FROM curso_cliques ${whereSql}`,
+        params
+      ) as any;
+
+      return res.json({ cliques: rows, resumo: resumo[0] });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao buscar relatório de cliques" });
+    }
+  }
+);

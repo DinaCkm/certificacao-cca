@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Navbar } from "@/components/Navbar";
 import { useCourses, CategoriaCurso, Curso, Pacote } from "@/contexts/CourseContext";
+import { cursosApi } from "@/lib/api";
+import { getSessaoId } from "@/lib/api";
 import {
   BookOpen, Clock, BarChart2, Star, Package, ExternalLink,
   ChevronRight, ArrowLeft, Search, Filter
@@ -33,7 +35,40 @@ const categoriaCor: Record<CategoriaCurso, string> = {
   outros: "#64748b",
 };
 
+// Registra o clique em "Comprar" (curso ou pacote) e redireciona o aluno:
+// - externo → abre o link da plataforma parceira em nova aba
+// - interno → leva para nossa página de pagamento, carregando o id do clique
+//   (usado depois para marcar a compra como concluída)
+async function comprarCurso(
+  navigate: (path: string) => void,
+  opts: { id: string | number; titulo: string; tipo: "interno" | "externo"; linkCompra: string; ehPacote?: boolean }
+) {
+  try {
+    const { id: cliqueId } = await cursosApi.registrarClique({
+      curso_id: opts.ehPacote ? undefined : Number(opts.id),
+      curso_titulo: opts.titulo,
+      tipo_destino: opts.tipo,
+      link_destino: opts.tipo === "externo" ? opts.linkCompra : undefined,
+      sessao_id: getSessaoId(),
+    });
+
+    if (opts.tipo === "externo") {
+      window.open(opts.linkCompra, "_blank", "noopener,noreferrer");
+    } else {
+      navigate(`/cursos/comprar/${opts.id}?clique=${cliqueId}${opts.ehPacote ? "&pacote=1" : ""}`);
+    }
+  } catch {
+    // Falha ao registrar o clique não deve travar a compra — ainda assim redireciona
+    if (opts.tipo === "externo") {
+      window.open(opts.linkCompra, "_blank", "noopener,noreferrer");
+    } else {
+      navigate(`/cursos/comprar/${opts.id}`);
+    }
+  }
+}
+
 function CursoCard({ curso }: { curso: Curso }) {
+  const [, navigate] = useLocation();
   const temImagem = curso.imagemUrl && curso.imagemUrl.trim() !== "";
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all group flex flex-col">
@@ -74,15 +109,13 @@ function CursoCard({ curso }: { curso: Curso }) {
           <span className="text-lg font-bold text-gray-900">
             {curso.preco === 0 ? "Gratuito" : `R$ ${curso.preco.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
           </span>
-          <a
-            href={curso.linkCompra}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => comprarCurso(navigate, { id: curso.id, titulo: curso.titulo, tipo: curso.tipo, linkCompra: curso.linkCompra })}
             className="flex items-center gap-1.5 text-sm font-bold text-white px-4 py-2 rounded-xl transition-all hover:opacity-90"
             style={{ background: `linear-gradient(135deg, ${categoriaCor[curso.categoria]} 0%, #2d5be3 100%)` }}
           >
-            Comprar <ExternalLink className="w-3.5 h-3.5" />
-          </a>
+            Comprar {curso.tipo === "externo" && <ExternalLink className="w-3.5 h-3.5" />}
+          </button>
         </div>
       </div>
     </div>
@@ -90,7 +123,8 @@ function CursoCard({ curso }: { curso: Curso }) {
 }
 
 function PacoteCard({ pacote, cursos }: { pacote: Pacote; cursos: Curso[] }) {
-  const cursosIncluidos = cursos.filter((c) => pacote.cursoIds.includes(c.id));
+  const [, navigate] = useLocation();
+  const cursosIncluidos = cursos.filter((c) => pacote.cursoIds.includes(String(c.id)));
   const precoTotal = cursosIncluidos.reduce((s, c) => s + c.preco, 0);
   const economia = precoTotal - pacote.preco;
 
@@ -135,12 +169,14 @@ function PacoteCard({ pacote, cursos }: { pacote: Pacote; cursos: Curso[] }) {
           </span>
         </div>
         <a
-          href={pacote.linkCompra}
-          target="_blank"
-          rel="noopener noreferrer"
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            comprarCurso(navigate, { id: pacote.id, titulo: pacote.nome, tipo: pacote.tipo, linkCompra: pacote.linkCompra, ehPacote: true });
+          }}
           className="flex items-center gap-1.5 text-sm font-bold bg-amber-400 text-amber-900 px-4 py-2.5 rounded-xl hover:bg-amber-300 transition-colors"
         >
-          Comprar pacote <ExternalLink className="w-3.5 h-3.5" />
+          Comprar pacote {pacote.tipo === "externo" && <ExternalLink className="w-3.5 h-3.5" />}
         </a>
       </div>
     </div>
