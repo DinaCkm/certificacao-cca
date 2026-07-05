@@ -44,7 +44,7 @@ function Carrossel({ imagens }: { imagens: CarrosselImagem[] }) {
 
   useEffect(() => {
     if (imagens.length <= 1) return;
-    timerRef.current = setInterval(() => setAtual(p => (p + 1) % imagens.length), 5000);
+    timerRef.current = setInterval(() => setAtual(p => (p + 1) % imagens.length), 15000);
     return () => clearInterval(timerRef.current);
   }, [imagens.length]);
 
