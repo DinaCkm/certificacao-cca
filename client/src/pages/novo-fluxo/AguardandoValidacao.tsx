@@ -7,7 +7,7 @@ import { useCertification } from "@/contexts/CertificationContext";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Clock, CheckCircle, Mail, FileText, Phone, HelpCircle,
+  Clock, CheckCircle, Mail, Phone, HelpCircle,
   BookOpen, Home, Calendar, Video, AlertCircle, RefreshCw,
   Award, ArrowRight, Upload, Loader2
 } from "lucide-react";
@@ -581,12 +581,6 @@ export function AguardandoValidacao() {
           <Card>
             <CardContent className="p-5">
               <div className="space-y-2">
-                {statusReal === "validacao" && (
-                  <Button variant="outline" size="sm" className="w-full text-xs"
-                    onClick={() => navigate("/novo-fluxo/upload-documentos")}>
-                    <FileText className="w-3.5 h-3.5 mr-1.5" /> Reenviar documentos
-                  </Button>
-                )}
                 <Button variant="ghost" size="sm" className="w-full text-xs text-muted-foreground"
                   onClick={() => navigate("/novo-fluxo")}>
                   <Home className="w-3.5 h-3.5 mr-1.5" /> Voltar ao início
