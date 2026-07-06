@@ -226,6 +226,18 @@ export function Cadastro() {
     }
   };
 
+  // Cadastro é único por pessoa — se ela já está autenticada como candidata
+  // de verdade e o perfil está completo, o sistema não exige nenhum clique:
+  // avança sozinho depois de uma breve pausa (só pra dar tempo de perceber
+  // e cancelar, caso os dados mostrados não sejam os dela — ex: sessão
+  // errada). Clicar em qualquer um dos botões cancela o avanço automático.
+  const [autoContinuarCancelado, setAutoContinuarCancelado] = useState(false);
+  useEffect(() => {
+    if (!modoConfirmacao || autoContinuarCancelado) return;
+    const timer = setTimeout(() => { handleConfirmar(); }, 2500);
+    return () => clearTimeout(timer);
+  }, [modoConfirmacao, autoContinuarCancelado]);
+
   const handleSubmit = async () => {
     if (!validate()) {
       toast({ title: "Preencha todos os campos obrigatórios", variant: "destructive" });
@@ -390,7 +402,8 @@ export function Cadastro() {
               <h2 className="font-semibold text-foreground">Você já tem cadastro conosco</h2>
             </div>
             <p className="text-sm text-muted-foreground mb-5">
-              Seu cadastro é único — os dados abaixo já estão registrados e valem para qualquer certificação. Confira e continue.
+              Seu cadastro é único — os dados abaixo já estão registrados e valem para qualquer certificação.
+              {!autoContinuarCancelado && !enviando && " Vamos continuar automaticamente em instantes."}
             </p>
 
             <div className="grid sm:grid-cols-2 gap-4 mb-6">
@@ -406,15 +419,15 @@ export function Cadastro() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button className="flex-1 bg-blue-900 hover:bg-blue-800" size="lg" onClick={handleConfirmar} disabled={enviando}>
-                {enviando ? "Confirmando..." : "Confirmar e continuar →"}
+              <Button className="flex-1 bg-blue-900 hover:bg-blue-800" size="lg" onClick={() => { setAutoContinuarCancelado(true); handleConfirmar(); }} disabled={enviando}>
+                {enviando ? "Continuando..." : "Continuar agora →"}
               </Button>
-              <Button variant="outline" size="lg" onClick={() => setModoConfirmacao(false)}>
+              <Button variant="outline" size="lg" onClick={() => { setAutoContinuarCancelado(true); setModoConfirmacao(false); }} disabled={enviando}>
                 Meus dados mudaram
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-3">
-              Precisa corrigir algo? Clique em "Meus dados mudaram" — a alteração vale para você, não só para esta certificação.
+              Precisa corrigir algo antes de continuar? Clique em "Meus dados mudaram" — a alteração vale para você, não só para esta certificação.
             </p>
           </CardContent>
         </Card>
