@@ -291,9 +291,16 @@ export function UploadDocumentos() {
       {obrigatoriosPendentes.length > 0 && (
         <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
           <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
-          <p className="text-xs text-red-700">
-            <strong>Atenção:</strong>             Você ainda precisa enviar {obrigatoriosPendentes.length} documento(s) obrigatório(s) para prosseguir para a validação.
-          </p>
+          <div className="text-xs text-red-700">
+            <p>
+              <strong>Atenção:</strong> Você ainda precisa enviar {obrigatoriosPendentes.length} documento(s) obrigatório(s) para prosseguir para a validação:
+            </p>
+            <ul className="list-disc list-inside mt-1.5 space-y-0.5">
+              {obrigatoriosPendentes.map((d) => (
+                <li key={d.id}>{d.nome}</li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
 
