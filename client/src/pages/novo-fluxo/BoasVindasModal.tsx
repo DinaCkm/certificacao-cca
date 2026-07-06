@@ -4,8 +4,6 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { api } from "@/lib/api";
 import { AlertCircle, Eye, EyeOff, Sparkles } from "lucide-react";
 
 interface BoasVindasModalProps {
@@ -20,14 +18,12 @@ function formatCPF(v: string) {
 
 export function BoasVindasModal({ open, onClose, onSuccess }: BoasVindasModalProps) {
   const [, navigate] = useLocation();
-  const { toast } = useToast();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [cpf, setCpf] = useState("");
   const [senha, setSenha] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [confirmarSenha, setConfirmarSenha] = useState("");
-  const [verificando, setVerificando] = useState(false);
   const [erro, setErro] = useState("");
 
   const handleCPF = (v: string) => { setCpf(formatCPF(v)); setErro(""); };
@@ -40,36 +36,15 @@ export function BoasVindasModal({ open, onClose, onSuccess }: BoasVindasModalPro
     if (!senha || senha.length < 8) { setErro("A senha deve ter no mínimo 8 caracteres."); return; }
     if (senha !== confirmarSenha) { setErro("As senhas não conferem."); return; }
 
-    setVerificando(true);
-    try {
-      // Verifica se o CPF/email já existe no banco
-      const cpfLimpo = cpf.replace(/\D/g, "");
-      const res = await fetch("/api/auth/verificar-cadastro", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, cpf: cpfLimpo }),
-      });
-      const data = await res.json();
-
-      if (data.existe) {
-        // Já tem cadastro — redireciona para login
-        toast({
-          title: "Você já tem cadastro!",
-          description: "Encontramos seu cadastro. Entre com sua senha para continuar seu processo.",
-        });
-        onClose();
-        navigate("/novo-fluxo");
-        return;
-      }
-
-      // Novo candidato — passa os dados para pré-preencher o cadastro
-      onSuccess({ nome, email, cpf, senha });
-    } catch {
-      // Se a rota não existir ainda, apenas passa os dados
-      onSuccess({ nome, email, cpf, senha });
-    } finally {
-      setVerificando(false);
-    }
+    // O CPF já foi verificado ANTES de chegar aqui (tela de "Vamos começar",
+    // antes de abrir este mini-cadastro) — checar de novo aqui, olhando
+    // e-mail OU CPF, causava falso positivo quando o e-mail já tinha sido
+    // usado em outro cadastro (mesmo com CPF novo), jogando o candidato pra
+    // uma tela de login tentando a senha ERRADA (a que ele acabou de criar,
+    // não a da conta antiga) e mostrando "e-mail ou senha incorretos" sem
+    // explicação. Se o e-mail realmente colidir com outra conta, isso é
+    // detectado de forma clara mais à frente, no envio final da ficha.
+    onSuccess({ nome, email, cpf, senha });
   };
 
   return (
@@ -145,8 +120,8 @@ export function BoasVindasModal({ open, onClose, onSuccess }: BoasVindasModalPro
             <p className="text-xs text-gray-400 mt-1">Você usará esta senha para acompanhar seu processo.</p>
           </div>
 
-          <Button className="w-full bg-blue-900 hover:bg-blue-800 mt-2" onClick={handleContinuar} disabled={verificando}>
-            {verificando ? "Verificando..." : "Quero me certificar →"}
+          <Button className="w-full bg-blue-900 hover:bg-blue-800 mt-2" onClick={handleContinuar}>
+            Quero me certificar →
           </Button>
 
           <p className="text-xs text-center text-gray-400">
