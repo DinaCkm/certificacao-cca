@@ -43,6 +43,80 @@ const ETAPAS = [
   { key: "concluido",        label: "Certificado emitido" },
 ];
 
+function ProcessoCertificacaoCard({ processo }: { processo: any }) {
+  const statusInfo = STATUS_LABEL[processo.status_geral] || { label: processo.status_geral, cor: "bg-gray-100 text-gray-600", emoji: "•" };
+  const etapaAtualIdx = ETAPAS.findIndex(e => e.key === processo.status_geral);
+
+  return (
+    <Card className="border-white/10" style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}>
+      <CardContent className="p-5">
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+          <p className="text-white font-semibold">{processo.certificacao_nome}</p>
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium w-fit ${statusInfo.cor}`}>
+            {statusInfo.emoji} {statusInfo.label}
+          </span>
+        </div>
+
+        {/* Timeline de progresso */}
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          {ETAPAS.map((etapa, idx) => {
+            const concluida = idx < etapaAtualIdx;
+            const atual = idx === etapaAtualIdx;
+            return (
+              <div key={etapa.key} className={`flex flex-col items-center p-2 rounded-xl text-center transition-all ${
+                atual ? "bg-blue-500/20 border border-blue-400/30" :
+                concluida ? "bg-green-500/10 border border-green-400/20" :
+                "bg-white/5 border border-white/5"
+              }`}>
+                <span className="text-base mb-0.5">
+                  {concluida ? "✅" : atual ? "▶️" : "⏳"}
+                </span>
+                <p className={`text-[11px] leading-tight ${atual ? "text-blue-200 font-semibold" : concluida ? "text-green-300" : "text-white/30"}`}>
+                  {etapa.label}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Informações adicionais do processo */}
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="bg-white/5 rounded-xl p-2.5 text-center">
+            <CreditCard className="w-4 h-4 text-blue-300 mx-auto mb-1" />
+            <p className="text-xs text-white/50">Pagamento 1</p>
+            <p className={`text-sm font-bold ${processo.pagamento1_realizado ? "text-green-400" : "text-white/30"}`}>
+              {processo.pagamento1_realizado ? "✓ Pago" : "Pendente"}
+            </p>
+          </div>
+          <div className="bg-white/5 rounded-xl p-2.5 text-center">
+            <FileText className="w-4 h-4 text-blue-300 mx-auto mb-1" />
+            <p className="text-xs text-white/50">Tentativas prova</p>
+            <p className="text-sm font-bold text-white">{processo.tentativas_prova || 0} / 2</p>
+          </div>
+          <div className="bg-white/5 rounded-xl p-2.5 text-center">
+            <CheckCircle className="w-4 h-4 text-blue-300 mx-auto mb-1" />
+            <p className="text-xs text-white/50">Entrevista</p>
+            <p className={`text-sm font-bold ${
+              processo.aprovado_entrevista === true ? "text-green-400" :
+              processo.aprovado_entrevista === false ? "text-red-400" : "text-white/30"
+            }`}>
+              {processo.aprovado_entrevista === true ? "✓ Aprovado" :
+               processo.aprovado_entrevista === false ? "✗ Reprovado" : "Pendente"}
+            </p>
+          </div>
+          <div className="bg-white/5 rounded-xl p-2.5 text-center">
+            <CreditCard className="w-4 h-4 text-blue-300 mx-auto mb-1" />
+            <p className="text-xs text-white/50">Pagamento 2</p>
+            <p className={`text-sm font-bold ${processo.pagamento2_realizado ? "text-green-400" : "text-white/30"}`}>
+              {processo.pagamento2_realizado ? "✓ Pago" : "Pendente"}
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function AdminCandidatoDetalhe() {
   const [, navigate] = useLocation();
   const [match, params] = useRoute("/novo-fluxo/admin/candidatos/:id");
@@ -104,8 +178,7 @@ export function AdminCandidatoDetalhe() {
     );
   }
 
-  const statusInfo = STATUS_LABEL[candidato.status_geral] || { label: "Sem processo", cor: "bg-gray-100 text-gray-600", emoji: "👤" };
-  const etapaAtualIdx = ETAPAS.findIndex(e => e.key === candidato.status_geral);
+  const processos: any[] = candidato.processos || [];
 
   return (
     <div className="min-h-screen p-6" style={{ background: "linear-gradient(180deg, #050a28 0%, #0a1f5e 45%, #1565c0 75%, #1976d2 100%)" }}>
@@ -209,79 +282,24 @@ export function AdminCandidatoDetalhe() {
             </CardContent>
           </Card>
 
-          {/* Status do processo */}
-          <Card className="border-white/10 md:col-span-2" style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}>
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-4">
-                <p className="text-xs font-semibold text-white/50 uppercase tracking-wide flex items-center gap-2">
-                  <Award className="w-3.5 h-3.5" /> Processo de Certificação
-                </p>
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${statusInfo.cor}`}>
-                  {statusInfo.emoji} {statusInfo.label}
-                </span>
+          {/* Processos de certificação — um card por certificação em andamento,
+              lado a lado (candidato pode ter várias simultâneas) */}
+          <div className="md:col-span-2">
+            <p className="text-xs font-semibold text-white/50 uppercase tracking-wide mb-3 flex items-center gap-2">
+              <Award className="w-3.5 h-3.5" /> Certificações em andamento {processos.length > 0 && `(${processos.length})`}
+            </p>
+            {processos.length === 0 ? (
+              <Card className="border-white/10" style={{ background: "rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}>
+                <CardContent className="p-5 text-center text-white/40 text-sm">
+                  Este candidato ainda não iniciou nenhum processo de certificação.
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-5">
+                {processos.map((p) => <ProcessoCertificacaoCard key={p.processo_id} processo={p} />)}
               </div>
-
-              {candidato.certificacao_nome && (
-                <p className="text-white font-semibold mb-4">{candidato.certificacao_nome}</p>
-              )}
-
-              {/* Timeline de progresso */}
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-5">
-                {ETAPAS.map((etapa, idx) => {
-                  const concluida = idx < etapaAtualIdx;
-                  const atual = idx === etapaAtualIdx;
-                  return (
-                    <div key={etapa.key} className={`flex flex-col items-center p-2.5 rounded-xl text-center transition-all ${
-                      atual ? "bg-blue-500/20 border border-blue-400/30" :
-                      concluida ? "bg-green-500/10 border border-green-400/20" :
-                      "bg-white/5 border border-white/5"
-                    }`}>
-                      <span className="text-lg mb-1">
-                        {concluida ? "✅" : atual ? "▶️" : "⏳"}
-                      </span>
-                      <p className={`text-xs leading-tight ${atual ? "text-blue-200 font-semibold" : concluida ? "text-green-300" : "text-white/30"}`}>
-                        {etapa.label}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Informações adicionais do processo */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="bg-white/5 rounded-xl p-3 text-center">
-                  <CreditCard className="w-4 h-4 text-blue-300 mx-auto mb-1" />
-                  <p className="text-xs text-white/50">Pagamento 1</p>
-                  <p className={`text-sm font-bold ${candidato.pagamento1_realizado ? "text-green-400" : "text-white/30"}`}>
-                    {candidato.pagamento1_realizado ? "✓ Pago" : "Pendente"}
-                  </p>
-                </div>
-                <div className="bg-white/5 rounded-xl p-3 text-center">
-                  <FileText className="w-4 h-4 text-blue-300 mx-auto mb-1" />
-                  <p className="text-xs text-white/50">Tentativas prova</p>
-                  <p className="text-sm font-bold text-white">{candidato.tentativas_prova || 0} / 2</p>
-                </div>
-                <div className="bg-white/5 rounded-xl p-3 text-center">
-                  <CheckCircle className="w-4 h-4 text-blue-300 mx-auto mb-1" />
-                  <p className="text-xs text-white/50">Entrevista</p>
-                  <p className={`text-sm font-bold ${
-                    candidato.aprovado_entrevista === true ? "text-green-400" :
-                    candidato.aprovado_entrevista === false ? "text-red-400" : "text-white/30"
-                  }`}>
-                    {candidato.aprovado_entrevista === true ? "✓ Aprovado" :
-                     candidato.aprovado_entrevista === false ? "✗ Reprovado" : "Pendente"}
-                  </p>
-                </div>
-                <div className="bg-white/5 rounded-xl p-3 text-center">
-                  <CreditCard className="w-4 h-4 text-blue-300 mx-auto mb-1" />
-                  <p className="text-xs text-white/50">Pagamento 2</p>
-                  <p className={`text-sm font-bold ${candidato.pagamento2_realizado ? "text-green-400" : "text-white/30"}`}>
-                    {candidato.pagamento2_realizado ? "✓ Pago" : "Pendente"}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
         </div>
 
         {/* Botão voltar */}

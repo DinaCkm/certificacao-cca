@@ -183,15 +183,14 @@ export function AdminCandidatos() {
                   <tr className="border-b border-white/10">
                     <th className="text-left px-4 py-3 text-xs font-semibold text-white/60 uppercase tracking-wide">Candidato</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-white/60 uppercase tracking-wide hidden md:table-cell">CPF</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-white/60 uppercase tracking-wide hidden lg:table-cell">Certificação</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-white/60 uppercase tracking-wide">Status no processo</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-white/60 uppercase tracking-wide">Certificações em andamento</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-white/60 uppercase tracking-wide hidden lg:table-cell">Cadastro</th>
                     <th className="px-4 py-3"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {candidatos.map((c, idx) => {
-                    const statusInfo = STATUS_LABEL[c.status_geral] || { label: "Sem processo", cor: "bg-gray-100 text-gray-500", emoji: "👤" };
+                    const processos: any[] = c.processos || [];
                     return (
                       <tr key={c.id} className={`border-b border-white/5 hover:bg-white/5 transition-colors ${!c.is_active ? "opacity-50" : ""}`}>
                         <td className="px-4 py-3">
@@ -208,12 +207,24 @@ export function AdminCandidatos() {
                           </div>
                         </td>
                         <td className="px-4 py-3 text-sm text-blue-200 hidden md:table-cell">{formatCPF(c.cpf)}</td>
-                        <td className="px-4 py-3 text-xs text-blue-200 hidden lg:table-cell">{c.certificacao_nome || "—"}</td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusInfo.cor}`}>
-                            <span>{statusInfo.emoji}</span>
-                            {statusInfo.label}
-                          </span>
+                          {processos.length === 0 ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                              👤 Sem processo
+                            </span>
+                          ) : (
+                            <div className="flex flex-col gap-1.5">
+                              {processos.map((p) => {
+                                const statusInfo = STATUS_LABEL[p.status_geral] || { label: p.status_geral, cor: "bg-gray-100 text-gray-500", emoji: "•" };
+                                return (
+                                  <span key={p.processo_id} className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium w-fit ${statusInfo.cor}`}>
+                                    <span>{statusInfo.emoji}</span>
+                                    <span className="font-semibold">{p.certificacao_nome}:</span> {statusInfo.label}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-xs text-blue-300 hidden lg:table-cell">
                           {new Date(c.created_at).toLocaleDateString("pt-BR")}

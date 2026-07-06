@@ -615,19 +615,15 @@ adminRouter.get("/candidatos",
   async (req, res) => {
     try {
       const { busca, status } = req.query as any;
+
+      // Um candidato pode ter várias certificações em andamento ao mesmo
+      // tempo agora — então primeiro pegamos os usuários (uma linha cada,
+      // sem duplicar por processo), e depois anexamos TODOS os processos
+      // de cada um numa segunda consulta.
       let sql = `
-        SELECT
-          u.id, u.full_name, u.email, u.cpf, u.is_active,
-          u.created_at,
-          cp.id as processo_id, cp.status_geral, cp.caminho_avaliacao,
-          cp.pagamento1_realizado, cp.pagamento2_realizado,
-          cp.tentativas_prova, cp.aprovado_entrevista,
-          ct.nome as certificacao_nome, ct.numero as cert_numero,
-          (SELECT COUNT(*) FROM tentativas_prova tp WHERE tp.user_id = u.id AND tp.aprovado = 1) as provas_aprovadas,
-          (SELECT COUNT(*) FROM tentativas_prova tp WHERE tp.user_id = u.id) as total_tentativas
+        SELECT DISTINCT u.id, u.full_name, u.email, u.cpf, u.is_active, u.created_at
         FROM users u
         LEFT JOIN candidato_processos cp ON cp.user_id = u.id
-        LEFT JOIN certification_types ct ON ct.id = cp.certification_type_id
         WHERE u.role_id = 1
       `;
       const params: any[] = [];
@@ -637,14 +633,50 @@ adminRouter.get("/candidatos",
         params.push(`%${busca}%`, `%${busca}%`, `%${busca}%`);
       }
       if (status) {
-        sql += ` AND cp.status_geral = ?`;
+        sql += ` AND EXISTS (SELECT 1 FROM candidato_processos cp2 WHERE cp2.user_id = u.id AND cp2.status_geral = ?)`;
         params.push(status);
       }
 
       sql += ` ORDER BY u.created_at DESC LIMIT 200`;
 
-      const [rows] = await db.execute(sql, params) as any;
-      return res.json({ candidatos: rows });
+      const [users] = await db.execute(sql, params) as any;
+
+      const userIds = users.map((u: any) => u.id);
+      const processosPorUsuario: Record<number, any[]> = {};
+
+      if (userIds.length > 0) {
+        const [processos] = await db.execute(
+          `SELECT cp.user_id, cp.id as processo_id, cp.status_geral, cp.caminho_avaliacao,
+                  cp.pagamento1_realizado, cp.pagamento2_realizado,
+                  cp.tentativas_prova, cp.aprovado_entrevista,
+                  ct.nome as certificacao_nome, ct.numero as cert_numero,
+                  (SELECT COUNT(*) FROM tentativas_prova tp WHERE tp.user_id = cp.user_id AND tp.aprovado = 1) as provas_aprovadas,
+                  (SELECT COUNT(*) FROM tentativas_prova tp WHERE tp.user_id = cp.user_id) as total_tentativas
+           FROM candidato_processos cp
+           JOIN certification_types ct ON ct.id = cp.certification_type_id
+           WHERE cp.user_id IN (${userIds.map(() => "?").join(",")})
+           ORDER BY cp.iniciado_em DESC`,
+          userIds
+        ) as any;
+
+        for (const p of processos) {
+          (processosPorUsuario[p.user_id] ||= []).push(p);
+        }
+      }
+
+      const candidatos = users.map((u: any) => {
+        const processosDoUsuario = processosPorUsuario[u.id] || [];
+        return {
+          ...u,
+          processos: processosDoUsuario,
+          // Mantidos por compatibilidade com quem ainda lê os campos antigos
+          // (mostra o processo mais recente) — mas o certo é usar `processos`.
+          status_geral: processosDoUsuario[0]?.status_geral || null,
+          certificacao_nome: processosDoUsuario[0]?.certificacao_nome || null,
+        };
+      });
+
+      return res.json({ candidatos });
     } catch (err) {
       console.error(err);
       return res.status(500).json({ error: "Erro ao buscar candidatos" });
@@ -652,24 +684,41 @@ adminRouter.get("/candidatos",
   }
 );
 
-// GET /api/admin/candidatos/:id — detalhe do candidato
+// GET /api/admin/candidatos/:id — detalhe do candidato (TODAS as certificações
+// em andamento dele, lado a lado — não só a mais recente)
 adminRouter.get("/candidatos/:id",
   requireRole("administrador", "gestor_n1", "gestor_n2"),
   async (req, res) => {
     try {
       const [rows] = await db.execute(
-        `SELECT u.*, cp.status_geral, cp.caminho_avaliacao, cp.tentativas_prova,
-                cp.pagamento1_realizado, cp.pagamento2_realizado,
-                ct.nome as certificacao_nome, la.aceito_em as lgpd_aceito_em
+        `SELECT u.*, la.aceito_em as lgpd_aceito_em
          FROM users u
-         LEFT JOIN candidato_processos cp ON cp.user_id = u.id
-         LEFT JOIN certification_types ct ON ct.id = cp.certification_type_id
          LEFT JOIN lgpd_aceites la ON la.user_id = u.id
          WHERE u.id = ? AND u.role_id = 1`,
         [parseInt(req.params.id)]
       ) as any;
       if (!rows.length) return res.status(404).json({ error: "Candidato não encontrado" });
-      return res.json({ candidato: rows[0] });
+
+      const [processos] = await db.execute(
+        `SELECT cp.id as processo_id, cp.status_geral, cp.caminho_avaliacao, cp.tentativas_prova,
+                cp.pagamento1_realizado, cp.pagamento2_realizado, cp.aprovado_entrevista,
+                cp.iniciado_em, ct.nome as certificacao_nome, ct.numero as cert_numero
+         FROM candidato_processos cp
+         JOIN certification_types ct ON ct.id = cp.certification_type_id
+         WHERE cp.user_id = ?
+         ORDER BY cp.iniciado_em DESC`,
+        [parseInt(req.params.id)]
+      ) as any;
+
+      return res.json({
+        candidato: {
+          ...rows[0],
+          processos,
+          // Compatibilidade com quem ainda lê os campos antigos
+          status_geral: processos[0]?.status_geral || null,
+          certificacao_nome: processos[0]?.certificacao_nome || null,
+        },
+      });
     } catch (err) {
       return res.status(500).json({ error: "Erro ao buscar candidato" });
     }

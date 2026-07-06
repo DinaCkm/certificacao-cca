@@ -11,7 +11,7 @@ import { BoasVindasModal } from "@/pages/novo-fluxo/BoasVindasModal";
 import {
   Award, LogIn, ChevronRight, BookOpen, CheckCircle,
   Clock, FileText, CreditCard, Users, X, AlertCircle,
-  ChevronLeft
+  ChevronLeft, Plus
 } from "lucide-react";
 
 const STATUS_LABEL: Record<string, { label: string; cor: string; icone: React.ReactNode }> = {
@@ -169,9 +169,9 @@ function LoginModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (p
         return;
       }
 
-      // É candidato — segue normalmente
-      const { processo } = await (api.processo as any).retomar();
-      onSuccess(processo);
+      // É candidato — segue normalmente (pode ter várias certificações ativas)
+      const { processos } = await (api.processo as any).meus();
+      onSuccess(processos || []);
     } catch (err: any) { setErro(err.message || "E-mail ou senha incorretos."); }
     finally { setCarregando(false); }
   };
@@ -210,55 +210,74 @@ function LoginModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (p
   );
 }
 
-function PainelCandidato({ processo, onNovaCertificacao }: { processo: any; onNovaCertificacao: () => void }) {
-  const [, navigate] = useLocation(); const { logout } = useAuth();
+function CertificacaoAtivaCard({ processo }: { processo: any }) {
+  const [, navigate] = useLocation();
   const statusInfo = STATUS_LABEL[processo.statusGeral] || STATUS_LABEL["cadastro"];
   const rota = STATUS_ROTA[processo.statusGeral];
   const etapas = ["cadastro","pagamento1","upload","validacao","entrevista","pagamento2","concluido"];
   const etapasLabel = ["Cadastro","Pagamento 1","Documentos","Validação","Entrevista","Pagamento 2","Certificado"];
   const atualIdx = etapas.indexOf(processo.statusGeral);
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "linear-gradient(180deg, #050a28 0%, #0a1f5e 40%, #1a4a9e 100%)" }}>
-      <div className="w-full max-w-lg">
+    <Card className="shadow-xl border-0 overflow-hidden">
+      <div className="h-1 w-full" style={{ background: "linear-gradient(to right, #0a1f5e, #1a4a9e, #0099cc)" }} />
+      <CardContent className="p-6">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Certificação</p>
+        <p className="font-bold text-gray-900 text-lg leading-tight">{processo.certificacaoNome}</p>
+        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border mt-2 mb-5 ${statusInfo.cor}`}>
+          {statusInfo.icone}{statusInfo.label}
+        </div>
+        <div className="space-y-2 mb-6">
+          {etapas.map((_, idx) => {
+            const concluida = idx < atualIdx; const ativa = idx === atualIdx;
+            return (
+              <div key={idx} className="flex items-center gap-3">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${concluida ? "text-white" : ativa ? "text-white" : "bg-gray-200 text-gray-500"}`}
+                  style={concluida ? { background: "#1a4a9e" } : ativa ? { background: "linear-gradient(135deg, #0a1f5e, #1a4a9e)" } : {}}>
+                  {concluida ? "✓" : idx + 1}
+                </div>
+                <span className={`text-sm ${ativa ? "font-semibold" : concluida ? "text-gray-400 line-through" : "text-gray-400"}`}
+                  style={ativa ? { color: "#0a1f5e" } : {}}>{etapasLabel[idx]}</span>
+                {ativa && <span className="text-xs font-medium" style={{ color: "#1a4a9e" }}>← você está aqui</span>}
+              </div>
+            );
+          })}
+        </div>
+        {rota && (
+          <Button className="w-full text-white" size="lg" style={{ background: "linear-gradient(to right, #0a1f5e, #1a4a9e)" }} onClick={() => navigate(rota)}>
+            Continuar processo <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function PainelCandidato({ processos, onNovaCertificacao }: { processos: any[]; onNovaCertificacao: () => void }) {
+  const { logout } = useAuth();
+  const primeiroNome = processos[0]?.candidatoNome?.split(" ")[0];
+  return (
+    <div className="min-h-screen p-4 py-10" style={{ background: "linear-gradient(180deg, #050a28 0%, #0a1f5e 40%, #1a4a9e 100%)" }}>
+      <div className="w-full max-w-5xl mx-auto">
         <div className="text-center mb-8">
           <img src="/logo-anefac.png" alt="ANEFAC" className="h-14 mx-auto mb-4 drop-shadow-lg" onError={e => { (e.target as any).style.display='none'; }} />
-          <h1 className="text-2xl font-bold text-white">Olá, {processo.candidatoNome?.split(" ")[0]}!</h1>
-          <p className="text-blue-300 mt-1 text-sm">Bem-vindo à sua área de candidato</p>
+          <h1 className="text-2xl font-bold text-white">Olá, {primeiroNome}!</h1>
+          <p className="text-blue-300 mt-1 text-sm">
+            {processos.length > 1
+              ? `Você tem ${processos.length} certificações em andamento`
+              : "Bem-vindo à sua área de candidato"}
+          </p>
         </div>
-        <Card className="mb-4 shadow-2xl border-0 overflow-hidden">
-          <div className="h-1 w-full" style={{ background: "linear-gradient(to right, #0a1f5e, #1a4a9e, #0099cc)" }} />
-          <CardContent className="p-6">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Seu processo ativo</p>
-            <p className="font-bold text-gray-900 text-lg">{processo.certificacaoNome}</p>
-            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border mt-2 mb-5 ${statusInfo.cor}`}>
-              {statusInfo.icone}{statusInfo.label}
-            </div>
-            <div className="space-y-2 mb-6">
-              {etapas.map((_, idx) => {
-                const concluida = idx < atualIdx; const ativa = idx === atualIdx;
-                return (
-                  <div key={idx} className="flex items-center gap-3">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${concluida ? "text-white" : ativa ? "text-white" : "bg-gray-200 text-gray-500"}`}
-                      style={concluida ? { background: "#1a4a9e" } : ativa ? { background: "linear-gradient(135deg, #0a1f5e, #1a4a9e)" } : {}}>
-                      {concluida ? "✓" : idx + 1}
-                    </div>
-                    <span className={`text-sm ${ativa ? "font-semibold" : concluida ? "text-gray-400 line-through" : "text-gray-400"}`}
-                      style={ativa ? { color: "#0a1f5e" } : {}}>{etapasLabel[idx]}</span>
-                    {ativa && <span className="text-xs font-medium" style={{ color: "#1a4a9e" }}>← você está aqui</span>}
-                  </div>
-                );
-              })}
-            </div>
-            {rota ? (
-              <Button className="w-full text-white" size="lg" style={{ background: "linear-gradient(to right, #0a1f5e, #1a4a9e)" }} onClick={() => navigate(rota)}>
-                Continuar processo <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            ) : (
-              <Button className="w-full" variant="outline" onClick={onNovaCertificacao}>Iniciar nova certificação</Button>
-            )}
-          </CardContent>
-        </Card>
-        <button onClick={() => { logout(); onNovaCertificacao(); }} className="w-full text-sm text-blue-300 hover:text-white py-2 transition-colors">Sair da conta</button>
+
+        <div className={`grid gap-5 mb-6 ${processos.length > 1 ? "md:grid-cols-2 lg:grid-cols-3" : "max-w-lg mx-auto"}`}>
+          {processos.map((p) => <CertificacaoAtivaCard key={p.processo_id} processo={p} />)}
+        </div>
+
+        <div className="max-w-lg mx-auto space-y-2">
+          <Button className="w-full" variant="outline" onClick={onNovaCertificacao}>
+            <Plus className="w-4 h-4 mr-1.5" /> Iniciar outra certificação
+          </Button>
+          <button onClick={() => { logout(); onNovaCertificacao(); }} className="w-full text-sm text-blue-300 hover:text-white py-2 transition-colors">Sair da conta</button>
+        </div>
       </div>
     </div>
   );
@@ -269,7 +288,7 @@ export function AreaCandidato() {
   const { isAuthenticated } = useAuth();
   const [modalAberto, setModalAberto] = useState(false);
   const [boasVindasAberto, setBoasVindasAberto] = useState(false);
-  const [processoAtivo, setProcessoAtivo] = useState<any>(null);
+  const [processosAtivos, setProcessosAtivos] = useState<any[] | null>(null);
   const [imagens, setImagens] = useState<CarrosselImagem[]>([]);
 
   useEffect(() => {
@@ -278,7 +297,7 @@ export function AreaCandidato() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      (api.processo as any).retomar().then((res: any) => { if (res?.processo) setProcessoAtivo(res.processo); }).catch(() => {});
+      (api.processo as any).meus().then((res: any) => { setProcessosAtivos(res?.processos || []); }).catch(() => {});
     }
   }, [isAuthenticated]);
 
@@ -287,8 +306,8 @@ export function AreaCandidato() {
   const { user } = useAuth();
   const isAdminUser = user && rolesAdmin.includes((user as any).role);
 
-  if (isAuthenticated && processoAtivo && !isAdminUser) {
-    return <PainelCandidato processo={processoAtivo} onNovaCertificacao={() => navigate("/novo-fluxo/selecionar")} />;
+  if (isAuthenticated && processosAtivos && processosAtivos.length > 0 && !isAdminUser) {
+    return <PainelCandidato processos={processosAtivos} onNovaCertificacao={() => navigate("/novo-fluxo/selecionar")} />;
   }
 
   return (
@@ -446,9 +465,9 @@ export function AreaCandidato() {
 
       {modalAberto && (
         <LoginModal onClose={() => setModalAberto(false)}
-          onSuccess={(processo) => {
+          onSuccess={(processos) => {
             setModalAberto(false);
-            if (processo) setProcessoAtivo(processo);
+            if (processos && processos.length > 0) setProcessosAtivos(processos);
             else navigate("/novo-fluxo/selecionar");
           }} />
       )}
