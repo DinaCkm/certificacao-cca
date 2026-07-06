@@ -245,10 +245,16 @@ export const certificacoesApi = {
 };
 
 Object.assign(adminApi, {
-  salvarDocumentosExigidos: (slug: string, documentos: string[]) =>
-    request<{ message: string; documentos: string[] }>(
-      "PUT",
-      `/admin/certificacoes/${slug}/documentos-exigidos`,
-      { documentos }
-    ),
+  sincronizarCertificacao: (slug: string, body: {
+    nome: string;
+    numero?: number;
+    taxaAnalise?: number;
+    taxaEmissao?: number;
+    caminhoDefault?: string | null;
+    documentosExigidos: string[];
+  }) => request<{ message: string; criado: boolean; numero?: number }>(
+    "PUT",
+    `/admin/certificacoes/${slug}/sincronizar`,
+    body
+  ),
 });

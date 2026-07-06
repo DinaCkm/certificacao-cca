@@ -2090,34 +2090,64 @@ adminRouter.get("/relatorios/cursos-cliques",
 // valer de verdade na tela de Upload de Documentos do candidato (máx. 10 itens)
 // ══════════════════════════════════════════════════════════════════════════
 
-adminRouter.put("/certificacoes/:slug/documentos-exigidos",
+adminRouter.put("/certificacoes/:slug/sincronizar",
   requireRole("administrador", "gestor_n1"),
   async (req: Request, res: Response) => {
-    const { documentos } = req.body;
+    const { nome, numero, taxaAnalise, taxaEmissao, caminhoDefault, documentosExigidos } = req.body;
+    const slug = req.params.slug;
 
-    if (!Array.isArray(documentos)) {
-      return res.status(400).json({ error: "documentos deve ser uma lista de textos" });
-    }
-    const lista = documentos.map((d: any) => String(d).trim()).filter(Boolean).slice(0, 10);
-    if (documentos.length > 10) {
+    if (!nome) return res.status(400).json({ error: "Nome é obrigatório" });
+
+    const documentos = Array.isArray(documentosExigidos)
+      ? documentosExigidos.map((d: any) => String(d).trim()).filter(Boolean).slice(0, 10)
+      : [];
+    if (Array.isArray(documentosExigidos) && documentosExigidos.length > 10) {
       return res.status(400).json({ error: "Máximo de 10 documentos exigidos por certificação" });
     }
 
     try {
-      const [result] = await db.execute(
-        `UPDATE certification_types SET documentos_exigidos = ? WHERE slug = ?`,
-        [JSON.stringify(lista), req.params.slug]
+      const [existing] = await db.execute(
+        "SELECT id FROM certification_types WHERE slug = ?", [slug]
       ) as any;
 
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          error: "Certificação ainda não cadastrada em certification_types (sem taxa/número definidos no banco) — os documentos foram salvos só localmente até ela ser integrada.",
-        });
+      if (existing.length > 0) {
+        // Certificação já existe no banco (é o caso comum: editar uma já usada
+        // por candidatos) — atualiza os campos sem mexer no id.
+        await db.execute(
+          `UPDATE certification_types SET
+             nome = ?, numero = ?, taxa_analise = ?, taxa_emissao = ?,
+             caminho_default = ?, documentos_exigidos = ?
+           WHERE slug = ?`,
+          [nome, numero || null, taxaAnalise || 0, taxaEmissao || 0,
+           caminhoDefault || null, JSON.stringify(documentos), slug]
+        );
+        return res.json({ message: "Certificação sincronizada com o banco", criado: false });
       }
-      return res.json({ message: "Documentos exigidos atualizados", documentos: lista });
-    } catch (err) {
+
+      // Certificação nova, criada pelo admin só na tela — precisa passar a
+      // existir de verdade em certification_types, senão o candidato nunca
+      // conseguiria concluir o processo com ela (o backend exige o slug lá).
+      // O número é recalculado aqui (não confia no valor vindo do frontend)
+      // para não colidir com certificações que já existem só no banco.
+      const [maxNum] = await db.execute(
+        "SELECT COALESCE(MAX(numero), 0) as max FROM certification_types"
+      ) as any;
+      const proximoNumero = (maxNum[0]?.max || 0) + 1;
+
+      await db.execute(
+        `INSERT INTO certification_types
+          (slug, nome, numero, taxa_analise, taxa_emissao, caminho_default, documentos_exigidos)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [slug, nome, proximoNumero, taxaAnalise || 0, taxaEmissao || 0,
+         caminhoDefault || null, JSON.stringify(documentos)]
+      );
+      return res.json({ message: "Certificação criada no banco", criado: true, numero: proximoNumero });
+    } catch (err: any) {
       console.error(err);
-      return res.status(500).json({ error: "Erro ao salvar documentos exigidos" });
+      // Retorna o erro real do banco — se faltar alguma coluna obrigatória
+      // que a gente não conhece ainda, isso fica visível e acionável, em vez
+      // de falhar silenciosamente e o candidato só descobrir na hora de pagar.
+      return res.status(500).json({ error: "Erro ao sincronizar certificação com o banco", detalhe: err?.message });
     }
   }
 );

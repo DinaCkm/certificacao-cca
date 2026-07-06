@@ -660,13 +660,25 @@ export function AdminCertificacoes() {
       : [...certifications, form as Certification];
     salvarCertificacoes(updated);
 
-    // Documentos exigidos precisam valer de verdade na tela de Upload do
-    // candidato — por isso vão também para o banco (não só localStorage).
-    if (form.id) {
-      (adminApi as any).salvarDocumentosExigidos(form.id, (form.documentosExigidos || []).slice(0, 10))
-        .catch((err: any) => {
-          console.warn("Não foi possível sincronizar documentos exigidos com o banco:", err?.message);
-        });
+    // A certificação inteira precisa existir de verdade no banco (não só como
+    // conteúdo local) — senão um candidato nunca conseguiria concluir o
+    // processo com uma certificação criada agora há pouco pelo admin.
+    if (form.id && form.nome) {
+      (adminApi as any).sincronizarCertificacao(form.id, {
+        nome: form.nome,
+        numero: form.numero,
+        taxaAnalise: form.taxaAnalise,
+        taxaEmissao: form.taxaEmissao,
+        caminhoDefault: form.caminhoDefault ?? null,
+        documentosExigidos: (form.documentosExigidos || []).slice(0, 10),
+      }).catch((err: any) => {
+        console.warn("Não foi possível sincronizar a certificação com o banco:", err?.message);
+        alert(
+          "Atenção: a certificação foi salva localmente, mas houve um erro ao sincronizar com o banco de dados.\n\n" +
+          "Isso significa que o candidato pode não conseguir concluir o processo com ela ainda.\n\n" +
+          "Detalhe técnico: " + (err?.message || "erro desconhecido")
+        );
+      });
     }
 
     setEditing(null);
