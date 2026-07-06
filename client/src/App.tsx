@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch, useLocation } from "wouter";
+import { Route, Switch, useLocation, Redirect } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { UserDataProvider } from "./contexts/UserDataContext";
@@ -21,7 +21,6 @@ import { ComoFunciona } from "./pages/site/ComoFunciona";
 import { ComoFuncionaLideranca } from "./pages/site/ComoFuncionaLideranca";
 import { Simulacao } from "./pages/site/Simulacao";
 import LandingPage from "./pages/LandingPage";
-import { SelecionarCertificacao } from "./pages/novo-fluxo/SelecionarCertificacao";
 import { AreaCandidato } from "./pages/novo-fluxo/AreaCandidato";
 import { Cadastro } from "./pages/novo-fluxo/Cadastro";
 import { UploadDocumentos } from "./pages/novo-fluxo/UploadDocumentos";
@@ -118,7 +117,9 @@ function Router() {
 
       {/* ── Novo Fluxo ANEFAC ─────────────────────────────────────────────── */}
       <Route path={"/novo-fluxo"} component={AreaCandidato} />
-      <Route path={"/novo-fluxo/selecionar"} component={SelecionarCertificacao} />
+      <Route path={"/novo-fluxo/selecionar"}>
+        <Redirect to="/novo-fluxo/certificacoes" />
+      </Route>
       <Route path={"/novo-fluxo/certificacoes"} component={NovoFluxoCertificacoes} />
       <Route path={"/novo-fluxo/cadastro"} component={Cadastro} />
       <Route path={"/novo-fluxo/upload-documentos"} component={UploadDocumentos} />

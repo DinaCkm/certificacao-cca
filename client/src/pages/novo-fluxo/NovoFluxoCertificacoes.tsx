@@ -113,7 +113,7 @@ export function NovoFluxoCertificacoes() {
       toast({ title: "Bem-vindo de volta!" });
       setLoginAberto(false);
       if (processo) navigate("/novo-fluxo/" + (processo.statusGeral === "agendamento" ? "agendamento-entrevista" : processo.statusGeral === "validacao" ? "aguardando-validacao" : processo.statusGeral));
-      else navigate("/novo-fluxo/selecionar");
+      else navigate("/novo-fluxo/certificacoes");
     } catch (err: any) { setLoginErro(err.message || "E-mail ou senha incorretos."); }
     finally { setLoginCarregando(false); }
   };
@@ -131,8 +131,8 @@ export function NovoFluxoCertificacoes() {
       selecionarCertificacao(certSelecionada);
       navigate("/novo-fluxo/lgpd");
     } else {
-      // Sem certificação selecionada — vai para seleção de certificação
-      navigate("/novo-fluxo/selecionar");
+      // Sem certificação selecionada — vai para a página de certificações
+      navigate("/novo-fluxo/certificacoes");
     }
   };
 

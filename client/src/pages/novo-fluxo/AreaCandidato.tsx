@@ -314,7 +314,7 @@ export function AreaCandidato() {
   const isAdminUser = user && rolesAdmin.includes((user as any).role);
 
   if (isAuthenticated && processosAtivos && processosAtivos.length > 0 && !isAdminUser) {
-    return <PainelCandidato processos={processosAtivos} onNovaCertificacao={() => navigate("/novo-fluxo/selecionar")} />;
+    return <PainelCandidato processos={processosAtivos} onNovaCertificacao={() => navigate("/novo-fluxo/certificacoes")} />;
   }
 
   return (
@@ -475,7 +475,7 @@ export function AreaCandidato() {
           onSuccess={(processos) => {
             setModalAberto(false);
             if (processos && processos.length > 0) setProcessosAtivos(processos);
-            else navigate("/novo-fluxo/selecionar");
+            else navigate("/novo-fluxo/certificacoes");
           }} />
       )}
     </div>
