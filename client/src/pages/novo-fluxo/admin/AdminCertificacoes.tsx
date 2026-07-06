@@ -685,7 +685,7 @@ export function AdminCertificacoes() {
     setEditing(null);
   }
 
-  function handleDelete(id: string) {
+  function handleInativar(id: string) {
     if (!confirm(
       "Esta certificação vai ser marcada como INATIVA — ela some da lista de seleção para novos " +
       "candidatos, mas o histórico de quem já está no processo com ela é preservado.\n\n" +
@@ -904,9 +904,9 @@ export function AdminCertificacoes() {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDelete(cert.id)}
+                          onClick={() => handleInativar(cert.id)}
                           className="p-2 rounded-xl hover:bg-red-50 transition-colors text-gray-400 hover:text-red-600"
-                          title="Marcar como inativa (não apaga o histórico)"
+                          title="Inativar (não apaga o histórico)"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
