@@ -70,6 +70,14 @@ export function Cadastro() {
   const [mostrarConfirmar, setMostrarConfirmar] = useState(false);
   const [enviando, setEnviando] = useState(false);
 
+  // Quando o e-mail/CPF já tem conta, oferece login ali mesmo em vez de
+  // deixar a pessoa travada — ela pode ter se cadastrado antes e não ter
+  // concluído o processo.
+  const [jaCadastrado, setJaCadastrado] = useState(false);
+  const [senhaLogin, setSenhaLogin] = useState("");
+  const [erroLogin, setErroLogin] = useState("");
+  const [entrandoLogin, setEntrandoLogin] = useState(false);
+
   useEffect(() => {
     if (!processo.certificacaoId) navigate("/novo-fluxo");
   }, [processo.certificacaoId, navigate]);
@@ -101,6 +109,44 @@ export function Cadastro() {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Continuação comum após ter um token válido (seja de registro novo ou
+  // de login em uma conta já existente).
+  const continuarComToken = async (token: string, userId: number | null) => {
+    setToken(token);
+
+    sessionStorage.removeItem("anefac_pre_dados");
+
+    if (sessionStorage.getItem("anefac_lgpd_aceito")) {
+      fetch("/api/admin/lgpd/aceite", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("anefac_token")}`,
+        },
+      }).catch(() => {});
+      sessionStorage.removeItem("anefac_lgpd_aceito");
+    }
+
+    atualizarCandidato({
+      candidatoNome: form.nome,
+      candidatoEmail: form.email,
+      candidatoCPF: form.cpf,
+      candidatoTelefone: form.telefone,
+      candidatoEmpresa: form.empresa,
+      candidatoCargo: form.cargo,
+    });
+    atualizarStatus("pagamento1");
+
+    localStorage.setItem("anefac_candidato_dados", JSON.stringify({ ...form, userId }));
+
+    toast({
+      title: "Cadastro realizado com sucesso!",
+      description: "Seus dados foram salvos. Prossiga para o pagamento.",
+    });
+
+    navigate("/novo-fluxo/pagamento-analise");
+  };
+
   const handleSubmit = async () => {
     if (!validate()) {
       toast({ title: "Preencha todos os campos obrigatórios", variant: "destructive" });
@@ -109,7 +155,6 @@ export function Cadastro() {
 
     setEnviando(true);
     try {
-      // 1. Registra o candidato no banco
       const { token, userId } = await api.auth.register({
         email: form.email,
         password: form.senha,
@@ -117,55 +162,16 @@ export function Cadastro() {
         cpf: form.cpf.replace(/\D/g, ""),
         phone: form.telefone,
       });
-
-      // 2. Salva o token de autenticação
-      setToken(token);
-
-      // Limpa dados do mini-cadastro e LGPD
-      sessionStorage.removeItem("anefac_pre_dados");
-
-      // Registra aceite LGPD no banco se foi aceito
-      if (sessionStorage.getItem("anefac_lgpd_aceito")) {
-        fetch("/api/admin/lgpd/aceite", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${localStorage.getItem("anefac_token")}`,
-          },
-        }).catch(() => {});
-        sessionStorage.removeItem("anefac_lgpd_aceito");
-      }
-
-      // 3. Atualiza o contexto local (para manter compatibilidade com o fluxo atual)
-      atualizarCandidato({
-        candidatoNome: form.nome,
-        candidatoEmail: form.email,
-        candidatoCPF: form.cpf,
-        candidatoTelefone: form.telefone,
-        candidatoEmpresa: form.empresa,
-        candidatoCargo: form.cargo,
-      });
-      atualizarStatus("pagamento1");
-
-      // 4. Salva dados complementares localmente (empresa, cargo, formação)
-      // Estes campos serão migrados para o banco na Fase 3
-      localStorage.setItem("anefac_candidato_dados", JSON.stringify({
-        ...form,
-        userId,
-      }));
-
-      toast({
-        title: "Cadastro realizado com sucesso!",
-        description: "Seus dados foram salvos. Prossiga para o pagamento.",
-      });
-
-      navigate("/novo-fluxo/pagamento-analise");
+      await continuarComToken(token, userId);
     } catch (err: any) {
       const msg = err.message || "Erro ao realizar cadastro";
       if (msg.includes("já cadastrado")) {
+        // Não deixa a pessoa travada — ela pode ter começado antes e não
+        // concluído. Oferece login ali mesmo, com o e-mail já preenchido.
+        setJaCadastrado(true);
         toast({
           title: "E-mail ou CPF já cadastrado",
-          description: "Tente fazer login ou use outros dados.",
+          description: "Você já tem uma conta — entre com sua senha logo abaixo para continuar.",
           variant: "destructive",
         });
       } else {
@@ -173,6 +179,45 @@ export function Cadastro() {
       }
     } finally {
       setEnviando(false);
+    }
+  };
+
+  // Login inline quando o e-mail/CPF já tem conta. Se a pessoa já tiver um
+  // processo em andamento (de qualquer certificação), continua a partir de
+  // onde parou — não mistura com a certificação que ela clicou agora, pra
+  // não bagunçar os dados de um processo já iniciado.
+  const handleLoginInline = async () => {
+    setErroLogin("");
+    if (!senhaLogin) { setErroLogin("Digite sua senha."); return; }
+    setEntrandoLogin(true);
+    try {
+      const { token } = await api.auth.login(form.email, senhaLogin);
+      setToken(token);
+
+      const { processo } = await api.processo.retomar();
+
+      if (processo) {
+        const STATUS_ROTA: Record<string, string> = {
+          cadastro: "/novo-fluxo/cadastro", pagamento1: "/novo-fluxo/pagamento-analise",
+          upload: "/novo-fluxo/upload-documentos", validacao: "/novo-fluxo/aguardando-validacao",
+          agendamento: "/novo-fluxo/aguardando-validacao", prova: "/novo-fluxo/aguardando-validacao",
+          entrevista: "/novo-fluxo/aguardando-validacao", pagamento2: "/novo-fluxo/pagamento-emissao",
+          emissao: "/novo-fluxo/emissao-certificado", concluido: "/novo-fluxo/emissao-certificado",
+        };
+        toast({
+          title: `Você já tem um processo em andamento: ${processo.certificacaoNome}`,
+          description: "Vamos te levar direto para onde você parou.",
+        });
+        navigate(STATUS_ROTA[processo.statusGeral] || "/novo-fluxo");
+        return;
+      }
+
+      // Sem processo ativo — segue normalmente com a certificação atual
+      await continuarComToken(token, null);
+    } catch (err: any) {
+      setErroLogin(err.message || "E-mail ou senha incorretos.");
+    } finally {
+      setEntrandoLogin(false);
     }
   };
 
@@ -342,6 +387,36 @@ export function Cadastro() {
             <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
             <p className="text-xs text-amber-800">Seus dados serão utilizados exclusivamente para o processo de certificação ANEFAC e armazenados com segurança.</p>
           </div>
+
+          {jaCadastrado && (
+            <Card className="border-2 border-blue-200 bg-blue-50/50">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-2 mb-1">
+                  <Lock className="w-4 h-4 text-blue-700" />
+                  <h3 className="font-semibold text-blue-900 text-sm">Você já tem uma conta com esse e-mail ou CPF</h3>
+                </div>
+                <p className="text-xs text-blue-700 mb-4">
+                  Entre com sua senha para continuar — se você já tinha um processo em andamento, vamos te levar direto para onde parou.
+                </p>
+                <div className="flex gap-3 items-end flex-wrap">
+                  <div className="flex-1 min-w-[200px]">
+                    <Label className="text-xs">Senha de {form.email}</Label>
+                    <Input
+                      type="password"
+                      value={senhaLogin}
+                      onChange={(e) => setSenhaLogin(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleLoginInline()}
+                      placeholder="••••••••"
+                    />
+                  </div>
+                  <Button onClick={handleLoginInline} disabled={entrandoLogin} className="bg-blue-900 hover:bg-blue-800">
+                    {entrandoLogin ? "Entrando..." : "Entrar e continuar"}
+                  </Button>
+                </div>
+                {erroLogin && <p className="text-xs text-red-600 mt-2">{erroLogin}</p>}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
