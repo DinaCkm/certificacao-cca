@@ -9,7 +9,7 @@ import {
   ExternalLink, Maximize2, MailPlus, FileWarning
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { api } from "@/lib/api";
+import { api, certificacoesApi } from "@/lib/api";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 interface ChecklistItem { id: string; label: string; checked: boolean | null; }
@@ -34,6 +34,7 @@ interface Candidato {
   full_name: string;
   email: string;
   cert_nome: string;
+  cert_slug?: string;
   documentos: any[];
   documentos_complementares_atendidos?: { id: number; mensagem: string; atendida_em: string }[];
   tem_solicitacao_pendente?: boolean;
@@ -164,11 +165,26 @@ export function AdminValidacaoDocumental() {
       });
       const data = await res.json();
 
-      const nomesDoc = [
+      // Antes essa lista era fixa (só os 3 documentos da CCA), então um
+      // avaliador nunca via os documentos que o admin realmente configurou
+      // para a certificação daquele candidato. Agora busca a lista real por
+      // certificação — cai nos 3 padrões só se essa certificação nunca foi
+      // configurada com uma lista própria (compatibilidade com dados antigos).
+      let nomesDoc = [
         "Diploma de graduação ou pós-graduação",
         "Declaração da empresa atual comprovando experiência",
         "Código de Conduta ANEFAC assinado",
       ];
+      if (c.cert_slug) {
+        try {
+          const { documentosExigidos } = await certificacoesApi.documentosExigidos();
+          if (documentosExigidos?.[c.cert_slug]?.length > 0) {
+            nomesDoc = documentosExigidos[c.cert_slug];
+          }
+        } catch {
+          // Falha na busca — mantém a lista padrão como fallback
+        }
+      }
 
       // Admin vê avaliação completa de ambos; avaliador vê só a sua
       const lista: DocAvaliacao[] = nomesDoc.map((nome, idx) => {
