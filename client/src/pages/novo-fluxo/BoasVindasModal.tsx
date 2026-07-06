@@ -10,17 +10,18 @@ interface BoasVindasModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess: (dados: { nome: string; email: string; cpf: string; senha: string }) => void;
+  cpfVerificado?: string; // CPF já checado na etapa anterior — trava o campo pra não burlar a verificação
 }
 
 function formatCPF(v: string) {
   return v.replace(/\D/g, "").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})/, "$1-$2").slice(0, 14);
 }
 
-export function BoasVindasModal({ open, onClose, onSuccess }: BoasVindasModalProps) {
+export function BoasVindasModal({ open, onClose, onSuccess, cpfVerificado }: BoasVindasModalProps) {
   const [, navigate] = useLocation();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
-  const [cpf, setCpf] = useState("");
+  const [cpf, setCpf] = useState(() => cpfVerificado ? formatCPF(cpfVerificado) : "");
   const [senha, setSenha] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [confirmarSenha, setConfirmarSenha] = useState("");
@@ -86,8 +87,18 @@ export function BoasVindasModal({ open, onClose, onSuccess }: BoasVindasModalPro
 
           <div>
             <Label>CPF</Label>
-            <Input value={cpf} onChange={e => handleCPF(e.target.value)} placeholder="000.000.000-00" />
-            <p className="text-xs text-gray-400 mt-1">Usado para identificar se você já tem cadastro conosco.</p>
+            <Input
+              value={cpf}
+              onChange={e => handleCPF(e.target.value)}
+              placeholder="000.000.000-00"
+              disabled={!!cpfVerificado}
+              className={cpfVerificado ? "bg-gray-50 text-gray-500" : ""}
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              {cpfVerificado
+                ? "Já verificamos esse CPF na etapa anterior — por isso não pode ser alterado aqui."
+                : "Usado para identificar se você já tem cadastro conosco."}
+            </p>
           </div>
 
           <div>

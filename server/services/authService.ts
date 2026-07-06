@@ -21,14 +21,23 @@ export async function registerUser(data: {
   cpf: string;
   phone?: string;
 }) {
-  // Verifica duplicidade
+  // Verifica duplicidade — checando e-mail e CPF separadamente pra poder
+  // dizer exatamente qual dos dois já existe, em vez de uma mensagem genérica
   const [existing] = await db.execute(
-    "SELECT id FROM users WHERE email = ? OR cpf = ?",
+    "SELECT email, cpf FROM users WHERE email = ? OR cpf = ?",
     [data.email, data.cpf]
   ) as any;
 
   if (existing.length > 0) {
-    throw new Error("E-mail ou CPF já cadastrado");
+    const emailExiste = existing.some((u: any) => u.email === data.email);
+    const cpfExiste = existing.some((u: any) => u.cpf === data.cpf);
+    if (emailExiste && cpfExiste) {
+      throw new Error("Este e-mail e este CPF já estão cadastrados em nossa base de dados.");
+    } else if (emailExiste) {
+      throw new Error("Este e-mail já está cadastrado em nossa base de dados.");
+    } else {
+      throw new Error("Este CPF já existe em nossa base de dados.");
+    }
   }
 
   const password_hash = await bcrypt.hash(data.password, 12);

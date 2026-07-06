@@ -468,6 +468,7 @@ export function NovoFluxoCertificacoes() {
           open={boasVindasAberto}
           onClose={() => setBoasVindasAberto(false)}
           onSuccess={handleBoasVindasSuccess}
+          cpfVerificado={vCpf.replace(/\D/g, "")}
         />
       )}
     </div>

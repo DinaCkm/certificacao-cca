@@ -98,6 +98,7 @@ export function Cadastro() {
   // deixar a pessoa travada — ela pode ter se cadastrado antes e não ter
   // concluído o processo.
   const [jaCadastrado, setJaCadastrado] = useState(false);
+  const [motivoDuplicado, setMotivoDuplicado] = useState("");
   const [senhaLogin, setSenhaLogin] = useState("");
   const [erroLogin, setErroLogin] = useState("");
   const [entrandoLogin, setEntrandoLogin] = useState(false);
@@ -203,13 +204,15 @@ export function Cadastro() {
       await continuarComToken(token, userId);
     } catch (err: any) {
       const msg = err.message || "Erro ao realizar cadastro";
-      if (msg.includes("já cadastrado")) {
+      if (msg.includes("cadastrado") || msg.includes("já existe")) {
         // Não deixa a pessoa travada — ela pode ter começado antes e não
         // concluído. Oferece login ali mesmo, com o e-mail já preenchido.
+        // A mensagem já vem específica do backend (e-mail x CPF x ambos).
         setJaCadastrado(true);
+        setMotivoDuplicado(msg);
         toast({
-          title: "E-mail ou CPF já cadastrado",
-          description: "Você já tem uma conta — entre com sua senha logo abaixo para continuar.",
+          title: msg,
+          description: "Se essa conta é sua, entre com sua senha logo abaixo para continuar.",
           variant: "destructive",
         });
       } else {
@@ -432,7 +435,7 @@ export function Cadastro() {
               <CardContent className="p-5">
                 <div className="flex items-center gap-2 mb-1">
                   <Lock className="w-4 h-4 text-blue-700" />
-                  <h3 className="font-semibold text-blue-900 text-sm">Você já tem uma conta com esse e-mail ou CPF</h3>
+                  <h3 className="font-semibold text-blue-900 text-sm">{motivoDuplicado || "Você já tem uma conta com esse e-mail ou CPF"}</h3>
                 </div>
                 <p className="text-xs text-blue-700 mb-4">
                   Entre com sua senha para continuar — se você já tinha um processo em andamento, vamos te levar direto para onde parou.

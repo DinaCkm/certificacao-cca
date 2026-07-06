@@ -34,7 +34,7 @@ authRouter.post("/register", async (req: Request, res: Response) => {
       userId,
     });
   } catch (err: any) {
-    if (err.message.includes("já cadastrado")) {
+    if (err.message.includes("cadastrado") || err.message.includes("já existe")) {
       return res.status(409).json({ error: err.message });
     }
     console.error("Erro no registro:", err);
