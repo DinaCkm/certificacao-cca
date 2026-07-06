@@ -671,18 +671,58 @@ const CertificationContext = createContext<CertificationContextType | null>(null
 export function CertificationProvider({ children }: { children: React.ReactNode }) {
   const [certifications, setCertifications] = useState<Certification[]>(loadCertifications);
 
-  // Documentos exigidos: campo que precisa ser real (não só marketing), pois
-  // alimenta a tela de Upload de Documentos do candidato. Por isso sobrepõe o
-  // valor local com o que estiver salvo no banco (quando o admin já configurou
-  // aquela certificação por lá) — assim qualquer navegador vê a lista correta.
+  // Certificações precisam existir de verdade pra todo mundo, não só quem
+  // as criou. Antes só o campo documentosExigidos era sobreposto — mas se a
+  // certificação em si (nome, taxas, status) nunca existisse localmente
+  // (ex: criada do zero por outro admin, em outro navegador), o candidato
+  // nem via a opção de selecioná-la. Agora a lista inteira do banco é
+  // mesclada: atualiza os campos operacionais das que já existem localmente
+  // e ACRESCENTA as que só existem no banco (com campos de marketing vazios,
+  // já que descrição/cor/etc ainda são só um "CMS" local por enquanto).
   useEffect(() => {
-    certificacoesApi.documentosExigidos().then(({ documentosExigidos }) => {
-      if (!documentosExigidos || Object.keys(documentosExigidos).length === 0) return;
-      setCertifications((prev) =>
-        prev.map((c) =>
-          documentosExigidos[c.id] ? { ...c, documentosExigidos: documentosExigidos[c.id] } : c
-        )
-      );
+    certificacoesApi.publico().then(({ certificacoes }) => {
+      if (!certificacoes || certificacoes.length === 0) return;
+      setCertifications((prev) => {
+        const porId = new Map(prev.map((c) => [c.id, c]));
+        for (const db of certificacoes) {
+          const local = porId.get(db.id);
+          if (local) {
+            porId.set(db.id, {
+              ...local,
+              nome: db.nome || local.nome,
+              numero: db.numero || local.numero,
+              taxaAnalise: db.taxaAnalise,
+              taxaEmissao: db.taxaEmissao,
+              caminhoDefault: db.caminhoDefault,
+              status: db.status,
+              documentosExigidos: db.documentosExigidos.length > 0 ? db.documentosExigidos : local.documentosExigidos,
+            });
+          } else {
+            // Certificação que existe no banco mas este navegador nunca viu —
+            // entra na lista com os dados que temos; conteúdo de marketing
+            // (descrição, cor, etc.) fica vazio até alguém editar pela tela.
+            porId.set(db.id, {
+              id: db.id,
+              numero: db.numero,
+              nome: db.nome,
+              subtitulo: "",
+              descricao: "",
+              descricaoBreve: "",
+              publicoAlvo: "",
+              competencias: [],
+              preRequisitos: [],
+              documentosExigidos: db.documentosExigidos,
+              cursos: [],
+              taxaAnalise: db.taxaAnalise,
+              taxaEmissao: db.taxaEmissao,
+              caminhoDefault: db.caminhoDefault,
+              status: db.status,
+              cor: "blue",
+            });
+          }
+        }
+        return Array.from(porId.values()).sort((a, b) => a.numero - b.numero);
+      });
     }).catch(() => {
       // Sem conexão com a API — mantém o que já está no localStorage/default
     });

@@ -240,6 +240,9 @@ Object.assign(adminApi, {
 // ── Documentos exigidos por certificação (público + admin) ──────────────────────
 
 export const certificacoesApi = {
+  publico: () =>
+    request<{ certificacoes: any[] }>("GET", "/certificacoes/publico"),
+
   documentosExigidos: () =>
     request<{ documentosExigidos: Record<string, string[]> }>("GET", "/certificacoes/documentos-exigidos"),
 };
