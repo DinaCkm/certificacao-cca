@@ -151,6 +151,22 @@ authRouter.put("/meu-perfil", requireAuth, async (req: Request, res: Response) =
        education || null, experience_years || null, linkedin_url || null,
        req.user!.userId]
     );
+
+    // Propaga pra TODOS os processos de certificação ativos dessa pessoa —
+    // não só o que estiver sendo confirmado no momento. O cadastro é único
+    // por candidato; se ela corrige o nome/telefone/formação numa
+    // certificação, isso vale pra ela em todas as que já tem em andamento.
+    if (full_name || phone || education) {
+      await db.execute(
+        `UPDATE candidato_processos SET
+          candidato_nome = COALESCE(?, candidato_nome),
+          candidato_telefone = COALESCE(?, candidato_telefone),
+          formacao = COALESCE(?, formacao)
+         WHERE user_id = ? AND status_geral NOT IN ('concluido', 'encerrado')`,
+        [full_name || null, phone || null, education || null, req.user!.userId]
+      );
+    }
+
     return res.json({ message: "Perfil atualizado" });
   } catch (err) {
     console.error("Erro ao atualizar perfil:", err);
