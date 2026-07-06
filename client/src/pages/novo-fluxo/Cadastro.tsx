@@ -49,10 +49,11 @@ export function Cadastro() {
   const certAtual = getCertificacaoAtual();
 
   const preData = (() => { try { return JSON.parse(sessionStorage.getItem("anefac_pre_dados") || "null"); } catch { return null; } })();
+  const cpfPreVerificado = sessionStorage.getItem("anefac_cpf_prefill") || "";
 
   const [form, setForm] = useState<FormData>({
     nome: preData?.nome || "",
-    cpf: preData?.cpf || "",
+    cpf: preData?.cpf || cpfPreVerificado || "",
     email: preData?.email || "",
     senha: preData?.senha || "",
     telefone: "",
@@ -64,6 +65,29 @@ export function Cadastro() {
     linkedin: "",
     confirmarSenha: "",
   });
+
+  // Se o candidato já está logado (ex: voltou pra iniciar outra certificação,
+  // ou acabou de entrar pelo card de "já tenho conta"), traz os dados que ele
+  // já informou antes — nome, CPF, e-mail, telefone e também os profissionais
+  // (empresa, cargo, formação etc.), que agora ficam salvos no perfil dele,
+  // não mais perdidos no localStorage de outro navegador.
+  useEffect(() => {
+    if (!localStorage.getItem("anefac_token")) return;
+    api.auth.me().then(({ user }: any) => {
+      setForm((prev) => ({
+        ...prev,
+        nome: user.full_name || prev.nome,
+        cpf: user.cpf || prev.cpf,
+        email: user.email || prev.email,
+        telefone: user.phone || prev.telefone,
+        empresa: user.company || prev.empresa,
+        cargo: user.job_title || prev.cargo,
+        formacao: user.education || prev.formacao,
+        anosExperiencia: user.experience_years || prev.anosExperiencia,
+        linkedin: user.linkedin_url || prev.linkedin,
+      }));
+    }).catch(() => {});
+  }, []);
 
   const [errors, setErrors] = useState<Partial<FormData>>({});
   const [mostrarSenha, setMostrarSenha] = useState(false);
@@ -137,6 +161,20 @@ export function Cadastro() {
     });
     atualizarStatus("pagamento1");
 
+    // Dados profissionais são do CANDIDATO, não da certificação — salvos no
+    // perfil dele no banco, valem pra qualquer certificação que ele inicie
+    // depois (evita ter que redigitar tudo de novo).
+    api.auth.atualizarPerfil({
+      full_name: form.nome,
+      phone: form.telefone,
+      company: form.empresa,
+      job_title: form.cargo,
+      education: form.formacao,
+      experience_years: form.anosExperiencia,
+      linkedin_url: form.linkedin,
+    }).catch(() => {});
+
+    sessionStorage.removeItem("anefac_cpf_prefill");
     localStorage.setItem("anefac_candidato_dados", JSON.stringify({ ...form, userId }));
 
     toast({

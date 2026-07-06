@@ -23,6 +23,7 @@ export async function testConnection() {
     await runSolicitacaoDocumentosMigrations();
     await runCursosMigrations();
     await runDocumentosExigidosMigration();
+    await runPerfilCandidatoMigration();
   } catch (err) {
     console.error("❌ Erro ao conectar ao MySQL:", err);
     process.exit(1);
@@ -251,7 +252,38 @@ export async function runSolicitacaoDocumentosMigrations() {
   }
 }
 
-// ─── Cursos, Pacotes e rastreamento de cliques de compra ───────────────────────
+// ─── Perfil profissional do candidato (empresa, cargo, formação etc.) ──────────
+// Antes esses dados só existiam no localStorage do navegador que preencheu o
+// Cadastro (anefac_candidato_dados) — nunca chegavam ao banco. Por isso, ao
+// logar em outro navegador (ou pra iniciar uma nova certificação), o
+// candidato via os campos em branco e tinha que redigitar tudo de novo,
+// mesmo tendo acabado de informar isso na certificação anterior.
+export async function runPerfilCandidatoMigration() {
+  try {
+    const [cols] = await db.execute(
+      `SELECT COLUMN_NAME FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users'`
+    ) as any;
+    const nomes: string[] = cols.map((c: any) => c.COLUMN_NAME.toLowerCase());
+
+    const novasColunas: [string, string][] = [
+      ["company", "VARCHAR(255) NULL"],
+      ["job_title", "VARCHAR(255) NULL"],
+      ["education", "VARCHAR(255) NULL"],
+      ["experience_years", "VARCHAR(20) NULL"],
+      ["linkedin_url", "VARCHAR(255) NULL"],
+    ];
+
+    for (const [coluna, definicao] of novasColunas) {
+      if (!nomes.includes(coluna)) {
+        await db.execute(`ALTER TABLE users ADD COLUMN ${coluna} ${definicao}`);
+        console.log(`✅ Coluna users.${coluna} criada`);
+      }
+    }
+  } catch (err) {
+    console.warn("⚠️ Erro na migração de perfil do candidato:", err);
+  }
+}
 // Antes esses dados viviam só no localStorage do navegador (cada admin via uma
 // versão diferente, e o link de compra nunca chegava no navegador do aluno).
 // Agora tudo fica no banco, e cada clique em "Comprar" é registrado — seja o

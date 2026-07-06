@@ -64,6 +64,19 @@ export const api = {
       phone?: string;
     }) => request<{ token: string; userId: number }>("POST", "/auth/register", body),
 
+    verificarCpf: (cpf: string) =>
+      request<{ existe: boolean; email?: string }>("POST", "/auth/verificar-cpf", { cpf }),
+
+    atualizarPerfil: (body: {
+      full_name?: string;
+      phone?: string;
+      company?: string;
+      job_title?: string;
+      education?: string;
+      experience_years?: string;
+      linkedin_url?: string;
+    }) => request<{ message: string }>("PUT", "/auth/meu-perfil", body),
+
     login: (email: string, password: string) =>
       request<{ token: string; user: { id: number; email: string; full_name: string; role: string } }>(
         "POST",

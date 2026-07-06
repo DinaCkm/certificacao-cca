@@ -42,6 +42,37 @@ authRouter.post("/register", async (req: Request, res: Response) => {
   }
 });
 
+// ── POST /api/auth/verificar-cpf ──────────────────────────────────────────────
+// Usada logo quando o candidato clica em "Quero me certificar" — verifica ANTES
+// de mostrar a ficha completa se esse CPF já tem conta. Se tiver, o frontend
+// mostra um campo de senha ali mesmo e leva direto pra onde o candidato parou,
+// em vez de fazer preencher tudo de novo pra só então descobrir que já existe.
+
+authRouter.post("/verificar-cpf", async (req: Request, res: Response) => {
+  try {
+    const { cpf } = req.body;
+    if (!cpf) return res.status(400).json({ error: "CPF é obrigatório" });
+
+    const cpfLimpo = cpf.replace(/\D/g, "");
+    if (cpfLimpo.length !== 11) {
+      return res.status(400).json({ error: "CPF inválido" });
+    }
+
+    const [rows] = await db.execute(
+      "SELECT email FROM users WHERE cpf = ? AND role_id = 1",
+      [cpfLimpo]
+    ) as any;
+
+    if (rows.length === 0) {
+      return res.json({ existe: false });
+    }
+    return res.json({ existe: true, email: rows[0].email });
+  } catch (err) {
+    console.error("Erro ao verificar CPF:", err);
+    return res.status(500).json({ error: "Erro ao verificar CPF" });
+  }
+});
+
 // ── POST /api/auth/login ──────────────────────────────────────────────────────
 
 authRouter.post("/login", async (req: Request, res: Response) => {
@@ -73,6 +104,7 @@ authRouter.get("/me", requireAuth, async (req: Request, res: Response) => {
   try {
     const [rows] = await db.execute(
       `SELECT u.id, u.email, u.full_name, u.cpf, u.phone, u.created_at,
+              u.company, u.job_title, u.education, u.experience_years, u.linkedin_url,
               r.code as role, r.nome as role_nome, r.menu_permissoes
        FROM users u
        JOIN roles r ON r.id = u.role_id
@@ -94,6 +126,35 @@ authRouter.get("/me", requireAuth, async (req: Request, res: Response) => {
   } catch (err) {
     console.error("Erro no /me:", err);
     return res.status(500).json({ error: "Erro interno no servidor" });
+  }
+});
+
+// ── PUT /api/auth/meu-perfil ───────────────────────────────────────────────────
+// Atualiza os dados profissionais do candidato (empresa, cargo, formação,
+// anos de experiência, LinkedIn). Antes esses campos só existiam no
+// localStorage de quem preencheu o Cadastro — por isso nunca vinham
+// pré-preenchidos ao logar em outro navegador ou iniciar outra certificação.
+// Como são dados do CANDIDATO (não da certificação), ficam no próprio usuário
+// e valem pra qualquer certificação que ele inicie depois.
+
+authRouter.put("/meu-perfil", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { full_name, phone, company, job_title, education, experience_years, linkedin_url } = req.body;
+    await db.execute(
+      `UPDATE users SET
+        full_name = COALESCE(?, full_name),
+        phone = COALESCE(?, phone),
+        company = ?, job_title = ?, education = ?,
+        experience_years = ?, linkedin_url = ?
+       WHERE id = ?`,
+      [full_name || null, phone || null, company || null, job_title || null,
+       education || null, experience_years || null, linkedin_url || null,
+       req.user!.userId]
+    );
+    return res.json({ message: "Perfil atualizado" });
+  } catch (err) {
+    console.error("Erro ao atualizar perfil:", err);
+    return res.status(500).json({ error: "Erro ao atualizar perfil" });
   }
 });
 

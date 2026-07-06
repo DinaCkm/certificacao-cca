@@ -30,6 +30,79 @@ export function NovoFluxoCertificacoes() {
   const [loginCarregando, setLoginCarregando] = useState(false);
   const [loginErro, setLoginErro] = useState("");
 
+  // Verificação de CPF logo ao clicar em "Quero me certificar" — antes de
+  // mostrar qualquer ficha. Se o CPF já tiver conta, pede só a senha e leva
+  // direto pra onde o candidato parou; só manda pra ficha completa se o CPF
+  // for realmente novo.
+  const [verificarAberto, setVerificarAberto] = useState(false);
+  const [vCpf, setVCpf] = useState("");
+  const [vExiste, setVExiste] = useState<boolean | null>(null);
+  const [vEmail, setVEmail] = useState("");
+  const [vSenha, setVSenha] = useState("");
+  const [vErro, setVErro] = useState("");
+  const [vCarregando, setVCarregando] = useState(false);
+
+  const STATUS_ROTA: Record<string, string> = {
+    cadastro: "/novo-fluxo/cadastro", pagamento1: "/novo-fluxo/pagamento-analise",
+    upload: "/novo-fluxo/upload-documentos", validacao: "/novo-fluxo/aguardando-validacao",
+    agendamento: "/novo-fluxo/aguardando-validacao", prova: "/novo-fluxo/aguardando-validacao",
+    entrevista: "/novo-fluxo/aguardando-validacao", pagamento2: "/novo-fluxo/pagamento-emissao",
+    emissao: "/novo-fluxo/emissao-certificado", concluido: "/novo-fluxo/emissao-certificado",
+  };
+
+  const handleVerificarCpf = async () => {
+    setVErro("");
+    const cpfLimpo = vCpf.replace(/\D/g, "");
+    if (cpfLimpo.length !== 11) { setVErro("Digite um CPF válido."); return; }
+    setVCarregando(true);
+    try {
+      const { existe, email } = await api.auth.verificarCpf(cpfLimpo);
+      if (existe) {
+        setVExiste(true);
+        setVEmail(email || "");
+      } else {
+        // CPF novo — segue o fluxo normal (mini-cadastro/LGPD/ficha completa),
+        // já levando o CPF digitado pra não precisar redigitar depois.
+        sessionStorage.setItem("anefac_cpf_prefill", cpfLimpo);
+        setVerificarAberto(false);
+        iniciarFluxoNovoCadastro();
+      }
+    } catch (err: any) {
+      setVErro(err.message || "Erro ao verificar CPF.");
+    } finally {
+      setVCarregando(false);
+    }
+  };
+
+  const handleEntrarEContinuar = async () => {
+    setVErro("");
+    if (!vSenha) { setVErro("Digite sua senha."); return; }
+    setVCarregando(true);
+    try {
+      await login(vEmail, vSenha);
+      const status = await selecionarCertificacao(certSelecionada);
+      setVerificarAberto(false);
+      toast({ title: "Bem-vindo de volta!", description: "Vamos te levar direto para onde você parou." });
+      navigate(STATUS_ROTA[status] || "/novo-fluxo/cadastro");
+    } catch (err: any) {
+      setVErro(err.message || "E-mail ou senha incorretos.");
+    } finally {
+      setVCarregando(false);
+    }
+  };
+
+  // Fluxo original para quem ainda não tem conta (CPF novo)
+  const iniciarFluxoNovoCadastro = () => {
+    selecionarCertificacao(certSelecionada);
+    const preData = sessionStorage.getItem("anefac_pre_dados");
+    if (preData) {
+      const lgpdAceito = sessionStorage.getItem("anefac_lgpd_aceito");
+      navigate(lgpdAceito ? "/novo-fluxo/cadastro" : "/novo-fluxo/lgpd");
+      return;
+    }
+    setBoasVindasAberto(true);
+  };
+
   const handleLogin = async () => {
     setLoginErro("");
     if (!loginEmail || !loginSenha) { setLoginErro("Preencha e-mail e senha."); return; }
@@ -47,19 +120,8 @@ export function NovoFluxoCertificacoes() {
 
   const handleQueroMeCertificar = (cert: any) => {
     setCertSelecionada(cert);
-    selecionarCertificacao(cert);
-    // Se já tem dados do mini-cadastro na sessão, vai para LGPD
-    const preData = sessionStorage.getItem("anefac_pre_dados");
-    if (preData) {
-      const lgpdAceito = sessionStorage.getItem("anefac_lgpd_aceito");
-      if (lgpdAceito) {
-        navigate("/novo-fluxo/cadastro");
-      } else {
-        navigate("/novo-fluxo/lgpd");
-      }
-      return;
-    }
-    setBoasVindasAberto(true);
+    setVCpf(""); setVExiste(null); setVEmail(""); setVSenha(""); setVErro("");
+    setVerificarAberto(true);
   };
 
   const handleBoasVindasSuccess = (dados: any) => {
@@ -287,6 +349,77 @@ export function NovoFluxoCertificacoes() {
           </div>
         </div>
       </div>
+
+      {/* Modal de verificação de CPF — aparece assim que clica em "Quero me certificar" */}
+      {verificarAberto && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <div className="h-1 w-full" style={{ background: "linear-gradient(to right, #050a28, #1a4a9e, #0099cc)" }} />
+            <div className="p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Vamos começar</h2>
+                  <p className="text-sm text-gray-500">
+                    {vExiste ? "Você já tem uma conta com esse CPF" : "Digite seu CPF para continuar"}
+                  </p>
+                </div>
+                <button onClick={() => setVerificarAberto(false)} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {vErro && (
+                <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                  <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                  <p className="text-sm text-red-700">{vErro}</p>
+                </div>
+              )}
+
+              {!vExiste ? (
+                <div className="space-y-4">
+                  <div>
+                    <Label>CPF</Label>
+                    <Input
+                      value={vCpf}
+                      onChange={(e) => setVCpf(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleVerificarCpf()}
+                      placeholder="000.000.000-00"
+                      maxLength={14}
+                    />
+                  </div>
+                  <button onClick={handleVerificarCpf} disabled={vCarregando}
+                    className="w-full text-white font-bold py-3 rounded-xl transition-all hover:opacity-90 disabled:opacity-60"
+                    style={{ background: "linear-gradient(to right, #050a28, #1a4a9e)" }}>
+                    {vCarregando ? "Verificando..." : "Continuar"}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm text-gray-600">
+                    Entre com sua senha para continuar — se você já tinha um processo em andamento, vamos te levar direto para onde parou.
+                  </p>
+                  <div>
+                    <Label>Senha de {vEmail}</Label>
+                    <Input
+                      type="password"
+                      value={vSenha}
+                      onChange={(e) => setVSenha(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleEntrarEContinuar()}
+                      placeholder="••••••••"
+                      autoFocus
+                    />
+                  </div>
+                  <button onClick={handleEntrarEContinuar} disabled={vCarregando}
+                    className="w-full text-white font-bold py-3 rounded-xl transition-all hover:opacity-90 disabled:opacity-60"
+                    style={{ background: "linear-gradient(to right, #050a28, #1a4a9e)" }}>
+                    {vCarregando ? "Entrando..." : "Entrar e continuar"}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de login */}
       {loginAberto && (
