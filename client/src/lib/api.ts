@@ -236,3 +236,19 @@ Object.assign(adminApi, {
     return request<{ cliques: any[]; resumo: any }>("GET", `/admin/relatorios/cursos-cliques${qs ? `?${qs}` : ""}`);
   },
 });
+
+// ── Documentos exigidos por certificação (público + admin) ──────────────────────
+
+export const certificacoesApi = {
+  documentosExigidos: () =>
+    request<{ documentosExigidos: Record<string, string[]> }>("GET", "/certificacoes/documentos-exigidos"),
+};
+
+Object.assign(adminApi, {
+  salvarDocumentosExigidos: (slug: string, documentos: string[]) =>
+    request<{ message: string; documentos: string[] }>(
+      "PUT",
+      `/admin/certificacoes/${slug}/documentos-exigidos`,
+      { documentos }
+    ),
+});

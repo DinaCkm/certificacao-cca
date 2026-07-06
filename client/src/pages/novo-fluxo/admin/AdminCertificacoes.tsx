@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { adminApi } from "@/lib/api";
 
 const STATUS_CONFIG: Record<Certification["status"], {
   label: string; icon: React.ElementType; className: string; dot: string;
@@ -192,7 +193,8 @@ function CertEditor({
   }
 
   function setListField(field: "competencias" | "preRequisitos" | "documentosExigidos", value: string) {
-    set(field, value.split("\n").filter(Boolean));
+    const itens = value.split("\n").filter(Boolean);
+    set(field, field === "documentosExigidos" ? itens.slice(0, 10) : itens);
   }
 
   function setCF(field: keyof ComoFuncionaContent, value: unknown) {
@@ -391,8 +393,14 @@ function CertEditor({
                     />
                   </div>
                   <div>
-                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">
-                      Documentos exigidos <span className="text-gray-400 font-normal">(um por linha)</span>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block flex items-center justify-between">
+                      <span>Documentos exigidos <span className="text-gray-400 font-normal">(um por linha, máx. 10)</span></span>
+                      <span className={cn(
+                        "text-xs font-normal",
+                        (form.documentosExigidos || []).length >= 10 ? "text-red-500 font-semibold" : "text-gray-400"
+                      )}>
+                        {(form.documentosExigidos || []).length}/10
+                      </span>
                     </Label>
                     <textarea
                       value={(form.documentosExigidos || []).join("\n")}
@@ -401,6 +409,10 @@ function CertEditor({
                       placeholder={"Diploma de graduação\nCurrículo atualizado\nComprovante de experiência"}
                       className="w-full px-3 py-2.5 rounded-xl border border-input bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
                     />
+                    {(form.documentosExigidos || []).length >= 10 && (
+                      <p className="text-xs text-red-500 mt-1">Limite máximo de 10 documentos atingido — linhas extras são ignoradas.</p>
+                    )}
+                    <p className="text-xs text-gray-400 mt-1">Essa lista é o que o candidato realmente vê e precisa enviar na tela de Upload de Documentos.</p>
                   </div>
                 </div>
               </div>
@@ -647,6 +659,16 @@ export function AdminCertificacoes() {
       ? certifications.map((c) => (c.id === form.id ? { ...c, ...form } as Certification : c))
       : [...certifications, form as Certification];
     salvarCertificacoes(updated);
+
+    // Documentos exigidos precisam valer de verdade na tela de Upload do
+    // candidato — por isso vão também para o banco (não só localStorage).
+    if (form.id) {
+      (adminApi as any).salvarDocumentosExigidos(form.id, (form.documentosExigidos || []).slice(0, 10))
+        .catch((err: any) => {
+          console.warn("Não foi possível sincronizar documentos exigidos com o banco:", err?.message);
+        });
+    }
+
     setEditing(null);
   }
 

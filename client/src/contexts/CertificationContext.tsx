@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { api } from "@/lib/api";
+import { api, certificacoesApi } from "@/lib/api";
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -670,6 +670,23 @@ const CertificationContext = createContext<CertificationContextType | null>(null
 
 export function CertificationProvider({ children }: { children: React.ReactNode }) {
   const [certifications, setCertifications] = useState<Certification[]>(loadCertifications);
+
+  // Documentos exigidos: campo que precisa ser real (não só marketing), pois
+  // alimenta a tela de Upload de Documentos do candidato. Por isso sobrepõe o
+  // valor local com o que estiver salvo no banco (quando o admin já configurou
+  // aquela certificação por lá) — assim qualquer navegador vê a lista correta.
+  useEffect(() => {
+    certificacoesApi.documentosExigidos().then(({ documentosExigidos }) => {
+      if (!documentosExigidos || Object.keys(documentosExigidos).length === 0) return;
+      setCertifications((prev) =>
+        prev.map((c) =>
+          documentosExigidos[c.id] ? { ...c, documentosExigidos: documentosExigidos[c.id] } : c
+        )
+      );
+    }).catch(() => {
+      // Sem conexão com a API — mantém o que já está no localStorage/default
+    });
+  }, []);
 
   const [processo, setProcesso] = useState<CandidatoProcesso>(() => {
     try {

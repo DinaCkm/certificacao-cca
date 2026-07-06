@@ -9,6 +9,7 @@ import { processoRouter } from "./routes/processo.js";
 import { adminRouter } from "./routes/admin.js";
 import { provaRouter } from "./routes/prova.js";
 import { cursosPublicoRouter } from "./routes/cursosPublico.js";
+import { certificacoesPublicoRouter } from "./routes/certificacoesPublico.js";
 import fs from "fs";
 // multer loaded dynamically
 
@@ -234,6 +235,7 @@ async function startServer() {
   app.use("/api/admin", adminRouter);
   app.use("/api/prova", provaRouter);
   app.use("/api/cursos", cursosPublicoRouter);
+  app.use("/api/certificacoes", certificacoesPublicoRouter);
 
   // Health check
   app.get("/api/health", (_req, res) => {

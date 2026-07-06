@@ -2084,3 +2084,40 @@ adminRouter.get("/relatorios/cursos-cliques",
     }
   }
 );
+
+// ══════════════════════════════════════════════════════════════════════════
+// Documentos exigidos por certificação — o que o admin define aqui passa a
+// valer de verdade na tela de Upload de Documentos do candidato (máx. 10 itens)
+// ══════════════════════════════════════════════════════════════════════════
+
+adminRouter.put("/certificacoes/:slug/documentos-exigidos",
+  requireRole("administrador", "gestor_n1"),
+  async (req: Request, res: Response) => {
+    const { documentos } = req.body;
+
+    if (!Array.isArray(documentos)) {
+      return res.status(400).json({ error: "documentos deve ser uma lista de textos" });
+    }
+    const lista = documentos.map((d: any) => String(d).trim()).filter(Boolean).slice(0, 10);
+    if (documentos.length > 10) {
+      return res.status(400).json({ error: "Máximo de 10 documentos exigidos por certificação" });
+    }
+
+    try {
+      const [result] = await db.execute(
+        `UPDATE certification_types SET documentos_exigidos = ? WHERE slug = ?`,
+        [JSON.stringify(lista), req.params.slug]
+      ) as any;
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          error: "Certificação ainda não cadastrada em certification_types (sem taxa/número definidos no banco) — os documentos foram salvos só localmente até ela ser integrada.",
+        });
+      }
+      return res.json({ message: "Documentos exigidos atualizados", documentos: lista });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao salvar documentos exigidos" });
+    }
+  }
+);

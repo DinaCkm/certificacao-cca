@@ -22,6 +22,7 @@ export async function testConnection() {
     await runValidacaoMigrations();
     await runSolicitacaoDocumentosMigrations();
     await runCursosMigrations();
+    await runDocumentosExigidosMigration();
   } catch (err) {
     console.error("❌ Erro ao conectar ao MySQL:", err);
     process.exit(1);
@@ -325,5 +326,26 @@ export async function runCursosMigrations() {
     console.log("✅ Tabelas de cursos, pacotes e cliques verificadas/criadas");
   } catch (err) {
     console.warn("⚠️ Erro na migração de cursos/pacotes/cliques:", err);
+  }
+}
+
+// ─── Documentos exigidos por certificação ──────────────────────────────────────
+// Antes esse campo vivia só no localStorage da tela de admin "Editar Certificação"
+// (conteúdo de marketing/CMS client-side), então nunca chegava no navegador do
+// candidato. Agora fica em certification_types, ligado por slug, e serve de
+// fonte da verdade para a tela real de Upload de Documentos. Limite: 10 itens.
+export async function runDocumentosExigidosMigration() {
+  try {
+    const [cols] = await db.execute(
+      `SELECT COLUMN_NAME FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'certification_types'`
+    ) as any;
+    const nomes: string[] = cols.map((c: any) => c.COLUMN_NAME.toLowerCase());
+    if (!nomes.includes("documentos_exigidos")) {
+      await db.execute(`ALTER TABLE certification_types ADD COLUMN documentos_exigidos JSON NULL`);
+      console.log("✅ Coluna certification_types.documentos_exigidos criada");
+    }
+  } catch (err) {
+    console.warn("⚠️ Erro na migração de documentos_exigidos (certification_types pode não existir ainda):", err);
   }
 }
