@@ -193,7 +193,14 @@ function CertEditor({
   }
 
   function setListField(field: "competencias" | "preRequisitos" | "documentosExigidos", value: string) {
-    const itens = value.split("\n").filter(Boolean);
+    const linhas = value.split("\n");
+    // Mantém a ÚLTIMA linha mesmo se estiver vazia — é a que o usuário acabou
+    // de criar apertando Enter e ainda vai preencher. Se filtrássemos todas as
+    // vazias de uma vez (inclusive essa), o campo controlado "engolia" o Enter
+    // porque o valor era recalculado sem a quebra de linha recém-criada.
+    // Linhas vazias no MEIO da lista continuam sendo removidas normalmente.
+    const ultima = linhas[linhas.length - 1];
+    const itens = [...linhas.slice(0, -1).filter((l) => l.trim() !== ""), ultima];
     set(field, field === "documentosExigidos" ? itens.slice(0, 10) : itens);
   }
 
@@ -397,9 +404,9 @@ function CertEditor({
                       <span>Documentos exigidos <span className="text-gray-400 font-normal">(um por linha, máx. 10)</span></span>
                       <span className={cn(
                         "text-xs font-normal",
-                        (form.documentosExigidos || []).length >= 10 ? "text-red-500 font-semibold" : "text-gray-400"
+                        (form.documentosExigidos || []).filter((d) => d.trim() !== "").length >= 10 ? "text-red-500 font-semibold" : "text-gray-400"
                       )}>
-                        {(form.documentosExigidos || []).length}/10
+                        {(form.documentosExigidos || []).filter((d) => d.trim() !== "").length}/10
                       </span>
                     </Label>
                     <textarea
@@ -409,7 +416,7 @@ function CertEditor({
                       placeholder={"Diploma de graduação\nCurrículo atualizado\nComprovante de experiência"}
                       className="w-full px-3 py-2.5 rounded-xl border border-input bg-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
                     />
-                    {(form.documentosExigidos || []).length >= 10 && (
+                    {(form.documentosExigidos || []).filter((d) => d.trim() !== "").length >= 10 && (
                       <p className="text-xs text-red-500 mt-1">Limite máximo de 10 documentos atingido — linhas extras são ignoradas.</p>
                     )}
                     <p className="text-xs text-gray-400 mt-1">Essa lista é o que o candidato realmente vê e precisa enviar na tela de Upload de Documentos.</p>
@@ -654,7 +661,17 @@ export function AdminCertificacoes() {
     setEditing({ ...cert });
   }
 
-  function handleSave(form: Partial<Certification>) {
+  function handleSave(formBruto: Partial<Certification>) {
+    // Remove linhas em branco que só existiam temporariamente durante a
+    // digitação (ver setListField) — não devem ser salvas.
+    const limpar = (arr?: string[]) => (arr || []).map((s) => s.trim()).filter(Boolean);
+    const form: Partial<Certification> = {
+      ...formBruto,
+      competencias: limpar(formBruto.competencias),
+      preRequisitos: limpar(formBruto.preRequisitos),
+      documentosExigidos: limpar(formBruto.documentosExigidos).slice(0, 10),
+    };
+
     const updated = certifications.some((c) => c.id === form.id)
       ? certifications.map((c) => (c.id === form.id ? { ...c, ...form } as Certification : c))
       : [...certifications, form as Certification];
