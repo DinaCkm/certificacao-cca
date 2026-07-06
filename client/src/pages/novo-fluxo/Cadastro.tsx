@@ -78,10 +78,21 @@ export function Cadastro() {
   // O cadastro pessoal é único; só quem nunca teve conta preenche do zero.
   const [modoConfirmacao, setModoConfirmacao] = useState(false);
   const [carregandoPerfil, setCarregandoPerfil] = useState(!!localStorage.getItem("anefac_token"));
+  // Se o token salvo neste navegador pertence a um admin/gestor/avaliador
+  // (não a um candidato), NUNCA usa esses dados pra pré-preencher ou
+  // "confirmar" cadastro — isso já criou um bug real: a tela de confirmação
+  // mostrando os dados do Administrador, e um clique em "Confirmar" teria
+  // vinculado um processo de certificação à conta do admin, não a um
+  // candidato de verdade.
+  const [sessaoConflitante, setSessaoConflitante] = useState<{ nome: string; email: string; role: string } | null>(null);
 
   useEffect(() => {
     if (!localStorage.getItem("anefac_token")) { setCarregandoPerfil(false); return; }
     api.auth.me().then(({ user }: any) => {
+      if (user.role !== "candidato") {
+        setSessaoConflitante({ nome: user.full_name, email: user.email, role: user.role_nome || user.role });
+        return;
+      }
       setForm((prev) => ({
         ...prev,
         nome: user.full_name || prev.nome,
@@ -206,7 +217,7 @@ export function Cadastro() {
   // (que já existem, únicos, no perfil dele) a esta nova certificação.
   const handleConfirmar = async () => {
     const token = localStorage.getItem("anefac_token");
-    if (!token) { setModoConfirmacao(false); return; }
+    if (!token || sessaoConflitante) { setModoConfirmacao(false); return; }
     setEnviando(true);
     try {
       await continuarComToken(token, null);
@@ -223,7 +234,9 @@ export function Cadastro() {
 
     // Já autenticado (só editou dados do próprio perfil, veio do "Meus dados
     // mudaram") — não cria conta nova, só atualiza o perfil único dela.
-    const tokenExistente = localStorage.getItem("anefac_token");
+    // Nunca faz isso se o token for de admin/gestor/avaliador (sessão
+    // conflitante) — nesse caso, segue pro registro normal de candidato.
+    const tokenExistente = !sessaoConflitante ? localStorage.getItem("anefac_token") : null;
     if (tokenExistente) {
       setEnviando(true);
       try {
@@ -311,6 +324,35 @@ export function Cadastro() {
     return (
       <FluxoLayout currentStep={1} title="Cadastro do Candidato" backHref="/novo-fluxo" backLabel="← Voltar">
         <div className="flex items-center justify-center py-20 text-muted-foreground text-sm">Carregando seus dados...</div>
+      </FluxoLayout>
+    );
+  }
+
+  if (sessaoConflitante) {
+    return (
+      <FluxoLayout currentStep={1} title="Cadastro do Candidato" backHref="/novo-fluxo" backLabel="← Voltar">
+        <Card className="max-w-xl border-amber-200">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-3 text-amber-700">
+              <AlertCircle className="w-5 h-5" />
+              <h2 className="font-semibold">Esta sessão não é de um candidato</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mb-1">
+              Este navegador está autenticado como <strong>{sessaoConflitante.nome}</strong> ({sessaoConflitante.email}),
+              com perfil de <strong>{sessaoConflitante.role}</strong>.
+            </p>
+            <p className="text-sm text-muted-foreground mb-5">
+              Pra continuar o cadastro de um candidato, saia dessa conta primeiro — assim o sistema não mistura os dados
+              administrativos com o processo de certificação.
+            </p>
+            <Button
+              className="bg-blue-900 hover:bg-blue-800"
+              onClick={() => { localStorage.removeItem("anefac_token"); window.location.reload(); }}
+            >
+              Sair desta conta e continuar
+            </Button>
+          </CardContent>
+        </Card>
       </FluxoLayout>
     );
   }
