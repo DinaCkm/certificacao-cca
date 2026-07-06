@@ -71,8 +71,16 @@ export function Cadastro() {
   // já informou antes — nome, CPF, e-mail, telefone e também os profissionais
   // (empresa, cargo, formação etc.), que agora ficam salvos no perfil dele,
   // não mais perdidos no localStorage de outro navegador.
+  //
+  // Em vez de reabrir tudo como formulário editável (o que criava risco de
+  // divergência: a pessoa edita "cargo" aqui pra ESTA certificação, mas isso
+  // deveria valer pra ela como pessoa, em todas), mostra como CONFIRMAÇÃO.
+  // O cadastro pessoal é único; só quem nunca teve conta preenche do zero.
+  const [modoConfirmacao, setModoConfirmacao] = useState(false);
+  const [carregandoPerfil, setCarregandoPerfil] = useState(!!localStorage.getItem("anefac_token"));
+
   useEffect(() => {
-    if (!localStorage.getItem("anefac_token")) return;
+    if (!localStorage.getItem("anefac_token")) { setCarregandoPerfil(false); return; }
     api.auth.me().then(({ user }: any) => {
       setForm((prev) => ({
         ...prev,
@@ -86,7 +94,13 @@ export function Cadastro() {
         anosExperiencia: user.experience_years || prev.anosExperiencia,
         linkedin: user.linkedin_url || prev.linkedin,
       }));
-    }).catch(() => {});
+      // Só entra em modo confirmação se o perfil já tiver o essencial
+      // preenchido — sem isso, cai pro formulário normal (evita mostrar
+      // uma "confirmação" de dados vazios).
+      if (user.full_name && user.cpf && user.email) {
+        setModoConfirmacao(true);
+      }
+    }).catch(() => {}).finally(() => setCarregandoPerfil(false));
   }, []);
 
   const [errors, setErrors] = useState<Partial<FormData>>({});
@@ -117,14 +131,15 @@ export function Cadastro() {
 
   const validate = (): boolean => {
     const newErrors: Partial<FormData> = {};
+    const jaAutenticado = !!localStorage.getItem("anefac_token");
     if (!form.nome.trim()) newErrors.nome = "Nome é obrigatório";
     if (!form.cpf || form.cpf.length < 14) newErrors.cpf = "CPF inválido";
     if (!form.email || !form.email.includes("@")) newErrors.email = "E-mail inválido";
-    if (!form.senha || form.senha.length < 8) newErrors.senha = "Senha deve ter no mínimo 8 caracteres";
-    if (!form.confirmarSenha) newErrors.confirmarSenha = "Confirme sua senha";
-    else if (form.senha !== form.confirmarSenha) newErrors.confirmarSenha = "As senhas não coincidem";
-    if (!form.confirmarSenha) newErrors.confirmarSenha = "Confirme sua senha";
-    else if (form.senha !== form.confirmarSenha) newErrors.confirmarSenha = "As senhas não conferem";
+    if (!jaAutenticado) {
+      if (!form.senha || form.senha.length < 8) newErrors.senha = "Senha deve ter no mínimo 8 caracteres";
+      if (!form.confirmarSenha) newErrors.confirmarSenha = "Confirme sua senha";
+      else if (form.senha !== form.confirmarSenha) newErrors.confirmarSenha = "As senhas não conferem";
+    }
     if (!form.telefone || form.telefone.length < 14) newErrors.telefone = "Telefone inválido";
     if (!form.empresa.trim()) newErrors.empresa = "Empresa é obrigatória";
     if (!form.cargo.trim()) newErrors.cargo = "Cargo é obrigatório";
@@ -186,9 +201,36 @@ export function Cadastro() {
     navigate("/novo-fluxo/pagamento-analise");
   };
 
+  // Candidato já autenticado confirmando que os dados do perfil dele
+  // continuam corretos — não recadastra nada, só vincula esses dados
+  // (que já existem, únicos, no perfil dele) a esta nova certificação.
+  const handleConfirmar = async () => {
+    const token = localStorage.getItem("anefac_token");
+    if (!token) { setModoConfirmacao(false); return; }
+    setEnviando(true);
+    try {
+      await continuarComToken(token, null);
+    } finally {
+      setEnviando(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!validate()) {
       toast({ title: "Preencha todos os campos obrigatórios", variant: "destructive" });
+      return;
+    }
+
+    // Já autenticado (só editou dados do próprio perfil, veio do "Meus dados
+    // mudaram") — não cria conta nova, só atualiza o perfil único dela.
+    const tokenExistente = localStorage.getItem("anefac_token");
+    if (tokenExistente) {
+      setEnviando(true);
+      try {
+        await continuarComToken(tokenExistente, null);
+      } finally {
+        setEnviando(false);
+      }
       return;
     }
 
@@ -265,6 +307,79 @@ export function Cadastro() {
 
   if (!certAtual) return null;
 
+  if (carregandoPerfil) {
+    return (
+      <FluxoLayout currentStep={1} title="Cadastro do Candidato" backHref="/novo-fluxo" backLabel="← Voltar">
+        <div className="flex items-center justify-center py-20 text-muted-foreground text-sm">Carregando seus dados...</div>
+      </FluxoLayout>
+    );
+  }
+
+  if (modoConfirmacao) {
+    const campos: { label: string; valor: string; icon: any }[] = [
+      { label: "Nome completo", valor: form.nome, icon: User },
+      { label: "CPF", valor: form.cpf, icon: User },
+      { label: "E-mail", valor: form.email, icon: Mail },
+      { label: "Telefone", valor: form.telefone, icon: Phone },
+      { label: "Empresa atual", valor: form.empresa, icon: Building },
+      { label: "Cargo atual", valor: form.cargo, icon: Briefcase },
+      { label: "Formação", valor: form.formacao, icon: GraduationCap },
+    ];
+    return (
+      <FluxoLayout
+        currentStep={1}
+        title="Cadastro do Candidato"
+        subtitle={`Confirme seus dados para iniciar o processo da ${certAtual.nome}.`}
+        backHref="/novo-fluxo"
+        backLabel="← Voltar para seleção de certificação"
+      >
+        <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-blue-700 flex items-center justify-center text-white font-black text-lg">{certAtual.numero}</div>
+          <div>
+            <p className="text-sm font-bold text-blue-900">{certAtual.nome}</p>
+            <p className="text-xs text-blue-600">{certAtual.subtitulo}</p>
+          </div>
+        </div>
+
+        <Card className="max-w-2xl">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-1">
+              <User className="w-4 h-4 text-blue-700" />
+              <h2 className="font-semibold text-foreground">Você já tem cadastro conosco</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mb-5">
+              Seu cadastro é único — os dados abaixo já estão registrados e valem para qualquer certificação. Confira e continue.
+            </p>
+
+            <div className="grid sm:grid-cols-2 gap-4 mb-6">
+              {campos.map(({ label, valor, icon: Icon }) => (
+                <div key={label} className="flex items-start gap-2.5">
+                  <Icon className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{valor || "—"}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button className="flex-1 bg-blue-900 hover:bg-blue-800" size="lg" onClick={handleConfirmar} disabled={enviando}>
+                {enviando ? "Confirmando..." : "Confirmar e continuar →"}
+              </Button>
+              <Button variant="outline" size="lg" onClick={() => setModoConfirmacao(false)}>
+                Meus dados mudaram
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              Precisa corrigir algo? Clique em "Meus dados mudaram" — a alteração vale para você, não só para esta certificação.
+            </p>
+          </CardContent>
+        </Card>
+      </FluxoLayout>
+    );
+  }
+
   return (
     <FluxoLayout
       currentStep={1}
@@ -317,29 +432,33 @@ export function Cadastro() {
                   <Input id="telefone" value={form.telefone} onChange={(e) => handleChange("telefone", e.target.value)} placeholder="(11) 99999-9999" className={errors.telefone ? "border-red-400" : ""} />
                   {errors.telefone && <p className="text-xs text-red-500 mt-1">{errors.telefone}</p>}
                 </div>
-                <div>
-                  <Label htmlFor="senha">Senha de acesso *</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input id="senha" type={mostrarSenha ? "text" : "password"} value={form.senha} onChange={(e) => handleChange("senha", e.target.value)} placeholder="Mínimo 8 caracteres" className={`pl-9 pr-10 ${errors.senha ? "border-red-400" : ""}`} />
-                    <button type="button" onClick={() => setMostrarSenha(!mostrarSenha)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                      {mostrarSenha ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {errors.senha && <p className="text-xs text-red-500 mt-1">{errors.senha}</p>}
-                </div>
-                <div>
-                  <Label htmlFor="confirmarSenha">Confirmar senha *</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input id="confirmarSenha" type={mostrarConfirmar ? "text" : "password"} value={form.confirmarSenha} onChange={(e) => handleChange("confirmarSenha", e.target.value)} placeholder="Repita a senha" className={`pl-9 pr-10 ${errors.confirmarSenha ? "border-red-400" : ""}`} />
-                    <button type="button" onClick={() => setMostrarConfirmar(!mostrarConfirmar)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                      {mostrarConfirmar ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {errors.confirmarSenha && <p className="text-xs text-red-500 mt-1">{errors.confirmarSenha}</p>}
-                  <p className="text-xs text-muted-foreground mt-1">Você usará esta senha para acompanhar seu processo.</p>
-                </div>
+                {!localStorage.getItem("anefac_token") && (
+                  <>
+                    <div>
+                      <Label htmlFor="senha">Senha de acesso *</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input id="senha" type={mostrarSenha ? "text" : "password"} value={form.senha} onChange={(e) => handleChange("senha", e.target.value)} placeholder="Mínimo 8 caracteres" className={`pl-9 pr-10 ${errors.senha ? "border-red-400" : ""}`} />
+                        <button type="button" onClick={() => setMostrarSenha(!mostrarSenha)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                          {mostrarSenha ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      {errors.senha && <p className="text-xs text-red-500 mt-1">{errors.senha}</p>}
+                    </div>
+                    <div>
+                      <Label htmlFor="confirmarSenha">Confirmar senha *</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input id="confirmarSenha" type={mostrarConfirmar ? "text" : "password"} value={form.confirmarSenha} onChange={(e) => handleChange("confirmarSenha", e.target.value)} placeholder="Repita a senha" className={`pl-9 pr-10 ${errors.confirmarSenha ? "border-red-400" : ""}`} />
+                        <button type="button" onClick={() => setMostrarConfirmar(!mostrarConfirmar)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                          {mostrarConfirmar ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      {errors.confirmarSenha && <p className="text-xs text-red-500 mt-1">{errors.confirmarSenha}</p>}
+                      <p className="text-xs text-muted-foreground mt-1">Você usará esta senha para acompanhar seu processo.</p>
+                    </div>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
