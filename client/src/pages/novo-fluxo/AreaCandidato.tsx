@@ -253,19 +253,26 @@ function CertificacaoAtivaCard({ processo }: { processo: any }) {
 }
 
 function PainelCandidato({ processos, onNovaCertificacao }: { processos: any[]; onNovaCertificacao: () => void }) {
-  const { logout } = useAuth();
-  const primeiroNome = processos[0]?.candidatoNome?.split(" ")[0];
+  const { logout, user } = useAuth();
+  // Prioriza o nome do processo mais recente; se vier vazio (ex: registro
+  // antigo/corrompido), cai pro nome do perfil autenticado — nunca mostra
+  // "Olá, !" em branco, o que já causou confusão sobre qual conta estava ativa.
+  const nomeCompleto = processos[0]?.candidatoNome || user?.full_name || user?.email || "";
+  const primeiroNome = nomeCompleto.split(" ")[0];
   return (
     <div className="min-h-screen p-4 py-10" style={{ background: "linear-gradient(180deg, #050a28 0%, #0a1f5e 40%, #1a4a9e 100%)" }}>
       <div className="w-full max-w-5xl mx-auto">
         <div className="text-center mb-8">
           <img src="/logo-anefac.png" alt="ANEFAC" className="h-14 mx-auto mb-4 drop-shadow-lg" onError={e => { (e.target as any).style.display='none'; }} />
-          <h1 className="text-2xl font-bold text-white">Olá, {primeiroNome}!</h1>
+          <h1 className="text-2xl font-bold text-white">Olá{primeiroNome ? `, ${primeiroNome}` : ""}!</h1>
           <p className="text-blue-300 mt-1 text-sm">
             {processos.length > 1
               ? `Você tem ${processos.length} certificações em andamento`
               : "Bem-vindo à sua área de candidato"}
           </p>
+          {user?.email && (
+            <p className="text-blue-400/70 text-xs mt-2">Logado como <span className="font-medium text-blue-300">{user.email}</span></p>
+          )}
         </div>
 
         <div className={`grid gap-5 mb-6 ${processos.length > 1 ? "md:grid-cols-2 lg:grid-cols-3" : "max-w-lg mx-auto"}`}>

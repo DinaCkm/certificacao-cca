@@ -1,7 +1,8 @@
 import React from "react";
 import { useLocation } from "wouter";
 import { useCertification } from "@/contexts/CertificationContext";
-import { CheckCircle, ChevronRight, ArrowLeft } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { CheckCircle, ChevronRight, ArrowLeft, LogOut } from "lucide-react";
 
 interface FluxoLayoutProps {
   children: React.ReactNode;
@@ -42,6 +43,7 @@ export function FluxoLayout({
 }: FluxoLayoutProps) {
   const [, navigate] = useLocation();
   const { processo, getCertificacaoAtual } = useCertification();
+  const { user, logout } = useAuth();
   const certAtual = getCertificacaoAtual();
   const progress = Math.round(((currentStep - 1) / (STEPS.length - 1)) * 100);
 
@@ -90,6 +92,30 @@ export function FluxoLayout({
               <span className="text-xs font-semibold text-blue-800 max-w-[140px] truncate">
                 {certAtual.nome}
               </span>
+            </div>
+          )}
+
+          {/* Candidato logado — sempre visível, evita confusão sobre qual conta está ativa */}
+          {user && (
+            <div className="flex-shrink-0 flex items-center gap-2 pl-3 border-l border-gray-100">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-700 to-blue-900 flex items-center justify-center shrink-0">
+                <span className="text-white font-bold text-[11px]">
+                  {(user.full_name || user.email).charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div className="hidden lg:block leading-tight">
+                <p className="text-xs font-semibold text-gray-800 max-w-[140px] truncate">
+                  {user.full_name || user.email}
+                </p>
+                <p className="text-[10px] text-gray-400 max-w-[140px] truncate">{user.email}</p>
+              </div>
+              <button
+                onClick={logout}
+                title="Sair da conta"
+                className="text-gray-300 hover:text-red-500 transition-colors p-1"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
         </div>
