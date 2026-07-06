@@ -682,8 +682,20 @@ export function CertificationProvider({ children }: { children: React.ReactNode 
   useEffect(() => {
     certificacoesApi.publico().then(({ certificacoes }) => {
       if (!certificacoes || certificacoes.length === 0) return;
+
+      // Ids que realmente existem no banco agora — qualquer entrada local
+      // com um id que não está mais aqui é descartada. Sem isso, uma
+      // certificação recriada/editada no admin (mudando de identificador)
+      // deixava uma cópia "fantasma" no navegador do candidato: ele clicava
+      // nela, o sistema procurava processo por aquele id antigo, não achava
+      // nada, e mandava pra um cadastro do zero — mesmo já tendo um processo
+      // em andamento (só que vinculado ao id atual, não ao fantasma).
+      const idsDoBanco = new Set(certificacoes.map((db: any) => db.id));
+
       setCertifications((prev) => {
-        const porId = new Map(prev.map((c) => [c.id, c]));
+        const porId = new Map(
+          prev.filter((c) => idsDoBanco.has(c.id)).map((c) => [c.id, c])
+        );
         for (const db of certificacoes) {
           const local = porId.get(db.id);
           if (local) {
