@@ -345,7 +345,18 @@ export async function runDocumentosExigidosMigration() {
       await db.execute(`ALTER TABLE certification_types ADD COLUMN documentos_exigidos JSON NULL`);
       console.log("✅ Coluna certification_types.documentos_exigidos criada");
     }
+    // status permite "excluir" uma certificação sem apagar a linha do banco —
+    // candidatos com processo já vinculado (FK certification_type_id) não
+    // podem ficar órfãos. "Excluir" no admin só marca como inativa, o que já
+    // bloqueia novas seleções (ver SelecionarCertificacao.tsx).
+    if (!nomes.includes("status")) {
+      await db.execute(
+        `ALTER TABLE certification_types ADD COLUMN status
+         ENUM('ativa','em_breve','inativa','encerrada') NOT NULL DEFAULT 'ativa'`
+      );
+      console.log("✅ Coluna certification_types.status criada");
+    }
   } catch (err) {
-    console.warn("⚠️ Erro na migração de documentos_exigidos (certification_types pode não existir ainda):", err);
+    console.warn("⚠️ Erro na migração de documentos_exigidos/status (certification_types pode não existir ainda):", err);
   }
 }

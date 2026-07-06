@@ -671,6 +671,7 @@ export function AdminCertificacoes() {
         taxaEmissao: form.taxaEmissao,
         caminhoDefault: form.caminhoDefault ?? null,
         documentosExigidos: (form.documentosExigidos || []).slice(0, 10),
+        status: form.status || "ativa",
       }).catch((err: any) => {
         console.warn("Não foi possível sincronizar a certificação com o banco:", err?.message);
         alert(
@@ -685,8 +686,21 @@ export function AdminCertificacoes() {
   }
 
   function handleDelete(id: string) {
-    if (!confirm("Tem certeza que deseja remover esta certificação?")) return;
-    salvarCertificacoes(certifications.filter((c) => c.id !== id));
+    if (!confirm(
+      "Esta certificação vai ser marcada como INATIVA — ela some da lista de seleção para novos " +
+      "candidatos, mas o histórico de quem já está no processo com ela é preservado.\n\n" +
+      "Continuar?"
+    )) return;
+
+    salvarCertificacoes(certifications.map((c) => (c.id === id ? { ...c, status: "inativa" } : c)));
+
+    (adminApi as any).definirStatusCertificacao(id, "inativa").catch((err: any) => {
+      console.warn("Não foi possível marcar a certificação como inativa no banco:", err?.message);
+      alert(
+        "A certificação foi marcada como inativa localmente, mas houve um erro ao atualizar o banco.\n\n" +
+        "Detalhe técnico: " + (err?.message || "erro desconhecido")
+      );
+    });
   }
 
   return (
@@ -892,7 +906,7 @@ export function AdminCertificacoes() {
                         <button
                           onClick={() => handleDelete(cert.id)}
                           className="p-2 rounded-xl hover:bg-red-50 transition-colors text-gray-400 hover:text-red-600"
-                          title="Remover"
+                          title="Marcar como inativa (não apaga o histórico)"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

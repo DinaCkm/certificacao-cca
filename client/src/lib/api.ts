@@ -252,9 +252,13 @@ Object.assign(adminApi, {
     taxaEmissao?: number;
     caminhoDefault?: string | null;
     documentosExigidos: string[];
+    status?: string;
   }) => request<{ message: string; criado: boolean; numero?: number }>(
     "PUT",
     `/admin/certificacoes/${slug}/sincronizar`,
     body
   ),
+
+  definirStatusCertificacao: (slug: string, status: string) =>
+    request<{ message: string }>("PUT", `/admin/certificacoes/${slug}/status`, { status }),
 });

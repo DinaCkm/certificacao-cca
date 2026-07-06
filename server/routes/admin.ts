@@ -2093,7 +2093,7 @@ adminRouter.get("/relatorios/cursos-cliques",
 adminRouter.put("/certificacoes/:slug/sincronizar",
   requireRole("administrador", "gestor_n1"),
   async (req: Request, res: Response) => {
-    const { nome, numero, taxaAnalise, taxaEmissao, caminhoDefault, documentosExigidos } = req.body;
+    const { nome, numero, taxaAnalise, taxaEmissao, caminhoDefault, documentosExigidos, status } = req.body;
     const slug = req.params.slug;
 
     if (!nome) return res.status(400).json({ error: "Nome é obrigatório" });
@@ -2104,6 +2104,7 @@ adminRouter.put("/certificacoes/:slug/sincronizar",
     if (Array.isArray(documentosExigidos) && documentosExigidos.length > 10) {
       return res.status(400).json({ error: "Máximo de 10 documentos exigidos por certificação" });
     }
+    const statusValido = ["ativa", "em_breve", "inativa", "encerrada"].includes(status) ? status : "ativa";
 
     try {
       const [existing] = await db.execute(
@@ -2116,10 +2117,10 @@ adminRouter.put("/certificacoes/:slug/sincronizar",
         await db.execute(
           `UPDATE certification_types SET
              nome = ?, numero = ?, taxa_analise = ?, taxa_emissao = ?,
-             caminho_default = ?, documentos_exigidos = ?
+             caminho_default = ?, documentos_exigidos = ?, status = ?
            WHERE slug = ?`,
           [nome, numero || null, taxaAnalise || 0, taxaEmissao || 0,
-           caminhoDefault || null, JSON.stringify(documentos), slug]
+           caminhoDefault || null, JSON.stringify(documentos), statusValido, slug]
         );
         return res.json({ message: "Certificação sincronizada com o banco", criado: false });
       }
@@ -2136,10 +2137,10 @@ adminRouter.put("/certificacoes/:slug/sincronizar",
 
       await db.execute(
         `INSERT INTO certification_types
-          (slug, nome, numero, taxa_analise, taxa_emissao, caminho_default, documentos_exigidos)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          (slug, nome, numero, taxa_analise, taxa_emissao, caminho_default, documentos_exigidos, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [slug, nome, proximoNumero, taxaAnalise || 0, taxaEmissao || 0,
-         caminhoDefault || null, JSON.stringify(documentos)]
+         caminhoDefault || null, JSON.stringify(documentos), statusValido]
       );
       return res.json({ message: "Certificação criada no banco", criado: true, numero: proximoNumero });
     } catch (err: any) {
@@ -2148,6 +2149,34 @@ adminRouter.put("/certificacoes/:slug/sincronizar",
       // que a gente não conhece ainda, isso fica visível e acionável, em vez
       // de falhar silenciosamente e o candidato só descobrir na hora de pagar.
       return res.status(500).json({ error: "Erro ao sincronizar certificação com o banco", detalhe: err?.message });
+    }
+  }
+);
+
+// ── PUT /api/admin/certificacoes/:slug/status ─────────────────────────────────
+// Exclusão segura: "excluir" uma certificação no admin nunca apaga a linha do
+// banco (candidatos com processo já vinculado ficariam órfãos). Em vez disso,
+// marca como "inativa" — o que já basta para sumir da tela de seleção de
+// novos candidatos (ver SelecionarCertificacao.tsx), preservando o histórico.
+adminRouter.put("/certificacoes/:slug/status",
+  requireRole("administrador", "gestor_n1"),
+  async (req: Request, res: Response) => {
+    const { status } = req.body;
+    if (!["ativa", "em_breve", "inativa", "encerrada"].includes(status)) {
+      return res.status(400).json({ error: "Status inválido" });
+    }
+    try {
+      await db.execute(
+        `UPDATE certification_types SET status = ? WHERE slug = ?`,
+        [status, req.params.slug]
+      );
+      // Não retorna erro se affectedRows = 0 — certificação pode ainda não
+      // existir no banco (ex: nunca foi salva de verdade), o que é inofensivo
+      // aqui já que ela também não aparece pra candidato nesse caso.
+      return res.json({ message: "Status atualizado" });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao atualizar status da certificação" });
     }
   }
 );
