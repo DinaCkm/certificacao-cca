@@ -182,10 +182,10 @@ export function Cadastro() {
     }
   };
 
-  // Login inline quando o e-mail/CPF já tem conta. Se a pessoa já tiver um
-  // processo em andamento (de qualquer certificação), continua a partir de
-  // onde parou — não mistura com a certificação que ela clicou agora, pra
-  // não bagunçar os dados de um processo já iniciado.
+  // Login inline quando o e-mail/CPF já tem conta. Como agora um candidato
+  // pode ter várias certificações em andamento ao mesmo tempo, só verificamos
+  // se já existe processo PARA ESTA certificação específica — não mexe em
+  // nenhuma outra que ele já tenha iniciado.
   const handleLoginInline = async () => {
     setErroLogin("");
     if (!senhaLogin) { setErroLogin("Digite sua senha."); return; }
@@ -194,7 +194,7 @@ export function Cadastro() {
       const { token } = await api.auth.login(form.email, senhaLogin);
       setToken(token);
 
-      const { processo } = await api.processo.retomar();
+      const { processo } = await api.processo.retomar(certAtual?.id);
 
       if (processo) {
         const STATUS_ROTA: Record<string, string> = {
@@ -205,14 +205,15 @@ export function Cadastro() {
           emissao: "/novo-fluxo/emissao-certificado", concluido: "/novo-fluxo/emissao-certificado",
         };
         toast({
-          title: `Você já tem um processo em andamento: ${processo.certificacaoNome}`,
+          title: `Você já tem um processo em andamento para ${processo.certificacaoNome}`,
           description: "Vamos te levar direto para onde você parou.",
         });
         navigate(STATUS_ROTA[processo.statusGeral] || "/novo-fluxo");
         return;
       }
 
-      // Sem processo ativo — segue normalmente com a certificação atual
+      // Sem processo ativo para ESTA certificação — inicia um novo,
+      // independente de outras certificações que essa conta já tenha
       await continuarComToken(token, null);
     } catch (err: any) {
       setErroLogin(err.message || "E-mail ou senha incorretos.");

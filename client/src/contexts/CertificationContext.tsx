@@ -653,7 +653,7 @@ interface CertificationContextType {
   processo: CandidatoProcesso;
   getCertificacaoAtual: () => Certification | null;
   // Candidato
-  selecionarCertificacao: (cert: Certification, tipo?: TipoCompra) => void;
+  selecionarCertificacao: (cert: Certification, tipo?: TipoCompra) => Promise<CandidatoProcesso["statusGeral"]>;
   atualizarStatus: (status: CandidatoProcesso["statusGeral"]) => void;
   definirCaminho: (caminho: CaminhoAvaliacao) => void;
   registrarPagamento1: () => void;
@@ -742,9 +742,15 @@ export function CertificationProvider({ children }: { children: React.ReactNode 
     const token = localStorage.getItem("anefac_token");
     if (!token) return;
 
-    // Sempre busca o status atual do banco ao inicializar
-    // (garante que mudanças feitas pelo admin sejam refletidas)
-    (api.processo as any).retomar().then((res: any) => {
+    // Se este navegador já sabe em qual certificação o candidato está
+    // trabalhando (cache local), busca o status atualizado DAQUELA
+    // certificação especificamente — evita que um simples refresh de página
+    // pule pra outra certificação, caso o candidato tenha mais de uma em
+    // andamento ao mesmo tempo. Sem cache local (sessão nova), pega a mais
+    // recente mesmo, só pra ter algo pra restaurar.
+    const certificacaoConhecida = processo.certificacaoId || undefined;
+
+    api.processo.retomar(certificacaoConhecida).then((res: any) => {
       if (!res?.processo) return;
       const p = res.processo;
 
@@ -761,7 +767,9 @@ export function CertificationProvider({ children }: { children: React.ReactNode 
         localStorage.setItem("anefac_processo_id", String(p.processo_id));
       }
     }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
 
   // Persiste no localStorage (cache local) e sincroniza com o banco
   useEffect(() => {
@@ -783,7 +791,44 @@ export function CertificationProvider({ children }: { children: React.ReactNode 
   const getCertificacaoAtual = (): Certification | null =>
     certifications.find((c) => c.id === processo.certificacaoId) || null;
 
-  const selecionarCertificacao = (cert: Certification, tipo: TipoCompra = "cert_direta") => {
+  const selecionarCertificacao = async (cert: Certification, tipo: TipoCompra = "cert_direta") => {
+    // Candidato pode ter várias certificações em andamento ao mesmo tempo —
+    // então antes de "começar do zero", verifica se JÁ existe um processo
+    // ativo especificamente PARA ESTA certificação (não mexe nas outras).
+    const token = localStorage.getItem("anefac_token");
+    if (token) {
+      try {
+        const { processo: existente } = await api.processo.retomar(cert.id);
+        if (existente) {
+          setProcesso((prev) => ({
+            ...prev,
+            certificacaoId: existente.certificacaoId,
+            certificacaoNome: existente.certificacaoNome,
+            certificacaoNumero: existente.certificacaoNumero,
+            taxaAnalise: existente.taxaAnalise,
+            taxaEmissao: existente.taxaEmissao,
+            statusGeral: existente.statusGeral,
+            candidatoNome: existente.candidatoNome || prev.candidatoNome,
+            candidatoEmail: existente.candidatoEmail || prev.candidatoEmail,
+            candidatoCPF: existente.candidatoCPF || prev.candidatoCPF,
+            candidatoTelefone: existente.candidatoTelefone || prev.candidatoTelefone,
+            caminhoAvaliacao: existente.caminhoAvaliacao,
+            tentativasProva: existente.tentativasProva || 0,
+            pagamento1Realizado: existente.pagamento1Realizado,
+            pagamento2Realizado: existente.pagamento2Realizado,
+            aprovadoEntrevista: existente.aprovadoEntrevista,
+          }));
+          if (existente.processo_id) {
+            localStorage.setItem("anefac_processo_id", String(existente.processo_id));
+          }
+          return existente.statusGeral as CandidatoProcesso["statusGeral"];
+        }
+      } catch {
+        // Sem conexão — segue com início "do zero" abaixo
+      }
+    }
+
+    // Sem processo existente para esta certificação — começa do zero
     setProcesso({
       ...PROCESSO_INICIAL,
       certificacaoId: cert.id,
@@ -795,6 +840,7 @@ export function CertificationProvider({ children }: { children: React.ReactNode 
       statusGeral: "cadastro",
       dataInicioProcesso: new Date().toISOString(),
     });
+    return "cadastro" as CandidatoProcesso["statusGeral"];
   };
 
   const atualizarStatus = (status: CandidatoProcesso["statusGeral"]) =>

@@ -322,6 +322,15 @@ processoRouter.get("/agendamento/:processoId", requireAuth, async (req: Request,
 // Recebe o estado completo do processo do frontend e persiste no banco
 // Chamado a cada mudança de status relevante
 
+// Ordem real do pipeline — usada para nunca deixar o status "andar pra trás"
+// sem querer (ex: candidato clicou de novo em "selecionar certificação" com
+// uma sessão antiga ainda válida, e isso reiniciava o processo local para
+// "cadastro", apagando progresso já feito como pagamento1/upload no banco).
+const ORDEM_STATUS = [
+  "selecao", "cadastro", "pagamento1", "upload", "validacao",
+  "agendamento", "entrevista", "prova", "pagamento2", "emissao", "concluido",
+];
+
 processoRouter.post("/sincronizar", requireAuth, async (req: Request, res: Response) => {
   const {
     certificacaoId, statusGeral, candidatoNome, candidatoEmail,
@@ -330,16 +339,43 @@ processoRouter.post("/sincronizar", requireAuth, async (req: Request, res: Respo
     pagamento2Realizado, aprovadoEntrevista, formacao
   } = req.body;
 
+  if (!certificacaoId) {
+    return res.status(400).json({ error: "certificacaoId é obrigatório" });
+  }
+
   try {
-    // Busca processo existente do candidato
+    // Resolve a certificação pelo slug primeiro — precisamos do id dela tanto
+    // pra buscar um processo existente ESPECÍFICO dessa certificação quanto
+    // pra criar um novo, já que agora um candidato pode ter várias
+    // certificações em andamento ao mesmo tempo (uma linha por certificação).
+    const [certs] = await db.execute(
+      "SELECT id FROM certification_types WHERE slug = ?", [certificacaoId]
+    ) as any;
+    if (certs.length === 0) {
+      return res.status(400).json({ error: "Certificação não encontrada" });
+    }
+    const certificationTypeId = certs[0].id;
+
+    // Busca processo existente do candidato PARA ESTA CERTIFICAÇÃO — não mais
+    // "o processo ativo do candidato" de forma genérica. Isso é o que permite
+    // certificações simultâneas: selecionar/avançar numa não mexe no processo
+    // de outra.
     const [existing] = await db.execute(
-      `SELECT id FROM candidato_processos
-       WHERE user_id = ? AND status_geral NOT IN ('concluido','encerrado')
+      `SELECT id, status_geral FROM candidato_processos
+       WHERE user_id = ? AND certification_type_id = ? AND status_geral NOT IN ('concluido','encerrado')
        ORDER BY iniciado_em DESC LIMIT 1`,
-      [req.user!.userId]
+      [req.user!.userId, certificationTypeId]
     ) as any;
 
     if (existing.length > 0) {
+      // "encerrado" é estado terminal (reprovado na entrevista) e sempre
+      // pode ser aplicado, mesmo "regredindo" na ordem numérica.
+      const statusAtualIdx = ORDEM_STATUS.indexOf(existing[0].status_geral);
+      const statusNovoIdx = ORDEM_STATUS.indexOf(statusGeral);
+      const statusFinal = (statusGeral === "encerrado" || statusNovoIdx === -1 || statusNovoIdx >= statusAtualIdx)
+        ? statusGeral
+        : existing[0].status_geral; // ignora tentativa de regressão — mantém o progresso real
+
       // Atualiza processo existente
       await db.execute(
         `UPDATE candidato_processos SET
@@ -349,26 +385,17 @@ processoRouter.post("/sincronizar", requireAuth, async (req: Request, res: Respo
           pagamento1_realizado = ?, pagamento2_realizado = ?,
           aprovado_entrevista = ?, updated_at = NOW()
          WHERE id = ?`,
-        [statusGeral, candidatoNome, candidatoEmail,
+        [statusFinal, candidatoNome, candidatoEmail,
          candidatoCPF, candidatoTelefone, candidatoCargo,
          caminhoAvaliacao || null, tentativasProva || 0,
          pagamento1Realizado ? 1 : 0, pagamento2Realizado ? 1 : 0,
          aprovadoEntrevista === null ? null : (aprovadoEntrevista ? 1 : 0),
          existing[0].id]
       );
-      return res.json({ processo_id: existing[0].id, status: statusGeral });
+      return res.json({ processo_id: existing[0].id, status: statusFinal });
     } else {
-      // Busca o id da certificação pelo slug
-      const [certs] = await db.execute(
-        "SELECT id FROM certification_types WHERE slug = ?",
-        [certificacaoId]
-      ) as any;
-
-      if (certs.length === 0) {
-        return res.status(400).json({ error: "Certificação não encontrada" });
-      }
-
-      // Cria novo processo
+      // Cria novo processo — independente de quaisquer outras certificações
+      // que este candidato já tenha em andamento.
       const [result] = await db.execute(
         `INSERT INTO candidato_processos
           (user_id, certification_type_id, status_geral, candidato_nome,
@@ -376,14 +403,13 @@ processoRouter.post("/sincronizar", requireAuth, async (req: Request, res: Respo
            caminho_avaliacao, tentativas_prova, pagamento1_realizado,
            pagamento2_realizado, aprovado_entrevista)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [req.user!.userId, certs[0].id, statusGeral, candidatoNome,
+        [req.user!.userId, certificationTypeId, statusGeral, candidatoNome,
          candidatoEmail, candidatoCPF, candidatoTelefone, candidatoCargo,
          caminhoAvaliacao || null, tentativasProva || 0,
          pagamento1Realizado ? 1 : 0, pagamento2Realizado ? 1 : 0,
          aprovadoEntrevista === null ? null : (aprovadoEntrevista ? 1 : 0)]
       ) as any;
 
-      // Salva o processo_id no localStorage para uso no agendamento
       return res.json({ processo_id: result.insertId, status: statusGeral });
     }
   } catch (err) {
@@ -393,18 +419,30 @@ processoRouter.post("/sincronizar", requireAuth, async (req: Request, res: Respo
 });
 
 // ── GET /api/processo/retomar ─────────────────────────────────────────────────
-// Retorna o processo ativo do candidato para restaurar o estado ao fazer login
+// Retorna o processo ativo do candidato para restaurar o estado ao fazer login.
+// Com suporte a múltiplas certificações simultâneas: por padrão retorna o
+// processo ativo mais recente (uso geral); passando ?certificacaoId=slug,
+// retorna especificamente o processo DAQUELA certificação (usado ao
+// selecionar/reabrir uma certificação específica, sem interferir nas outras).
 
 processoRouter.get("/retomar", requireAuth, async (req: Request, res: Response) => {
+  const { certificacaoId } = req.query as { certificacaoId?: string };
   try {
+    const params: any[] = [req.user!.userId];
+    let filtroCert = "";
+    if (certificacaoId) {
+      filtroCert = "AND ct.slug = ?";
+      params.push(certificacaoId);
+    }
+
     const [rows] = await db.execute(
       `SELECT p.*, ct.slug as certificacao_id, ct.nome as certificacao_nome,
               ct.numero as certificacao_numero, ct.taxa_analise, ct.taxa_emissao
        FROM candidato_processos p
        JOIN certification_types ct ON ct.id = p.certification_type_id
-       WHERE p.user_id = ? AND p.status_geral NOT IN ('concluido','encerrado')
+       WHERE p.user_id = ? AND p.status_geral NOT IN ('concluido','encerrado') ${filtroCert}
        ORDER BY p.iniciado_em DESC LIMIT 1`,
-      [req.user!.userId]
+      params
     ) as any;
 
     if (rows.length === 0) return res.json({ processo: null });
@@ -433,6 +471,48 @@ processoRouter.get("/retomar", requireAuth, async (req: Request, res: Response) 
   } catch (err) {
     console.error("Erro ao retomar processo:", err);
     return res.status(500).json({ error: "Erro ao retomar processo" });
+  }
+});
+
+// ── GET /api/processo/meus ────────────────────────────────────────────────────
+// Lista TODOS os processos ativos do candidato (uma certificação pode não ser
+// mais única) — usado pra mostrar todas as certificações em andamento dele.
+
+processoRouter.get("/meus", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const [rows] = await db.execute(
+      `SELECT p.*, ct.slug as certificacao_id, ct.nome as certificacao_nome,
+              ct.numero as certificacao_numero, ct.taxa_analise, ct.taxa_emissao
+       FROM candidato_processos p
+       JOIN certification_types ct ON ct.id = p.certification_type_id
+       WHERE p.user_id = ? AND p.status_geral NOT IN ('concluido','encerrado')
+       ORDER BY p.iniciado_em DESC`,
+      [req.user!.userId]
+    ) as any;
+
+    const processos = rows.map((p: any) => ({
+      processo_id: p.id,
+      certificacaoId: p.certificacao_id,
+      certificacaoNome: p.certificacao_nome,
+      certificacaoNumero: p.certificacao_numero,
+      taxaAnalise: p.taxa_analise,
+      taxaEmissao: p.taxa_emissao,
+      statusGeral: p.status_geral,
+      candidatoNome: p.candidato_nome,
+      candidatoEmail: p.candidato_email,
+      candidatoCPF: p.candidato_cpf,
+      candidatoTelefone: p.candidato_telefone,
+      caminhoAvaliacao: p.caminho_avaliacao,
+      tentativasProva: p.tentativas_prova,
+      pagamento1Realizado: !!p.pagamento1_realizado,
+      pagamento2Realizado: !!p.pagamento2_realizado,
+      aprovadoEntrevista: p.aprovado_entrevista === null ? null : !!p.aprovado_entrevista,
+    }));
+
+    return res.json({ processos });
+  } catch (err) {
+    console.error("Erro ao listar processos do candidato:", err);
+    return res.status(500).json({ error: "Erro ao listar processos do candidato" });
   }
 });
 

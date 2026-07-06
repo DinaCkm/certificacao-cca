@@ -115,8 +115,14 @@ export const api = {
     sincronizar: (processo: any) =>
       request<{ processo_id: number; status: string }>("POST", "/processo/sincronizar", processo),
 
-    retomar: () =>
-      request<{ processo: any | null }>("GET", "/processo/retomar"),
+    retomar: (certificacaoId?: string) =>
+      request<{ processo: any | null }>(
+        "GET",
+        `/processo/retomar${certificacaoId ? `?certificacaoId=${encodeURIComponent(certificacaoId)}` : ""}`
+      ),
+
+    meus: () =>
+      request<{ processos: any[] }>("GET", "/processo/meus"),
 
     // Documentos complementares solicitados pelo avaliador — fluxo do candidato
     solicitacoesDocumentos: () =>
