@@ -2,12 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useCertification } from "@/contexts/CertificationContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { MENU_ITEMS } from "@/lib/menuItems";
 import {
   Users, FileText, Award, DollarSign, CheckCircle, Clock,
-  XCircle, BarChart3, Settings, ChevronRight, AlertCircle, Globe, BookOpen
+  XCircle, BarChart3, Settings, ChevronRight, Globe, BookOpen
 } from "lucide-react";
 
 const STATUS_LABEL_DASH: Record<string, { label: string; cor: string }> = {
@@ -30,10 +29,8 @@ const STATUS_LABEL_DASH: Record<string, { label: string; cor: string }> = {
 };
 
 export function AdminDashboard() {
-  const { processo, getCertificacaoAtual } = useCertification();
   const { podeVerMenuItem } = useAuth();
   const [, navigate] = useLocation();
-  const certAtual = getCertificacaoAtual();
   const [candidatos, setCandidatos] = useState<any[]>([]);
   const [metricas, setMetricas] = useState({ total: 0, validacao: 0, concluidos: 0 });
 
@@ -157,30 +154,6 @@ export function AdminDashboard() {
               </CardContent>
             </Card>
 
-            {/* Active Process Alert */}
-            {processo.certificacaoId && processo.statusGeral === "validacao" && (
-              <Card className="mt-4 border-yellow-300 bg-yellow-50">
-                <CardContent className="p-5">
-                  <div className="flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 shrink-0" />
-                    <div className="flex-1">
-                      <p className="font-semibold text-yellow-800 text-sm mb-1">
-                        Processo aguardando validação documental
-                      </p>
-                      <p className="text-xs text-yellow-700 mb-3">
-                        Candidato: <strong>{processo.candidatoNome || "Demo"}</strong> — {certAtual?.nome}
-                      </p>
-                      <Link href="/novo-fluxo/admin/validacao">
-                        <Button size="sm" className="bg-yellow-600 hover:bg-yellow-700 text-xs">
-                          <FileText className="w-3.5 h-3.5 mr-1.5" />
-                          Ir para validação documental
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
 
           {/* Quick Actions */}
