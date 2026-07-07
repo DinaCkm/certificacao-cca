@@ -244,6 +244,14 @@ export async function runSolicitacaoDocumentosMigrations() {
         await db.execute(`ALTER TABLE solicitacoes_documentos ADD COLUMN revisada_em TIMESTAMP NULL`);
         console.log("✅ Coluna solicitacoes_documentos.revisada_em criada");
       }
+      // Vincula a solicitação a um documento específico (índice na lista de
+      // documentos exigidos) — antes era só uma mensagem solta pro processo
+      // inteiro, então o sistema não sabia QUAL documento travar enquanto
+      // aguardava o candidato reenviar.
+      if (!colunasSolic.includes("documento_idx")) {
+        await db.execute(`ALTER TABLE solicitacoes_documentos ADD COLUMN documento_idx INT NULL`);
+        console.log("✅ Coluna solicitacoes_documentos.documento_idx criada");
+      }
     } catch (alterErr) {
       console.warn("⚠️ ALTER TABLE solicitacoes_documentos (pode já estar correto):", (alterErr as any)?.message);
     }

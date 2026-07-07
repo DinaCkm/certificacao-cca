@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   CheckCircle, XCircle, FileText, User, Eye, X, Check,
   Send, Loader2, AlertTriangle, ShieldAlert, Lock,
-  ExternalLink, Maximize2, MailPlus, FileWarning, RotateCcw
+  ExternalLink, Maximize2, MailPlus, FileWarning, RotateCcw, Clock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api, certificacoesApi } from "@/lib/api";
@@ -29,6 +29,7 @@ interface DocAvaliacao {
   av2_nome?: string | null;
   av2_parecer?: string;
   status?: string;
+  aguardandoDocumento?: boolean; // true = avaliador pediu documento complementar pra este item e o candidato ainda não enviou
 }
 interface Candidato {
   processo_id: number;
@@ -38,7 +39,8 @@ interface Candidato {
   cert_nome: string;
   cert_slug?: string;
   documentos: any[];
-  documentos_complementares_atendidos?: { id: number; mensagem: string; atendida_em: string }[];
+  documentos_complementares_atendidos?: { id: number; mensagem: string; atendida_em: string; documento_idx: number | null }[];
+  solicitacoes_pendentes?: { id: number; documento_idx: number | null }[];
   tem_solicitacao_pendente?: boolean;
 }
 
@@ -111,10 +113,15 @@ export function AdminValidacaoDocumental() {
     }
     setEnviandoSolicitacao(true);
     try {
-      await api.admin.solicitarDocumentos(candidato.processo_id, mensagemSolicitacao.trim());
+      await api.admin.solicitarDocumentos(candidato.processo_id, mensagemSolicitacao.trim(), docAberto ?? undefined);
       toast({ title: "✅ Solicitação enviada ao candidato por e-mail" });
       setSolicitarDocsAberto(false);
       setMensagemSolicitacao("");
+      // Trava esse item na hora — não precisa esperar recarregar do banco
+      // pra impedir aprovar/reprovar enquanto aguarda o candidato responder
+      if (docAberto !== null) {
+        setAvaliacoes((prev) => prev.map((a, i) => i === docAberto ? { ...a, aguardandoDocumento: true } : a));
+      }
     } catch (err: any) {
       toast({ title: "Erro ao solicitar documentos", description: err.message, variant: "destructive" });
     } finally {
@@ -188,6 +195,15 @@ export function AdminValidacaoDocumental() {
         }
       }
 
+      // Índices de documento que têm solicitação PENDENTE (o avaliador já
+      // pediu, mas o candidato ainda não respondeu) — enquanto isso, esse
+      // item fica travado: não dá pra aprovar/reprovar até o envio chegar.
+      const idxComSolicitacaoPendente = new Set(
+        (c.solicitacoes_pendentes || [])
+          .filter((s) => s.documento_idx !== null && s.documento_idx !== undefined)
+          .map((s) => s.documento_idx as number)
+      );
+
       // Admin vê avaliação completa de ambos; avaliador vê só a sua
       const listaOriginais: DocAvaliacao[] = nomesDoc.map((nome, idx) => {
         const docExistente = data.documentos?.find((d: any) => d.documento_idx === idx);
@@ -218,6 +234,7 @@ export function AdminValidacaoDocumental() {
           av2_nome: docExistente?.av2_nome_real || docExistente?.avaliador2_nome || null,
           av2_parecer: docExistente?.avaliador2_parecer || "",
           status: docExistente?.status || "pendente",
+          aguardandoDocumento: idxComSolicitacaoPendente.has(idx),
         };
       });
 
@@ -285,6 +302,24 @@ export function AdminValidacaoDocumental() {
 
   async function registrarDecisaoDoc(docIdx: number, aprovado: boolean) {
     const doc = avaliacoes[docIdx];
+
+    if (doc.aguardandoDocumento) {
+      toast({
+        title: "Aguardando documento",
+        description: "Você solicitou um documento complementar para este item — não é possível avaliar até o candidato enviar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!doc.parecer || !doc.parecer.trim()) {
+      toast({
+        title: "Descreva seu parecer antes de decidir",
+        description: "O campo \"Meu parecer\" é obrigatório para aprovar ou reprovar um documento.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     // Admin em modo desempate: a decisão é só local por enquanto — ela é
     // persistida de fato quando ele clicar em "Confirmar decisão do
@@ -688,7 +723,7 @@ export function AdminValidacaoDocumental() {
                     fechar a avaliação. Uma vez que todos os documentos foram avaliados
                     (coincidência ou discordância já processada), essa opção some, pois
                     o avaliador não pode mais pedir novos documentos nesse ponto. */}
-                {!isAdmin && !modoDesempate && !todosAvaliados && (
+                {!isAdmin && !modoDesempate && !todosAvaliados && !docAtual.aguardandoDocumento && (
                   <div>
                     <Button variant="outline" size="sm" className="w-full border-blue-300 text-blue-800 hover:bg-blue-50"
                       onClick={() => setSolicitarDocsAberto(true)}>
@@ -698,24 +733,38 @@ export function AdminValidacaoDocumental() {
                   </div>
                 )}
 
+                {docAtual.aguardandoDocumento && (
+                  <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                    <p className="text-sm text-amber-800">
+                      <strong>Aguardando documento.</strong> Você solicitou um complemento pra este item — a avaliação fica travada até o candidato enviar.
+                    </p>
+                  </div>
+                )}
+
                 {/* Parecer */}
                 <div>
-                  <label className="text-sm font-semibold block mb-2">Meu parecer</label>
+                  <label className="text-sm font-semibold block mb-2">
+                    Meu parecer <span className="text-red-500">*</span>
+                  </label>
                   <textarea
                     value={docAtual.parecer}
                     onChange={e => setAvaliacoes(prev => prev.map((a, i) => i === docAberto ? { ...a, parecer: e.target.value } : a))}
-                    className="w-full border border-border rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows={3} placeholder="Descreva sua análise..." />
+                    disabled={docAtual.aguardandoDocumento}
+                    className="w-full border border-border rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-muted-foreground"
+                    rows={3} placeholder="Descreva sua análise (obrigatório para aprovar ou reprovar)..." />
                 </div>
 
                 {/* Decisão — só para avaliadores, não para admin observando */}
                 {(!isAdmin || modoDesempate) && (
                   <div className="flex gap-3 pt-2 border-t">
                     <Button className="flex-1 bg-green-600 hover:bg-green-700"
+                      disabled={docAtual.aguardandoDocumento || !docAtual.parecer.trim()}
                       onClick={() => registrarDecisaoDoc(docAberto, true)}>
                       <Check className="w-4 h-4 mr-2" /> Aprovar
                     </Button>
                     <Button className="flex-1 bg-red-600 hover:bg-red-700"
+                      disabled={docAtual.aguardandoDocumento || !docAtual.parecer.trim()}
                       onClick={() => registrarDecisaoDoc(docAberto, false)}>
                       <X className="w-4 h-4 mr-2" /> Reprovar
                     </Button>
@@ -977,6 +1026,17 @@ export function AdminValidacaoDocumental() {
                             : "Ver documento"}
                         </Button>
                       </div>
+                    </div>
+                  ) : av.aguardandoDocumento ? (
+                    // ── Aguardando o candidato enviar o documento complementar pedido ──
+                    <div className="rounded-lg p-3 text-center bg-amber-50 border border-amber-200">
+                      <p className="text-xs font-bold text-amber-800 flex items-center justify-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5" /> Aguardando documento
+                      </p>
+                      <Button size="sm" variant="outline" className="w-full text-xs mt-2"
+                        onClick={() => setDocAberto(idx)}>
+                        <Eye className="w-3.5 h-3.5 mr-1.5" /> Ver solicitação
+                      </Button>
                     </div>
                   ) : jaAvaliou ? (
                     // ── Avaliador: já avaliou — mostra sem botão ──

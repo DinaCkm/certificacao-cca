@@ -1050,14 +1050,14 @@ adminRouter.get("/validacao/pendentes",
           ) as any;
 
           const [solicitacoesAtendidas] = await db.execute(
-            `SELECT id, mensagem, atendida_em FROM solicitacoes_documentos
+            `SELECT id, mensagem, atendida_em, documento_idx FROM solicitacoes_documentos
              WHERE processo_id = ? AND solicitado_por_id = ? AND status = 'atendida'
              ORDER BY atendida_em DESC`,
             [c.processo_id, userId]
           ) as any;
 
           const [solicitacoesPendentes] = await db.execute(
-            `SELECT id FROM solicitacoes_documentos
+            `SELECT id, documento_idx FROM solicitacoes_documentos
              WHERE processo_id = ? AND status = 'pendente'`,
             [c.processo_id]
           ) as any;
@@ -1066,6 +1066,7 @@ adminRouter.get("/validacao/pendentes",
             ...c,
             documentos: docs,
             documentos_complementares_atendidos: solicitacoesAtendidas,
+            solicitacoes_pendentes: solicitacoesPendentes,
             tem_solicitacao_pendente: solicitacoesPendentes.length > 0,
           };
         })
@@ -1700,7 +1701,7 @@ adminRouter.post("/validacao/:processoId/solicitar-documentos",
   requireRole("administrador", "gestor_n1", "gestor_n2", "avaliador"),
   async (req: any, res: Response) => {
     const processoId = parseInt(req.params.processoId);
-    const { mensagem } = req.body;
+    const { mensagem, documento_idx } = req.body;
 
     if (!mensagem || !String(mensagem).trim()) {
       return res.status(400).json({ error: "Descreva quais documentos complementares são necessários" });
@@ -1724,9 +1725,9 @@ adminRouter.post("/validacao/:processoId/solicitar-documentos",
       const mensagemLimpa = String(mensagem).trim();
 
       const [result] = await db.execute(
-        `INSERT INTO solicitacoes_documentos (processo_id, solicitado_por_id, solicitado_por_nome, mensagem)
-         VALUES (?, ?, ?, ?)`,
-        [processoId, req.user!.userId, nomeSolicitante, mensagemLimpa]
+        `INSERT INTO solicitacoes_documentos (processo_id, solicitado_por_id, solicitado_por_nome, mensagem, documento_idx)
+         VALUES (?, ?, ?, ?, ?)`,
+        [processoId, req.user!.userId, nomeSolicitante, mensagemLimpa, documento_idx ?? null]
       ) as any;
 
       // E-mail avisando o candidato — sem anexos, só direcionando para a plataforma

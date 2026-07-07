@@ -168,8 +168,8 @@ export const api = {
     removerQuestao: (id: number) => request<{ message: string }>("DELETE", `/admin/questoes/${id}`),
 
     // Documentos complementares — avaliador solicita ao candidato dentro do sistema
-    solicitarDocumentos: (processoId: number, mensagem: string) =>
-      request<{ id: number; message: string }>("POST", `/admin/validacao/${processoId}/solicitar-documentos`, { mensagem }),
+    solicitarDocumentos: (processoId: number, mensagem: string, documentoIdx?: number) =>
+      request<{ id: number; message: string }>("POST", `/admin/validacao/${processoId}/solicitar-documentos`, { mensagem, documento_idx: documentoIdx }),
     listarSolicitacoesDocumentos: (processoId: number) =>
       request<{ solicitacoes: any[] }>("GET", `/admin/validacao/${processoId}/solicitacoes-documentos`),
 
