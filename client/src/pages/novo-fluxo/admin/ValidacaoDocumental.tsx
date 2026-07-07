@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   CheckCircle, XCircle, FileText, User, Eye, X, Check,
   Send, Loader2, AlertTriangle, ShieldAlert, Lock,
-  ExternalLink, Maximize2, MailPlus, FileWarning
+  ExternalLink, Maximize2, MailPlus, FileWarning, RotateCcw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api, certificacoesApi } from "@/lib/api";
@@ -343,6 +343,28 @@ export function AdminValidacaoDocumental() {
   const todosAvaliados = avaliacoes.every(a => a.aprovado !== null);
   const podeFechar = meuNumero === 2 || isAdmin;
 
+  async function reabrirAvaliacao(documentoIdx: number) {
+    const motivo = window.prompt(
+      "Por que essa avaliação está sendo reaberta? (obrigatório, fica registrado no log de auditoria)"
+    );
+    if (!motivo || !motivo.trim()) return;
+
+    try {
+      const res = await fetch(`/api/admin/validacao-dupla/${candidato!.processo_id}/reabrir`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ documento_idx: documentoIdx, motivo: motivo.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      toast({ title: "Avaliação reaberta", description: "Liberada de volta para os avaliadores refazerem." });
+      // Recarrega o estado do candidato pra refletir a avaliação zerada
+      selecionarCandidato(candidato!);
+    } catch (err: any) {
+      toast({ title: "Erro ao reabrir avaliação", description: err.message, variant: "destructive" });
+    }
+  }
+
   // ── Tela: lista de candidatos ─────────────────────────────────────────────
   if (!candidato) return (
     <div className="min-h-screen bg-gray-50">
@@ -642,10 +664,20 @@ export function AdminValidacaoDocumental() {
                   </div>
                 )}
                 {isAdmin && !modoDesempate && (
-                  <div className="pt-2 border-t">
+                  <div className="pt-2 border-t space-y-2">
                     <p className="text-xs text-center text-muted-foreground italic">
                       Modo visualização — o administrador não realiza avaliações
                     </p>
+                    {docAtual.av1_aprovado !== null && (
+                      <Button
+                        variant="outline" size="sm"
+                        className="w-full border-amber-300 text-amber-800 hover:bg-amber-50"
+                        onClick={() => reabrirAvaliacao(docAberto)}
+                      >
+                        <RotateCcw className="w-3.5 h-3.5 mr-2" />
+                        Cancelar esta avaliação e liberar para refazer
+                      </Button>
+                    )}
                   </div>
                 )}
 

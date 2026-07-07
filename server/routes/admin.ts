@@ -1311,9 +1311,13 @@ adminRouter.get("/validacao-dupla/:processoId",
 );
 
 // POST /api/admin/validacao-dupla/:processoId/avaliar
-// Avaliador se auto-atribui e registra sua avaliação de um documento
+// Avaliador se auto-atribui e registra sua avaliação de um documento.
+// Restrito a "avaliador" — admin/gestor NÃO pode virar avaliador1/avaliador2
+// nesse fluxo (isso quebraria o propósito da avaliação cega e independente).
+// O papel do admin é só desempatar divergências (rota /fechar) ou reabrir
+// uma avaliação já feita (rota /reabrir), nunca avaliar ele mesmo.
 adminRouter.post("/validacao-dupla/:processoId/avaliar",
-  requireRole("administrador", "gestor_n1", "gestor_n2", "avaliador"),
+  requireRole("avaliador"),
   async (req: any, res) => {
     const processoId = parseInt(req.params.processoId);
     const userId = req.user!.userId;
@@ -1611,7 +1615,21 @@ adminRouter.post("/validacao-dupla/:processoId/fechar",
             discordancias: discordancias.map((d: any) => d.documento_nome),
           });
         }
-      } else if (desempate_docs) {
+      } else {
+        // Admin/gestor só pode agir aqui quando existe uma divergência
+        // GENUÍNA pendente entre os dois avaliadores — nunca para fechar
+        // uma avaliação comum, nem para atuar como se fosse avaliador.
+        const temDivergenciaPendente = docs.some((d: any) =>
+          d.status === "desempate" ||
+          (d.avaliador1_aprovado !== null && d.avaliador2_aprovado !== null && d.avaliador1_aprovado !== d.avaliador2_aprovado)
+        );
+        if (!temDivergenciaPendente) {
+          return res.status(403).json({
+            error: "Não há divergência pendente entre avaliadores neste processo — o fechamento normal é feito pelo Avaliador 2.",
+          });
+        }
+
+        if (desempate_docs) {
         // Admin resolvendo desempate — aplica decisões manuais
         for (const decisao of desempate_docs) {
           await db.execute(
@@ -1624,6 +1642,7 @@ adminRouter.post("/validacao-dupla/:processoId/fechar",
              userId, processoId, decisao.documento_idx]
           );
         }
+      }
       }
 
       // Fecha a avaliação — determina resultado final
