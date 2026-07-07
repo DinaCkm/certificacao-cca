@@ -461,7 +461,7 @@ export function AdminValidacaoDocumental() {
 
       {/* Modal: solicitar documentos complementares ao candidato */}
       {solicitarDocsAberto && candidato && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+        <div className="fixed inset-0 z-[65] flex items-center justify-center bg-black/70 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
             <div className="flex items-center justify-between px-6 py-4 border-b bg-blue-900 rounded-t-2xl">
               <div className="flex items-center gap-2">
