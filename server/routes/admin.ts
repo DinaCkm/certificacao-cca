@@ -611,7 +611,7 @@ adminRouter.put("/fale-conosco/:id/lida",
 
 // GET /api/admin/candidatos — lista todos os candidatos com processo
 adminRouter.get("/candidatos",
-  requireRole("administrador", "gestor_n1", "gestor_n2"),
+  requireRole("administrador", "gestor_n1", "gestor_n2", "avaliador"),
   async (req, res) => {
     try {
       const { busca, status } = req.query as any;
@@ -687,7 +687,7 @@ adminRouter.get("/candidatos",
 // GET /api/admin/candidatos/:id — detalhe do candidato (TODAS as certificações
 // em andamento dele, lado a lado — não só a mais recente)
 adminRouter.get("/candidatos/:id",
-  requireRole("administrador", "gestor_n1", "gestor_n2"),
+  requireRole("administrador", "gestor_n1", "gestor_n2", "avaliador"),
   async (req, res) => {
     try {
       const [rows] = await db.execute(
