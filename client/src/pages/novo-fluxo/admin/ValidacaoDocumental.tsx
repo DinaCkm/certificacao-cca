@@ -16,6 +16,8 @@ interface ChecklistItem { id: string; label: string; checked: boolean | null; }
 interface DocAvaliacao {
   documento_idx: number;
   documento_nome: string;
+  tipo_arquivo_key: string; // chave real do arquivo em documentos_candidato — "doc-N" para os originais, "complementar-ID" para os enviados a pedido do avaliador
+  complementar?: boolean; // true = documento extra, enviado em resposta a uma solicitação
   aprovado: boolean | null;
   parecer: string;
   checklist: ChecklistItem[];
@@ -187,7 +189,7 @@ export function AdminValidacaoDocumental() {
       }
 
       // Admin vê avaliação completa de ambos; avaliador vê só a sua
-      const lista: DocAvaliacao[] = nomesDoc.map((nome, idx) => {
+      const listaOriginais: DocAvaliacao[] = nomesDoc.map((nome, idx) => {
         const docExistente = data.documentos?.find((d: any) => d.documento_idx === idx);
         // Para admin, monta visão completa com ambos os avaliadores
         const minhaAv = data.is_admin ? docExistente : docExistente?.minha_avaliacao;
@@ -200,6 +202,7 @@ export function AdminValidacaoDocumental() {
         return {
           documento_idx: idx,
           documento_nome: nome,
+          tipo_arquivo_key: `doc-${idx}`,
           aprovado,
           parecer: data.is_admin ? (docExistente?.avaliador1_parecer || "") : (minhaAv?.parecer || ""),
           checklist: data.is_admin
@@ -217,6 +220,45 @@ export function AdminValidacaoDocumental() {
           status: docExistente?.status || "pendente",
         };
       });
+
+      // Documentos complementares que o candidato enviou em resposta a uma
+      // solicitação — antes ficavam avisados num banner, mas não entravam
+      // na lista de avaliação: o avaliador não tinha como abrir/analisar/
+      // aprovar esse arquivo específico. Agora entram como itens normais,
+      // seguindo exatamente o mesmo fluxo de dupla avaliação — sua chave de
+      // arquivo real é "complementar-{id da solicitação}", não "doc-N".
+      const complementares: DocAvaliacao[] = (c.documentos_complementares_atendidos || []).map(
+        (s: { id: number; mensagem: string }, i: number) => {
+          const idx = nomesDoc.length + i;
+          const docExistente = data.documentos?.find((d: any) => d.documento_idx === idx);
+          const minhaAv = data.is_admin ? docExistente : docExistente?.minha_avaliacao;
+          const aprovadoVal = data.is_admin ? docExistente?.avaliador1_aprovado : minhaAv?.aprovado;
+          const aprovado = aprovadoVal === null || aprovadoVal === undefined ? null : Boolean(Number(aprovadoVal));
+          const nomeDoc = `Documento complementar: "${s.mensagem.slice(0, 60)}${s.mensagem.length > 60 ? "…" : ""}"`;
+          return {
+            documento_idx: idx,
+            documento_nome: nomeDoc,
+            tipo_arquivo_key: `complementar-${s.id}`,
+            complementar: true,
+            aprovado,
+            parecer: data.is_admin ? (docExistente?.avaliador1_parecer || "") : (minhaAv?.parecer || ""),
+            checklist: data.is_admin
+              ? (docExistente?.checklist_av1 || getChecklist(nomeDoc))
+              : (minhaAv?.checklist || getChecklist(nomeDoc)),
+            av1_aprovado: docExistente?.avaliador1_aprovado !== undefined
+              ? Boolean(Number(docExistente.avaliador1_aprovado)) : null,
+            av1_nome: docExistente?.av1_nome_real || docExistente?.avaliador1_nome || null,
+            av1_parecer: docExistente?.avaliador1_parecer || "",
+            av2_aprovado: docExistente?.avaliador2_aprovado !== undefined && docExistente?.avaliador2_aprovado !== null
+              ? Boolean(Number(docExistente.avaliador2_aprovado)) : null,
+            av2_nome: docExistente?.av2_nome_real || docExistente?.avaliador2_nome || null,
+            av2_parecer: docExistente?.avaliador2_parecer || "",
+            status: docExistente?.status || "pendente",
+          };
+        }
+      );
+
+      const lista: DocAvaliacao[] = [...listaOriginais, ...complementares];
 
       // Só agora atualiza todos os estados e exibe a tela
       setMeuNumero(data.meu_numero);
@@ -524,7 +566,7 @@ export function AdminValidacaoDocumental() {
               </div>
               <div className="flex items-center gap-1">
                 {(() => {
-                  const tipoKey = `doc-${docAberto}`;
+                  const tipoKey = docAtual.tipo_arquivo_key;
                   const docEnviado = candidato.documentos.find((d: any) => d.tipo_documento === tipoKey);
                   const caminhoArq = docEnviado?.caminho_arquivo || docEnviado?.nome_arquivo;
                   if (!caminhoArq) return null;
@@ -549,8 +591,8 @@ export function AdminValidacaoDocumental() {
               {/* Arquivo */}
               <div className="lg:w-1/2 bg-gray-100 min-h-[400px] flex items-center justify-center rounded-bl-2xl">
                 {(() => {
-                  // Busca o documento pelo tipo_documento (doc-0, doc-1, doc-2)
-                  const tipoKey = `doc-${docAberto}`;
+                  // Busca o documento pela chave real (doc-0, doc-1... ou complementar-ID)
+                  const tipoKey = docAtual.tipo_arquivo_key;
                   const docEnviado = candidato.documentos.find((d: any) =>
                     d.tipo_documento === tipoKey
                   );
@@ -860,7 +902,14 @@ export function AdminValidacaoDocumental() {
                 av.aprovado === false ? "border-red-300 bg-red-50" :
                 "border-gray-200")}>
                 <CardContent className="p-4">
-                  <p className="text-sm font-semibold text-foreground mb-3">{av.documento_nome}</p>
+                  <p className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                    {av.documento_nome}
+                    {av.complementar && (
+                      <span className="text-[10px] font-bold uppercase tracking-wide bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full">
+                        Complementar
+                      </span>
+                    )}
+                  </p>
 
                   {isAdmin ? (
                     // ── Visão do Admin: mostra ambos os avaliadores lado a lado ──
