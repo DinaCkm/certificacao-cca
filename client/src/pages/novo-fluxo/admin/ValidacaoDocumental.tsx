@@ -83,7 +83,7 @@ export function AdminValidacaoDocumental() {
   const [enviando, setEnviando] = useState(false);
   const [discordancias, setDiscordancias] = useState<any[]>([]);
   const [modoDesempate, setModoDesempate] = useState(false);
-  const [zoomImagem, setZoomImagem] = useState<string | null>(null); // URL da imagem em tela cheia, ou null se fechado
+  const [zoomArquivo, setZoomArquivo] = useState<{ url: string; isPdf: boolean } | null>(null); // arquivo em tela cheia, ou null se fechado
   const [solicitarDocsAberto, setSolicitarDocsAberto] = useState(false);
   const [mensagemSolicitacao, setMensagemSolicitacao] = useState("");
   const [enviandoSolicitacao, setEnviandoSolicitacao] = useState(false);
@@ -92,15 +92,15 @@ export function AdminValidacaoDocumental() {
   const [avaliadoresCompletos, setAvaliadoresCompletos] = useState(false);
   const [avaliadoresNomes, setAvaliadoresNomes] = useState<{ av1: string | null; av2: string | null } | null>(null);
 
-  // Fecha o zoom da imagem ao pressionar ESC
+  // Fecha o zoom do arquivo ao pressionar ESC
   useEffect(() => {
-    if (!zoomImagem) return;
+    if (!zoomArquivo) return;
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setZoomImagem(null);
+      if (e.key === "Escape") setZoomArquivo(null);
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [zoomImagem]);
+  }, [zoomArquivo]);
 
   async function enviarSolicitacaoDocumentos() {
     if (!candidato || !mensagemSolicitacao.trim()) {
@@ -437,25 +437,31 @@ export function AdminValidacaoDocumental() {
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* Zoom em tela cheia da imagem do documento — fecha com ESC, X ou clique fora */}
-      {zoomImagem && (
+      {/* Zoom em tela cheia do documento (imagem ou PDF) — fecha com ESC, X ou clique fora */}
+      {zoomArquivo && (
         <div
           className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4"
-          onClick={() => setZoomImagem(null)}
+          onClick={() => setZoomArquivo(null)}
         >
           <button
-            onClick={() => setZoomImagem(null)}
+            onClick={() => setZoomArquivo(null)}
             title="Fechar (Esc)"
             className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20"
           >
             <X className="w-5 h-5 text-white" />
           </button>
-          <img
-            src={zoomImagem}
-            alt="Documento em tela cheia"
-            className="max-w-full max-h-full object-contain"
-            onClick={e => e.stopPropagation()}
-          />
+          {zoomArquivo.isPdf ? (
+            <div className="w-full h-full max-w-5xl bg-white rounded-lg overflow-hidden" onClick={e => e.stopPropagation()}>
+              <iframe src={zoomArquivo.url} title="Documento em tela cheia" className="w-full h-full" style={{ border: "none" }} />
+            </div>
+          ) : (
+            <img
+              src={zoomArquivo.url}
+              alt="Documento em tela cheia"
+              className="max-w-full max-h-full object-contain"
+              onClick={e => e.stopPropagation()}
+            />
+          )}
         </div>
       )}
 
@@ -559,12 +565,22 @@ export function AdminValidacaoDocumental() {
                   const url = `/api/upload/documento/${caminho}?token=${token}`;
                   const isPdf = caminho.toLowerCase().endsWith(".pdf");
                   return isPdf ? (
-                    <iframe src={url} title={docAtual.documento_nome}
-                      className="w-full min-h-[500px] rounded-bl-2xl" style={{ border: "none" }} />
+                    <div className="relative w-full">
+                      <button
+                        type="button"
+                        onClick={() => setZoomArquivo({ url, isPdf: true })}
+                        title="Ver em tela cheia"
+                        className="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-md border hover:bg-gray-50"
+                      >
+                        <Maximize2 className="w-4 h-4 text-gray-700" />
+                      </button>
+                      <iframe src={url} title={docAtual.documento_nome}
+                        className="w-full min-h-[500px] rounded-bl-2xl" style={{ border: "none" }} />
+                    </div>
                   ) : (
                     <button
                       type="button"
-                      onClick={() => setZoomImagem(url)}
+                      onClick={() => setZoomArquivo({ url, isPdf: false })}
                       className="relative w-full h-full flex items-center justify-center group cursor-zoom-in"
                       title="Clique para ver em tela cheia"
                     >
