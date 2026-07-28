@@ -27,6 +27,7 @@ import { UploadDocumentos } from "./pages/novo-fluxo/UploadDocumentos";
 import { PagamentoAnalise } from "./pages/novo-fluxo/PagamentoAnalise";
 import { AguardandoValidacao } from "./pages/novo-fluxo/AguardandoValidacao";
 import { Prova } from "./pages/novo-fluxo/Prova";
+import { AgendamentoProva } from "./pages/novo-fluxo/AgendamentoProva";
 import { ResultadoProva } from "./pages/novo-fluxo/ResultadoProva";
 import { AgendamentoEntrevista } from "./pages/novo-fluxo/AgendamentoEntrevista";
 import { SalaEntrevista } from "./pages/novo-fluxo/SalaEntrevista";
@@ -127,6 +128,7 @@ function Router() {
       <Route path={"/novo-fluxo/pagamento-analise"} component={PagamentoAnalise} />
       <Route path={"/novo-fluxo/aguardando-validacao"} component={AguardandoValidacao} />
       <Route path={"/novo-fluxo/prova"} component={Prova} />
+      <Route path={"/novo-fluxo/agendar-prova"} component={AgendamentoProva} />
       <Route path={"/novo-fluxo/resultado-prova"} component={ResultadoProva} />
       <Route path={"/novo-fluxo/agendamento-entrevista"} component={AgendamentoEntrevista} />
       <Route path={"/novo-fluxo/sala-entrevista"} component={SalaEntrevista} />
