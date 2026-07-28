@@ -332,6 +332,27 @@ adminRouter.delete(
 
 // ── Salas de Prova (agendamento, agenda, fiscal, gravações) ──────────────────
 
+// GET /api/admin/fiscais-disponiveis — qualquer usuário não-candidato pode ser escalado
+adminRouter.get(
+  "/fiscais-disponiveis",
+  requireRole("administrador", "gestor_n1"),
+  async (_req: Request, res: Response) => {
+    try {
+      const [rows] = await db.execute(
+        `SELECT u.id, u.full_name, r.code as role, r.nome as role_nome
+         FROM users u
+         JOIN roles r ON r.id = u.role_id
+         WHERE r.code != 'candidato' AND u.is_active = TRUE
+         ORDER BY u.full_name`
+      ) as any;
+      return res.json({ fiscais: rows });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao listar possíveis fiscais" });
+    }
+  }
+);
+
 // GET /api/admin/salas-prova — agenda completa (admin/gestor/fiscal)
 adminRouter.get(
   "/salas-prova",
@@ -369,17 +390,20 @@ adminRouter.post(
   "/salas-prova",
   requireRole("administrador", "gestor_n1"),
   async (req: Request, res: Response) => {
-    const { certification_type_id, data_hora, duracao_minutos, capacidade_maxima, fiscal_id } = req.body;
-    if (!certification_type_id || !data_hora) {
-      return res.status(400).json({ error: "certification_type_id e data_hora são obrigatórios" });
+    const { cert_slug, data_hora, duracao_minutos, capacidade_maxima, fiscal_id } = req.body;
+    if (!cert_slug || !data_hora) {
+      return res.status(400).json({ error: "cert_slug e data_hora são obrigatórios" });
     }
     if (capacidade_maxima && capacidade_maxima > 5) {
       return res.status(400).json({ error: "Capacidade máxima por sala é 5 candidatos" });
     }
     try {
+      const [certs] = await db.execute(`SELECT id FROM certification_types WHERE slug = ?`, [cert_slug]) as any;
+      if (!certs.length) return res.status(404).json({ error: "Certificação não encontrada" });
+
       const { criarSalaProva } = await import("../services/provaAgendamentoService.js");
       const result = await criarSalaProva({
-        certification_type_id: parseInt(certification_type_id),
+        certification_type_id: certs[0].id,
         data_hora,
         duracao_minutos: duracao_minutos || 60,
         capacidade_maxima: capacidade_maxima || 5,

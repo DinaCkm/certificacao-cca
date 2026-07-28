@@ -22,6 +22,7 @@ export const MENU_ITEMS: MenuItemDef[] = [
   { key: "candidatos", label: "Todos os Candidatos", href: "/novo-fluxo/admin/candidatos" },
   { key: "perfis", label: "Perfis e Permissões", href: "/novo-fluxo/admin/perfis" },
   { key: "prova", label: "Parametrizar Prova", href: "/novo-fluxo/admin/prova-config" },
+  { key: "provas_agendadas", label: "Agenda de Provas", href: "/novo-fluxo/admin/provas-agendadas" },
   { key: "usuarios", label: "Gestão de Usuários", href: "/novo-fluxo/admin/usuarios" },
   { key: "carrossel", label: "Carrossel de Imagens", href: "/novo-fluxo/admin/carrossel" },
   { key: "certificacoes", label: "Certificações ativas", href: "/novo-fluxo/admin/certificacoes" },

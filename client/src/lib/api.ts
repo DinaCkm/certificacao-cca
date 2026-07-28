@@ -179,6 +179,26 @@ export const api = {
     salvarMenuPermissoes: (roleCode: string, itens: string[]) =>
       request<{ message: string }>("PUT", `/admin/roles/${roleCode}/menu-permissoes`, { itens }),
   },
+
+  provaAgendamento: {
+    salasDisponiveis: () =>
+      request<{ processo_id: number; cert_nome: string; salas: any[] }>("GET", "/prova/salas-disponiveis"),
+
+    agendar: (salaId: number) =>
+      request<{ sala_id: number; data_hora: string; duracao_minutos: number; cert_nome: string }>(
+        "POST", "/prova/agendar", { sala_id: salaId }
+      ),
+
+    entrarNaSala: (salaId: number) =>
+      request<{ tentativa_id: number; daily_room_url: string; daily_token: string }>(
+        "POST", `/prova/sala/${salaId}/entrar`
+      ),
+
+    registrarViolacao: (tentativaId: number, tipo: "troca_aba" | "saida_fullscreen") =>
+      request<{ violacoes_count: number; limite: number; anulada: boolean }>(
+        "POST", "/prova/violacao", { tentativa_id: tentativaId, tipo }
+      ),
+  },
 };
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
@@ -283,4 +303,42 @@ Object.assign(adminApi, {
 
   definirStatusCertificacao: (slug: string, status: string) =>
     request<{ message: string }>("PUT", `/admin/certificacoes/${slug}/status`, { status }),
+});
+
+// ── Salas de Prova — agenda, fiscal e gravações (admin) ──────────────────────
+
+Object.assign(adminApi, {
+  listarFiscaisDisponiveis: () =>
+    request<{ fiscais: { id: number; full_name: string; role: string; role_nome: string }[] }>(
+      "GET", "/admin/fiscais-disponiveis"
+    ),
+
+  listarSalasProva: () =>
+    request<{ salas: any[] }>("GET", "/admin/salas-prova"),
+
+  criarSalaProva: (body: {
+    cert_slug: string;
+    data_hora: string;
+    duracao_minutos?: number;
+    capacidade_maxima?: number;
+    fiscal_id?: number | null;
+  }) => request<{ id: number }>("POST", "/admin/salas-prova", body),
+
+  cancelarSalaProva: (id: number) =>
+    request<{ message: string }>("DELETE", `/admin/salas-prova/${id}`),
+
+  listarCandidatosDaSala: (salaId: number) =>
+    request<{ candidatos: any[] }>("GET", `/admin/salas-prova/${salaId}/candidatos`),
+
+  entrarComoFiscal: (salaId: number) =>
+    request<{ daily_room_url: string; daily_token: string }>("POST", `/admin/salas-prova/${salaId}/entrar-fiscal`),
+
+  anularTentativaAdmin: (salaId: number, tentativaId: number, motivo?: string) =>
+    request<{ message: string }>("POST", `/admin/salas-prova/${salaId}/anular/${tentativaId}`, { motivo }),
+
+  listarGravacoesSala: (salaId: number) =>
+    request<{ gravacoes: any[] }>("GET", `/admin/salas-prova/${salaId}/gravacoes`),
+
+  arquivarGravacao: (id: number) =>
+    request<{ message: string }>("POST", `/admin/gravacoes/${id}/arquivar`),
 });
