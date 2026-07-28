@@ -10,6 +10,7 @@ import { adminApi } from "@/lib/api";
 import {
   Calendar, Clock, Users, Video, Plus, X, Trash2,
   Loader2, ShieldCheck, RefreshCw, ChevronDown, ChevronUp,
+  Film, Download, Archive,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +39,13 @@ const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   cancelada: { label: "Cancelada", className: "bg-red-100 text-red-600" },
 };
 
+const GRAVACAO_STATUS_LABEL: Record<string, { label: string; className: string }> = {
+  processando: { label: "Processando", className: "bg-amber-100 text-amber-700" },
+  disponivel: { label: "Disponível", className: "bg-blue-100 text-blue-700" },
+  baixada: { label: "Baixada", className: "bg-green-100 text-green-700" },
+  arquivada: { label: "Arquivada", className: "bg-gray-100 text-gray-500" },
+};
+
 function formatDataHora(dataHora: string) {
   const d = new Date(dataHora);
   return {
@@ -61,6 +69,9 @@ export function AdminProvasAgendadas() {
   const [salvando, setSalvando] = useState(false);
   const [expandido, setExpandido] = useState<number | null>(null);
   const [candidatosPorSala, setCandidatosPorSala] = useState<Record<number, any[]>>({});
+  const [expandidoGravacoes, setExpandidoGravacoes] = useState<number | null>(null);
+  const [gravacoesPorSala, setGravacoesPorSala] = useState<Record<number, any[]>>({});
+  const [sincronizandoGravacoes, setSincronizandoGravacoes] = useState(false);
 
   const [form, setForm] = useState({
     cert_slug: "",
@@ -162,8 +173,63 @@ export function AdminProvasAgendadas() {
     }
   }
 
+  async function toggleGravacoes(salaId: number) {
+    if (expandidoGravacoes === salaId) {
+      setExpandidoGravacoes(null);
+      return;
+    }
+    setExpandidoGravacoes(salaId);
+    setSincronizandoGravacoes(true);
+    try {
+      const res = await adminApi.listarGravacoesSala(salaId);
+      setGravacoesPorSala((prev) => ({ ...prev, [salaId]: res.gravacoes || [] }));
+    } catch (err: any) {
+      toast({ title: "Erro ao buscar gravações", description: err.message, variant: "destructive" });
+      setGravacoesPorSala((prev) => ({ ...prev, [salaId]: [] }));
+    } finally {
+      setSincronizandoGravacoes(false);
+    }
+  }
+
+  function baixarGravacao(id: number) {
+    const token = localStorage.getItem("anefac_token");
+    window.open(`/api/admin/gravacoes/${id}/download?token=${encodeURIComponent(token || "")}`, "_blank");
+  }
+
+  async function arquivarGravacao(id: number, salaId: number) {
+    if (!confirm("Confirma que já baixou e guardou esta gravação? O arquivo será removido do servidor e do Daily.co.")) return;
+    try {
+      await adminApi.arquivarGravacao(id);
+      toast({ title: "Gravação arquivada — removida do servidor" });
+      const res = await adminApi.listarGravacoesSala(salaId);
+      setGravacoesPorSala((prev) => ({ ...prev, [salaId]: res.gravacoes || [] }));
+    } catch (err: any) {
+      toast({ title: "Erro ao arquivar gravação", description: err.message, variant: "destructive" });
+    }
+  }
+
   const proximas = salas.filter((s) => s.status === "agendada" || s.status === "em_andamento");
   const passadas = salas.filter((s) => s.status === "concluida" || s.status === "cancelada");
+
+  function renderSalaCard(s: SalaProva) {
+    return (
+      <SalaCard
+        key={s.id}
+        sala={s}
+        expandido={expandido === s.id}
+        candidatos={candidatosPorSala[s.id]}
+        onToggle={() => toggleExpandir(s.id)}
+        onCancelar={() => cancelarSala(s.id)}
+        onEntrarFiscal={() => entrarComoFiscal(s.id)}
+        expandidoGravacoes={expandidoGravacoes === s.id}
+        gravacoes={gravacoesPorSala[s.id]}
+        sincronizandoGravacoes={sincronizandoGravacoes && expandidoGravacoes === s.id}
+        onToggleGravacoes={() => toggleGravacoes(s.id)}
+        onBaixarGravacao={baixarGravacao}
+        onArquivarGravacao={(gid: number) => arquivarGravacao(gid, s.id)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -222,17 +288,7 @@ export function AdminProvasAgendadas() {
                   Próximas ({proximas.length})
                 </h2>
                 <div className="space-y-3">
-                  {proximas.map((s) => (
-                    <SalaCard
-                      key={s.id}
-                      sala={s}
-                      expandido={expandido === s.id}
-                      candidatos={candidatosPorSala[s.id]}
-                      onToggle={() => toggleExpandir(s.id)}
-                      onCancelar={() => cancelarSala(s.id)}
-                      onEntrarFiscal={() => entrarComoFiscal(s.id)}
-                    />
-                  ))}
+                  {proximas.map(renderSalaCard)}
                 </div>
               </div>
             )}
@@ -243,17 +299,7 @@ export function AdminProvasAgendadas() {
                   Encerradas ({passadas.length})
                 </h2>
                 <div className="space-y-3">
-                  {passadas.map((s) => (
-                    <SalaCard
-                      key={s.id}
-                      sala={s}
-                      expandido={expandido === s.id}
-                      candidatos={candidatosPorSala[s.id]}
-                      onToggle={() => toggleExpandir(s.id)}
-                      onCancelar={() => cancelarSala(s.id)}
-                      onEntrarFiscal={() => entrarComoFiscal(s.id)}
-                    />
-                  ))}
+                  {passadas.map(renderSalaCard)}
                 </div>
               </div>
             )}
@@ -348,6 +394,7 @@ export function AdminProvasAgendadas() {
 
 function SalaCard({
   sala, expandido, candidatos, onToggle, onCancelar, onEntrarFiscal,
+  expandidoGravacoes, gravacoes, sincronizandoGravacoes, onToggleGravacoes, onBaixarGravacao, onArquivarGravacao,
 }: {
   sala: SalaProva;
   expandido: boolean;
@@ -355,6 +402,12 @@ function SalaCard({
   onToggle: () => void;
   onCancelar: () => void;
   onEntrarFiscal: () => void;
+  expandidoGravacoes: boolean;
+  gravacoes?: any[];
+  sincronizandoGravacoes: boolean;
+  onToggleGravacoes: () => void;
+  onBaixarGravacao: (id: number) => void;
+  onArquivarGravacao: (id: number) => void;
 }) {
   const fmt = formatDataHora(sala.data_hora);
   const st = STATUS_LABEL[sala.status];
@@ -393,10 +446,15 @@ function SalaCard({
                 <Video className="w-3.5 h-3.5 mr-1.5" /> Entrar como fiscal
               </Button>
             )}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <button onClick={onToggle} className="text-xs text-indigo-700 flex items-center gap-1 hover:underline">
                 Ver candidatos {expandido ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
               </button>
+              {sala.daily_room_name && (
+                <button onClick={onToggleGravacoes} className="text-xs text-indigo-700 flex items-center gap-1 hover:underline">
+                  <Film className="w-3 h-3" /> Gravações {expandidoGravacoes ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                </button>
+              )}
               {podeCancelar && (
                 <button onClick={onCancelar} className="text-red-500 hover:text-red-700"><Trash2 className="w-4 h-4" /></button>
               )}
@@ -426,6 +484,49 @@ function SalaCard({
                         <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-semibold">Anulada</span>
                       ) : (
                         <span className="bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{c.status}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {expandidoGravacoes && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            {sincronizandoGravacoes ? (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Loader2 className="w-3 h-3 animate-spin" /> Sincronizando com o Daily.co...
+              </div>
+            ) : !gravacoes || gravacoes.length === 0 ? (
+              <p className="text-xs text-muted-foreground">Nenhuma gravação encontrada para esta sala ainda.</p>
+            ) : (
+              <div className="space-y-2">
+                {gravacoes.map((g: any) => (
+                  <div key={g.id} className="flex items-center justify-between text-xs bg-gray-50 rounded-lg px-3 py-2 flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <Film className="w-3.5 h-3.5 text-gray-400" />
+                      <span className="text-muted-foreground">Gravação #{g.id}</span>
+                      <span className={cn("px-2 py-0.5 rounded-full font-semibold", GRAVACAO_STATUS_LABEL[g.status]?.className)}>
+                        {GRAVACAO_STATUS_LABEL[g.status]?.label || g.status}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {(g.status === "disponivel" || g.status === "baixada") && (
+                        <button onClick={() => onBaixarGravacao(g.id)}
+                          className="flex items-center gap-1 text-blue-700 hover:underline font-medium">
+                          <Download className="w-3 h-3" /> Baixar
+                        </button>
+                      )}
+                      {g.status === "baixada" && (
+                        <button onClick={() => onArquivarGravacao(g.id)}
+                          className="flex items-center gap-1 text-red-600 hover:underline font-medium">
+                          <Archive className="w-3 h-3" /> Arquivar
+                        </button>
+                      )}
+                      {g.status === "processando" && (
+                        <span className="text-gray-400">Ainda processando no Daily.co...</span>
                       )}
                     </div>
                   </div>

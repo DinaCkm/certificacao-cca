@@ -14,12 +14,13 @@ declare global {
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
+  const queryToken = req.query.token as string | undefined;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.split(" ")[1] : queryToken;
+
+  if (!token) {
     return res.status(401).json({ error: "Token de autenticação não fornecido" });
   }
-
-  const token = authHeader.split(" ")[1];
 
   try {
     const payload = verifyToken(token);
