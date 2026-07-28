@@ -12,6 +12,7 @@ import {
   agendarProva,
   entrarNaSalaProva,
   registrarViolacao,
+  buscarMeuAgendamento,
 } from "../services/provaAgendamentoService.js";
 
 export const provaRouter = Router();
@@ -55,6 +56,18 @@ provaRouter.post("/agendar", async (req: Request, res: Response) => {
     return res.status(201).json(result);
   } catch (err: any) {
     return res.status(400).json({ error: err.message });
+  }
+});
+
+// ── GET /api/prova/meu-agendamento ────────────────────────────────────────────
+// Retorna o agendamento de prova ativo do candidato (para a sala)
+
+provaRouter.get("/meu-agendamento", async (req: Request, res: Response) => {
+  try {
+    const agendamento = await buscarMeuAgendamento(req.user!.userId);
+    return res.json({ agendamento });
+  } catch (err: any) {
+    return res.status(500).json({ error: "Erro ao buscar agendamento" });
   }
 });
 

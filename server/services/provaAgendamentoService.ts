@@ -28,6 +28,24 @@ async function buscarProcessoElegivel(userId: number) {
   return processo;
 }
 
+// ── Busca o agendamento de prova atual do candidato (para a sala) ────────────
+export async function buscarMeuAgendamento(userId: number) {
+  const [rows] = await db.execute(
+    `SELECT a.id as agendamento_id, a.sala_id, a.status as agendamento_status,
+            s.data_hora, s.duracao_minutos, s.status as sala_status,
+            ct.nome as cert_nome
+     FROM agendamentos_prova a
+     JOIN salas_prova s ON s.id = a.sala_id
+     JOIN certification_types ct ON ct.id = s.certification_type_id
+     WHERE a.user_id = ? AND a.status IN ('agendado','presente') AND s.status != 'cancelada'
+     ORDER BY s.data_hora ASC LIMIT 1`,
+    [userId]
+  ) as any;
+
+  if (!rows.length) return null;
+  return rows[0];
+}
+
 // ── Lista salas com vaga para a certificação do candidato ────────────────────
 export async function listarSalasDisponiveis(userId: number) {
   const processo = await buscarProcessoElegivel(userId);

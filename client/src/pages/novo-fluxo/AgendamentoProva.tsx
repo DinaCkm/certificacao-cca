@@ -111,8 +111,8 @@ export function AgendamentoProva() {
                   Fique na tela da prova o tempo todo. Sair da aba ou do modo tela cheia mais de 3 vezes anula a tentativa automaticamente.
                 </p>
               </div>
-              <Button className="w-full bg-blue-900 hover:bg-blue-800" onClick={() => navigate("/novo-fluxo/aguardando-validacao")}>
-                Voltar ao painel →
+              <Button className="w-full bg-blue-900 hover:bg-blue-800" onClick={() => navigate("/novo-fluxo/sala-prova")}>
+                Ver minha sala de prova →
               </Button>
             </CardContent>
           </Card>

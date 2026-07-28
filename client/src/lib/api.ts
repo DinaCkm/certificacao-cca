@@ -184,6 +184,9 @@ export const api = {
     salasDisponiveis: () =>
       request<{ processo_id: number; cert_nome: string; salas: any[] }>("GET", "/prova/salas-disponiveis"),
 
+    meuAgendamento: () =>
+      request<{ agendamento: any | null }>("GET", "/prova/meu-agendamento"),
+
     agendar: (salaId: number) =>
       request<{ sala_id: number; data_hora: string; duracao_minutos: number; cert_nome: string }>(
         "POST", "/prova/agendar", { sala_id: salaId }
