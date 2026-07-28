@@ -7,11 +7,86 @@ import {
   submeterProva,
   buscarHistoricoTentativas,
 } from "../services/provaService.js";
+import {
+  listarSalasDisponiveis,
+  agendarProva,
+  entrarNaSalaProva,
+  registrarViolacao,
+} from "../services/provaAgendamentoService.js";
 
 export const provaRouter = Router();
 
 // Todas as rotas exigem autenticação
 provaRouter.use(requireAuth);
+
+// ── GET /api/prova/salas-disponiveis ──────────────────────────────────────────
+// Lista salas com vaga para o candidato agendar sua prova
+
+provaRouter.get("/salas-disponiveis", async (req: Request, res: Response) => {
+  try {
+    const result = await listarSalasDisponiveis(req.user!.userId);
+    return res.json(result);
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
+// ── POST /api/prova/agendar ────────────────────────────────────────────────────
+// Candidato agenda uma sala de prova
+
+provaRouter.post("/agendar", async (req: Request, res: Response) => {
+  const { sala_id } = req.body;
+  if (!sala_id) return res.status(400).json({ error: "sala_id é obrigatório" });
+
+  try {
+    const result = await agendarProva(req.user!.userId, parseInt(sala_id));
+
+    try {
+      const { enviarConfirmacaoAgendamentoProva } = await import("../services/emailService.js");
+      const { db } = await import("../db/connection.js");
+      const [u] = await db.execute(`SELECT full_name, email FROM users WHERE id = ?`, [req.user!.userId]) as any;
+      await enviarConfirmacaoAgendamentoProva(
+        u[0].email, u[0].full_name, String(result.data_hora), result.duracao_minutos, result.cert_nome
+      );
+    } catch (emailErr) {
+      console.warn("Confirmação de agendamento de prova falhou (não crítico):", emailErr);
+    }
+
+    return res.status(201).json(result);
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
+// ── POST /api/prova/sala/:salaId/entrar ───────────────────────────────────────
+// Candidato entra na sala de vídeo no horário da prova
+
+provaRouter.post("/sala/:salaId/entrar", async (req: Request, res: Response) => {
+  try {
+    const { db } = await import("../db/connection.js");
+    const [u] = await db.execute(`SELECT full_name FROM users WHERE id = ?`, [req.user!.userId]) as any;
+    const result = await entrarNaSalaProva(req.user!.userId, parseInt(req.params.salaId), u[0].full_name);
+    return res.json(result);
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
+// ── POST /api/prova/violacao ───────────────────────────────────────────────────
+// Registra troca de aba / saída de fullscreen durante a prova
+
+provaRouter.post("/violacao", async (req: Request, res: Response) => {
+  const { tentativa_id, tipo } = req.body;
+  if (!tentativa_id || !["troca_aba", "saida_fullscreen"].includes(tipo)) {
+    return res.status(400).json({ error: "tentativa_id e tipo (troca_aba|saida_fullscreen) são obrigatórios" });
+  }
+  try {
+    const result = await registrarViolacao(parseInt(tentativa_id), req.user!.userId, tipo);
+    return res.json(result);
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message });
+  }
+});
 
 // ── GET /api/prova/disponivel ─────────────────────────────────────────────────
 // Verifica se candidato pode fazer prova

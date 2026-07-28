@@ -24,6 +24,7 @@ export async function testConnection() {
     await runCursosMigrations();
     await runDocumentosExigidosMigration();
     await runPerfilCandidatoMigration();
+    await runProvaAgendamentoMigrations();
   } catch (err) {
     console.error("❌ Erro ao conectar ao MySQL:", err);
     process.exit(1);
@@ -398,5 +399,136 @@ export async function runDocumentosExigidosMigration() {
     }
   } catch (err) {
     console.warn("⚠️ Erro na migração de documentos_exigidos/status (certification_types pode não existir ainda):", err);
+  }
+}
+
+// ─── Prova autônoma com sala de vídeo ao vivo (Daily.co) ──────────────────────
+// Antes a prova era feita sem fiscalização; agora o candidato agenda um
+// horário em uma "sala" (com até N candidatos + 1 fiscal), a sala vira uma
+// sala de vídeo Daily.co com gravação automática, e violações (troca de aba/
+// saída de fullscreen) são registradas e anulam a tentativa na 3ª ocorrência.
+export async function runProvaAgendamentoMigrations() {
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS salas_prova (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        certification_type_id INT NOT NULL,
+        data_hora DATETIME NOT NULL,
+        duracao_minutos INT NOT NULL DEFAULT 60,
+        capacidade_maxima INT NOT NULL DEFAULT 5,
+        fiscal_id INT NULL,
+        daily_room_name VARCHAR(255) NULL,
+        daily_room_url VARCHAR(500) NULL,
+        status ENUM('agendada','em_andamento','concluida','cancelada') NOT NULL DEFAULT 'agendada',
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_data_hora (data_hora),
+        INDEX idx_status (status),
+        INDEX idx_cert (certification_type_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS agendamentos_prova (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        sala_id INT NOT NULL,
+        processo_id INT NOT NULL,
+        user_id INT NOT NULL,
+        status ENUM('agendado','presente','ausente','cancelado') NOT NULL DEFAULT 'agendado',
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_sala_user (sala_id, user_id),
+        INDEX idx_processo (processo_id),
+        INDEX idx_user (user_id),
+        INDEX idx_sala (sala_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS violacoes_prova (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        tentativa_id INT NOT NULL,
+        tipo ENUM('troca_aba','saida_fullscreen') NOT NULL,
+        ocorrido_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_tentativa (tentativa_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS gravacoes_prova (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        sala_id INT NOT NULL,
+        tentativa_id INT NULL,
+        daily_recording_id VARCHAR(255) NULL,
+        caminho_arquivo VARCHAR(500) NULL,
+        tamanho_bytes BIGINT NULL,
+        status ENUM('processando','disponivel','baixada','arquivada') NOT NULL DEFAULT 'processando',
+        baixada_em TIMESTAMP NULL,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_daily_recording (daily_recording_id),
+        INDEX idx_sala (sala_id),
+        INDEX idx_tentativa (tentativa_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    console.log("✅ Tabelas de agendamento/sala/gravação de prova verificadas/criadas");
+
+    // Colunas novas em tentativas_prova (idempotente via INFORMATION_SCHEMA)
+    const [cols] = await db.execute(`
+      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tentativas_prova'
+    `) as any;
+    const existentes: string[] = cols.map((c: any) => c.COLUMN_NAME.toLowerCase());
+
+    if (!existentes.includes("sala_id")) {
+      await db.execute(`ALTER TABLE tentativas_prova ADD COLUMN sala_id INT NULL`);
+      console.log("✅ Coluna tentativas_prova.sala_id criada");
+    }
+    if (!existentes.includes("violacoes_count")) {
+      await db.execute(`ALTER TABLE tentativas_prova ADD COLUMN violacoes_count INT NOT NULL DEFAULT 0`);
+      console.log("✅ Coluna tentativas_prova.violacoes_count criada");
+    }
+    if (!existentes.includes("anulada")) {
+      await db.execute(`ALTER TABLE tentativas_prova ADD COLUMN anulada TINYINT(1) NOT NULL DEFAULT 0`);
+      console.log("✅ Coluna tentativas_prova.anulada criada");
+    }
+    if (!existentes.includes("anulada_motivo")) {
+      await db.execute(`ALTER TABLE tentativas_prova ADD COLUMN anulada_motivo VARCHAR(255) NULL`);
+      console.log("✅ Coluna tentativas_prova.anulada_motivo criada");
+    }
+    if (!existentes.includes("anulada_em")) {
+      await db.execute(`ALTER TABLE tentativas_prova ADD COLUMN anulada_em TIMESTAMP NULL`);
+      console.log("✅ Coluna tentativas_prova.anulada_em criada");
+    }
+
+    // status precisa aceitar 'anulada' além dos valores já usados
+    try {
+      await db.execute(`
+        ALTER TABLE tentativas_prova
+        MODIFY COLUMN status ENUM('em_andamento','finalizada','anulada') NOT NULL DEFAULT 'em_andamento'
+      `);
+    } catch (enumErr) {
+      console.warn("⚠️ ALTER ENUM tentativas_prova.status (pode já estar correto):", (enumErr as any)?.message);
+    }
+
+    // Role "fiscal" — acompanha a prova ao vivo (fiscal de sala)
+    await db.execute(
+      `INSERT IGNORE INTO roles (code, nome, descricao) VALUES ('fiscal', 'Fiscal de Prova', 'Acompanha a prova ao vivo e monitora violações')`
+    );
+
+    // Item de menu "provas_agendadas" para quem já vê "prova" no menu
+    const [rolesComMenu] = await db.execute(
+      `SELECT code, menu_permissoes FROM roles WHERE code IN ('administrador','gestor_n1','gestor_n2','fiscal')`
+    ) as any;
+    for (const r of rolesComMenu) {
+      let itens: string[] = [];
+      try { itens = r.menu_permissoes ? JSON.parse(r.menu_permissoes) : []; } catch { itens = []; }
+      if (!itens.includes("provas_agendadas")) {
+        itens.push("provas_agendadas");
+        await db.execute(`UPDATE roles SET menu_permissoes = ? WHERE code = ?`, [JSON.stringify(itens), r.code]);
+      }
+    }
+
+    console.log("✅ Migração de agendamento de prova concluída");
+  } catch (err) {
+    console.warn("⚠️ Erro na migração de agendamento de prova:", err);
   }
 }

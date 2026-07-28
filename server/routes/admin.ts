@@ -330,6 +330,163 @@ adminRouter.delete(
   }
 );
 
+// ── Salas de Prova (agendamento, agenda, fiscal, gravações) ──────────────────
+
+// GET /api/admin/salas-prova — agenda completa (admin/gestor/fiscal)
+adminRouter.get(
+  "/salas-prova",
+  requireRole("administrador", "gestor_n1", "gestor_n2", "fiscal"),
+  async (_req: Request, res: Response) => {
+    try {
+      const { listarAgendaAdmin } = await import("../services/provaAgendamentoService.js");
+      const salas = await listarAgendaAdmin();
+      return res.json({ salas });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao listar agenda de provas" });
+    }
+  }
+);
+
+// GET /api/admin/salas-prova/:id/candidatos — candidatos + status ao vivo da sala
+adminRouter.get(
+  "/salas-prova/:id/candidatos",
+  requireRole("administrador", "gestor_n1", "gestor_n2", "fiscal"),
+  async (req: Request, res: Response) => {
+    try {
+      const { listarCandidatosDaSala } = await import("../services/provaAgendamentoService.js");
+      const candidatos = await listarCandidatosDaSala(parseInt(req.params.id));
+      return res.json({ candidatos });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao listar candidatos da sala" });
+    }
+  }
+);
+
+// POST /api/admin/salas-prova — cria uma sala/horário de prova
+adminRouter.post(
+  "/salas-prova",
+  requireRole("administrador", "gestor_n1"),
+  async (req: Request, res: Response) => {
+    const { certification_type_id, data_hora, duracao_minutos, capacidade_maxima, fiscal_id } = req.body;
+    if (!certification_type_id || !data_hora) {
+      return res.status(400).json({ error: "certification_type_id e data_hora são obrigatórios" });
+    }
+    if (capacidade_maxima && capacidade_maxima > 5) {
+      return res.status(400).json({ error: "Capacidade máxima por sala é 5 candidatos" });
+    }
+    try {
+      const { criarSalaProva } = await import("../services/provaAgendamentoService.js");
+      const result = await criarSalaProva({
+        certification_type_id: parseInt(certification_type_id),
+        data_hora,
+        duracao_minutos: duracao_minutos || 60,
+        capacidade_maxima: capacidade_maxima || 5,
+        fiscal_id: fiscal_id || null,
+      });
+      return res.status(201).json(result);
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao criar sala de prova" });
+    }
+  }
+);
+
+// DELETE /api/admin/salas-prova/:id — cancela sala (apenas se sem candidatos agendados)
+adminRouter.delete(
+  "/salas-prova/:id",
+  requireRole("administrador", "gestor_n1"),
+  async (req: Request, res: Response) => {
+    try {
+      const { cancelarSalaProva } = await import("../services/provaAgendamentoService.js");
+      await cancelarSalaProva(parseInt(req.params.id));
+      return res.json({ message: "Sala cancelada com sucesso" });
+    } catch (err: any) {
+      return res.status(400).json({ error: err.message });
+    }
+  }
+);
+
+// POST /api/admin/salas-prova/:id/entrar-fiscal — fiscal/admin entra para monitorar ao vivo
+adminRouter.post(
+  "/salas-prova/:id/entrar-fiscal",
+  requireRole("administrador", "gestor_n1", "gestor_n2", "fiscal"),
+  async (req: Request, res: Response) => {
+    try {
+      const { entrarComoFiscal } = await import("../services/provaAgendamentoService.js");
+      const [u] = await db.execute(`SELECT full_name FROM users WHERE id = ?`, [req.user!.userId]) as any;
+      const result = await entrarComoFiscal(parseInt(req.params.id), u[0]?.full_name || "Fiscal ANEFAC");
+      return res.json(result);
+    } catch (err: any) {
+      return res.status(400).json({ error: err.message });
+    }
+  }
+);
+
+// POST /api/admin/salas-prova/:id/anular/:tentativaId — anulação manual pelo fiscal/admin
+adminRouter.post(
+  "/salas-prova/:id/anular/:tentativaId",
+  requireRole("administrador", "gestor_n1", "gestor_n2", "fiscal"),
+  async (req: Request, res: Response) => {
+    const { motivo } = req.body;
+    try {
+      const { anularTentativa } = await import("../services/provaAgendamentoService.js");
+      await anularTentativa(parseInt(req.params.tentativaId), motivo || "Anulada manualmente pelo fiscal");
+      return res.json({ message: "Tentativa anulada" });
+    } catch (err: any) {
+      return res.status(400).json({ error: err.message });
+    }
+  }
+);
+
+// GET /api/admin/salas-prova/:id/gravacoes — sincroniza com Daily.co e lista gravações
+adminRouter.get(
+  "/salas-prova/:id/gravacoes",
+  requireRole("administrador", "gestor_n1", "gestor_n2"),
+  async (req: Request, res: Response) => {
+    try {
+      const { sincronizarGravacoesSala } = await import("../services/gravacaoProvaService.js");
+      const gravacoes = await sincronizarGravacoesSala(parseInt(req.params.id));
+      return res.json({ gravacoes });
+    } catch (err: any) {
+      console.error(err);
+      return res.status(400).json({ error: err.message });
+    }
+  }
+);
+
+// GET /api/admin/gravacoes/:id/download — baixa (ou já retorna) o arquivo local e envia
+adminRouter.get(
+  "/gravacoes/:id/download",
+  requireRole("administrador", "gestor_n1", "gestor_n2"),
+  async (req: Request, res: Response) => {
+    try {
+      const { baixarGravacao } = await import("../services/gravacaoProvaService.js");
+      const caminho = await baixarGravacao(parseInt(req.params.id));
+      return res.download(caminho);
+    } catch (err: any) {
+      console.error(err);
+      return res.status(400).json({ error: err.message });
+    }
+  }
+);
+
+// POST /api/admin/gravacoes/:id/arquivar — marca como arquivada e libera espaço do servidor
+adminRouter.post(
+  "/gravacoes/:id/arquivar",
+  requireRole("administrador", "gestor_n1"),
+  async (req: Request, res: Response) => {
+    try {
+      const { arquivarGravacao } = await import("../services/gravacaoProvaService.js");
+      await arquivarGravacao(parseInt(req.params.id));
+      return res.json({ message: "Gravação arquivada — arquivo removido do servidor" });
+    } catch (err: any) {
+      return res.status(400).json({ error: err.message });
+    }
+  }
+);
+
 // ── Carrossel de imagens ──────────────────────────────────────────────────────
 
 // GET /api/admin/carrossel/publico — SEM autenticação (exibido na página de entrada)
@@ -1143,6 +1300,16 @@ adminRouter.post("/validacao/:processoId/decisao",
         );
       } catch (auditErr) {
         console.warn("Audit log falhou (não crítico):", auditErr);
+      }
+
+      // Caminho B → dispara convite de agendamento de prova automaticamente
+      if (caminho === "B") {
+        try {
+          const { enviarConviteAgendamentoProva } = await import("../services/emailService.js");
+          await enviarConviteAgendamentoProva(processo.email, processo.full_name, processo.cert_nome);
+        } catch (emailErr) {
+          console.warn("Convite de prova falhou (não crítico):", emailErr);
+        }
       }
 
       return res.json({ message: "Decisão registrada", novo_status: novoStatus, caminho });

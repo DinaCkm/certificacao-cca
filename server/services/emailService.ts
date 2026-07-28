@@ -155,6 +155,74 @@ export async function enviarConfirmacaoEntrevista(
 }
 
 /**
+ * Convite para agendar a prova — enviado ao candidato assim que o avaliador
+ * aprova os documentos (Caminho B)
+ */
+export async function enviarConviteAgendamentoProva(
+  candidatoEmail: string,
+  candidatoNome: string,
+  certNome: string
+) {
+  const subject = `Seus documentos foram aprovados — agende sua prova (${certNome})`;
+
+  const html = baseTemplate(`
+    <p>Olá, <strong>${candidatoNome}</strong>!</p>
+
+    <p>Seus documentos foram validados com sucesso para a <strong>${certNome}</strong>. Agora é hora de agendar sua prova de competência.</p>
+
+    <div class="alert-box">
+      <p><strong>Importante:</strong> a prova é realizada dentro da própria plataforma, com câmera e microfone ligados durante toda a realização, em uma sala com outros candidatos e um fiscal.</p>
+    </div>
+
+    <a href="${APP_URL}/novo-fluxo/agendar-prova" class="btn">
+      Agendar minha prova →
+    </a>
+  `);
+
+  return sendEmail(candidatoEmail, subject, html);
+}
+
+/**
+ * Confirmação de agendamento de prova — enviado ao candidato
+ */
+export async function enviarConfirmacaoAgendamentoProva(
+  candidatoEmail: string,
+  candidatoNome: string,
+  dataHora: string,
+  duracaoMinutos: number,
+  certNome: string
+) {
+  const d = new Date(dataHora);
+  const dataFormatada = d.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
+  const horaFormatada = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+  const subject = `Prova agendada — ${certNome}`;
+
+  const html = baseTemplate(`
+    <p>Olá, <strong>${candidatoNome}</strong>!</p>
+
+    <p>Sua prova de competência para a <strong>${certNome}</strong> foi agendada com sucesso.</p>
+
+    <div class="stat-box" style="text-align: left;">
+      <p style="margin: 0 0 8px; font-size: 13px; color: #3b82f6; font-weight: 600;">DETALHES DA PROVA</p>
+      <p style="margin: 0 0 6px; font-size: 15px;">📅 <strong>${dataFormatada}</strong></p>
+      <p style="margin: 0 0 6px; font-size: 15px;">🕐 <strong>${horaFormatada}</strong> (horário de Brasília)</p>
+      <p style="margin: 0; font-size: 15px;">⏱ Duração: <strong>${duracaoMinutos} minutos</strong></p>
+    </div>
+
+    <div class="alert-box">
+      <p><strong>Antes de começar:</strong> garanta câmera e microfone funcionando, uma conexão estável, e permaneça na tela da prova o tempo todo — sair da aba mais de 3 vezes anula a tentativa automaticamente.</p>
+    </div>
+
+    <a href="${APP_URL}/novo-fluxo/sala-prova" class="btn">
+      Acessar Plataforma →
+    </a>
+  `);
+
+  return sendEmail(candidatoEmail, subject, html);
+}
+
+/**
  * Aviso ao entrevistador sobre nova entrevista agendada
  */
 export async function enviarAvisoEntrevistador(
