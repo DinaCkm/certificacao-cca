@@ -62,6 +62,8 @@ import { AdminProvasAgendadas } from "./pages/novo-fluxo/admin/AdminProvasAgenda
 import { AceiteLGPD } from "./pages/novo-fluxo/AceiteLGPD";
 import { NavbarGlobal } from "./components/NavbarGlobal";
 import { FaleConosco } from "./components/FaleConosco";
+import { CookieConsent } from "./components/CookieConsent";
+import { PoliticaCookies } from "./pages/PoliticaCookies";
 import { NovoFluxoCertificacoes } from "./pages/novo-fluxo/NovoFluxoCertificacoes";
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -77,6 +79,7 @@ function Router() {
       <Route path={"/simulacao"} component={Simulacao} />
       <Route path={"/cursos"} component={Cursos} />
       <Route path={"/cursos/comprar/:id"} component={ComprarCurso} />
+      <Route path={"/politica-cookies"} component={PoliticaCookies} />
       {/* ARQUIVADO: <Route path={"/home"} component={Home} /> */}
       {/* ARQUIVADO: <Route path={"/select-certification-type"} component={SelectCertificationType} /> */}
 
@@ -207,6 +210,7 @@ function App() {
               </div>
             </div>
             {!isInitialPage && <GlobalFooter />}
+            {location !== "/novo-fluxo/sala-prova" && <CookieConsent />}
           </TooltipProvider>
         </ThemeProvider>
       </UserDataProvider>
