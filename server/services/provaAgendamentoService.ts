@@ -272,10 +272,12 @@ export async function criarSalaProva(dados: {
   capacidade_maxima: number;
   fiscal_id: number | null;
 }) {
+  // Passamos um objeto Date (não a string ISO crua) para que o driver mysql2
+  // serialize corretamente respeitando o timezone "-03:00" já configurado na conexão.
   const [result] = await db.execute(
     `INSERT INTO salas_prova (certification_type_id, data_hora, duracao_minutos, capacidade_maxima, fiscal_id)
      VALUES (?, ?, ?, ?, ?)`,
-    [dados.certification_type_id, dados.data_hora, dados.duracao_minutos, dados.capacidade_maxima, dados.fiscal_id]
+    [dados.certification_type_id, new Date(dados.data_hora), dados.duracao_minutos, dados.capacidade_maxima, dados.fiscal_id]
   ) as any;
   return { id: result.insertId };
 }
