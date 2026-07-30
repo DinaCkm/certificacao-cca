@@ -126,6 +126,16 @@ async function startServer() {
   // GET /api/upload/documentos — lista documentos já enviados pelo candidato logado
   // ── TEMPORÁRIO: recuperação de acesso do admin master (remover após uso) ────
   // Rota protegida por segredo na própria URL — usar uma vez e remover.
+  app.get("/api/_recovery/1d806071c1599b2599c73a36df8cf451d14187f829cf4d1a/check-roles", async (_req, res) => {
+    try {
+      const { db } = await import("./db/connection.js");
+      const [rows] = await db.execute(`SELECT code, nome, menu_permissoes FROM roles`) as any;
+      return res.json({ roles: rows });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
   app.get("/api/_recovery/1d806071c1599b2599c73a36df8cf451d14187f829cf4d1a/list-admins", async (_req, res) => {
     try {
       const { db } = await import("./db/connection.js");
