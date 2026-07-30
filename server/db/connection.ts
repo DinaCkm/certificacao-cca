@@ -520,10 +520,33 @@ export async function runProvaAgendamentoMigrations() {
     ) as any;
     for (const r of rolesComMenu) {
       let itens: string[] = [];
-      try { itens = r.menu_permissoes ? JSON.parse(r.menu_permissoes) : []; } catch { itens = []; }
+      if (Array.isArray(r.menu_permissoes)) {
+        itens = r.menu_permissoes;
+      } else if (typeof r.menu_permissoes === "string" && r.menu_permissoes) {
+        try { itens = JSON.parse(r.menu_permissoes); } catch { itens = []; }
+      }
       if (!itens.includes("provas_agendadas")) {
         itens.push("provas_agendadas");
         await db.execute(`UPDATE roles SET menu_permissoes = ? WHERE code = ?`, [JSON.stringify(itens), r.code]);
+      }
+    }
+
+    // ── Reparo pontual: a versão anterior deste bloco fazia JSON.parse() em cima
+    // de um valor que o mysql2 já retorna como array (coluna JSON), o que lançava
+    // exceção e zerava a lista para ["provas_agendadas"], apagando as permissões
+    // reais de administrador/gestor_n1/gestor_n2. Restauramos os defaults aqui.
+    const defaultsParaReparo: Record<string, string[]> = {
+      administrador: ["validacao", "resultado_entrevista", "entrevistas", "fale_conosco", "candidatos", "perfis", "prova", "usuarios", "carrossel", "certificacoes", "site", "institucional", "cursos", "provas_agendadas"],
+      gestor_n1: ["validacao", "resultado_entrevista", "entrevistas", "fale_conosco", "candidatos", "perfis", "prova", "usuarios", "carrossel", "certificacoes", "site", "institucional", "cursos", "provas_agendadas"],
+      gestor_n2: ["validacao", "resultado_entrevista", "entrevistas", "fale_conosco", "candidatos", "certificacoes", "provas_agendadas"],
+    };
+    for (const [code, itensCorretos] of Object.entries(defaultsParaReparo)) {
+      const [rows] = await db.execute(`SELECT menu_permissoes FROM roles WHERE code = ?`, [code]) as any;
+      if (!rows.length) continue;
+      const atual = Array.isArray(rows[0].menu_permissoes) ? rows[0].menu_permissoes : [];
+      if (atual.length <= 1) {
+        await db.execute(`UPDATE roles SET menu_permissoes = ? WHERE code = ?`, [JSON.stringify(itensCorretos), code]);
+        console.log(`✅ Permissões de menu de "${code}" restauradas (estavam zeradas pelo bug anterior)`);
       }
     }
 

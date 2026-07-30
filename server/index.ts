@@ -124,45 +124,6 @@ async function startServer() {
   );
 
   // GET /api/upload/documentos — lista documentos já enviados pelo candidato logado
-  // ── TEMPORÁRIO: recuperação de acesso do admin master (remover após uso) ────
-  // Rota protegida por segredo na própria URL — usar uma vez e remover.
-  app.get("/api/_recovery/1d806071c1599b2599c73a36df8cf451d14187f829cf4d1a/check-roles", async (_req, res) => {
-    try {
-      const { db } = await import("./db/connection.js");
-      const [rows] = await db.execute(`SELECT code, nome, menu_permissoes FROM roles`) as any;
-      return res.json({ roles: rows });
-    } catch (err: any) {
-      return res.status(500).json({ error: err.message });
-    }
-  });
-
-  app.get("/api/_recovery/1d806071c1599b2599c73a36df8cf451d14187f829cf4d1a/list-admins", async (_req, res) => {
-    try {
-      const { db } = await import("./db/connection.js");
-      const [rows] = await db.execute(
-        `SELECT u.id, u.full_name, u.email, u.is_active, u.created_at
-         FROM users u JOIN roles r ON r.id = u.role_id
-         WHERE r.code = 'administrador' ORDER BY u.created_at ASC`
-      ) as any;
-      return res.json({ administradores: rows });
-    } catch (err: any) {
-      return res.status(500).json({ error: err.message });
-    }
-  });
-
-  app.get("/api/_recovery/1d806071c1599b2599c73a36df8cf451d14187f829cf4d1a/reset-password/:userId/:novaSenha", async (req, res) => {
-    try {
-      const bcrypt = (await import("bcryptjs")).default;
-      const { db } = await import("./db/connection.js");
-      const hash = await bcrypt.hash(req.params.novaSenha, 12);
-      await db.execute(`UPDATE users SET password_hash = ? WHERE id = ?`, [hash, req.params.userId]);
-      const [rows] = await db.execute(`SELECT email, full_name FROM users WHERE id = ?`, [req.params.userId]) as any;
-      return res.json({ message: "Senha redefinida com sucesso", usuario: rows[0] });
-    } catch (err: any) {
-      return res.status(500).json({ error: err.message });
-    }
-  });
-
   app.get("/api/upload/documentos", async (req: any, res) => {
     try {
       const jwt = await import("jsonwebtoken");
