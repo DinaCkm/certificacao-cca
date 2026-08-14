@@ -165,7 +165,14 @@ export const api = {
     // Prova config
     salvarProvaConfig: (body: any) => request<{ message: string }>("POST", "/admin/prova-config", body),
     adicionarQuestao: (body: any) => request<{ id: number }>("POST", "/admin/questoes", body),
+    editarQuestao: (id: number, body: any) => request<{ message: string }>("PUT", `/admin/questoes/${id}`, body),
     removerQuestao: (id: number) => request<{ message: string }>("DELETE", `/admin/questoes/${id}`),
+
+    // Simulações (configuração por certificação)
+    listarSimulacoes: () => request<{ simulacoes: any[] }>("GET", "/admin/simulacoes"),
+    salvarSimulacao: (body: { cert_slug: string; titulo: string; quantidade_questoes: number; ativa: boolean }) =>
+      request<{ id: number }>("POST", "/admin/simulacoes", body),
+    removerSimulacao: (id: number) => request<{ message: string }>("DELETE", `/admin/simulacoes/${id}`),
 
     // Documentos complementares — avaliador solicita ao candidato dentro do sistema
     solicitarDocumentos: (processoId: number, mensagem: string, documentoIdx?: number) =>
@@ -201,6 +208,36 @@ export const api = {
       request<{ violacoes_count: number; limite: number; anulada: boolean }>(
         "POST", "/prova/violacao", { tentativa_id: tentativaId, tipo }
       ),
+  },
+
+  simulacao: {
+    ativas: () =>
+      request<{ simulacoes: { id: number; titulo: string; quantidade_questoes: number; cert_slug: string; cert_nome: string }[] }>(
+        "GET", "/simulacao/ativas"
+      ),
+
+    iniciar: (certSlug: string, nome?: string, email?: string) =>
+      request<{ tentativa_id: number; retomada: boolean }>(
+        "POST", "/simulacao/iniciar", { cert_slug: certSlug, nome, email }
+      ),
+
+    minhaEmAndamento: (certSlug: string) =>
+      request<{ tentativa_id: number | null }>("GET", `/simulacao/minha-em-andamento/${certSlug}`),
+
+    estado: (tentativaId: number) =>
+      request<{
+        tentativa_id: number; status: string; total_questoes: number; acertos: number | null;
+        questoes: { id: number; numero: number; enunciado: string; opcoes: string[] }[];
+        respostas: { questao_id: number; resposta: number; correta: boolean }[];
+      }>("GET", `/simulacao/${tentativaId}`),
+
+    responder: (tentativaId: number, questaoId: number, resposta: number) =>
+      request<{ correta: boolean; resposta_correta: number; explicacao: string | null }>(
+        "POST", `/simulacao/${tentativaId}/responder`, { questao_id: questaoId, resposta }
+      ),
+
+    finalizar: (tentativaId: number) =>
+      request<{ acertos: number; total_questoes: number }>("POST", `/simulacao/${tentativaId}/finalizar`),
   },
 };
 

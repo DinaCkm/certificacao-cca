@@ -280,6 +280,12 @@ function PainelCandidato({ processos, onNovaCertificacao }: { processos: any[]; 
         </div>
 
         <div className="max-w-lg mx-auto space-y-2">
+          <Button className="w-full" variant="outline" onClick={() => window.location.href = "/novo-fluxo/simulacoes"}>
+            <Award className="w-4 h-4 mr-1.5" /> Fazer simulado
+          </Button>
+          <Button className="w-full" variant="outline" onClick={() => window.location.href = "/cursos"}>
+            <BookOpen className="w-4 h-4 mr-1.5" /> Ver cursos
+          </Button>
           <Button className="w-full" variant="outline" onClick={onNovaCertificacao}>
             <Plus className="w-4 h-4 mr-1.5" /> Iniciar outra certificação
           </Button>

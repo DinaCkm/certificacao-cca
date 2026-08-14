@@ -617,6 +617,18 @@ export async function runSimulacoesMigrations() {
     `);
 
     console.log("✅ Tabelas de simulação (config/tentativas) verificadas/criadas");
+
+    // Item de menu "simulacoes" para quem já gerencia a prova
+    const [rolesComMenuSim] = await db.execute(
+      `SELECT code, menu_permissoes FROM roles WHERE code IN ('administrador','gestor_n1','gestor_n2')`
+    ) as any;
+    for (const r of rolesComMenuSim) {
+      const itens: string[] = Array.isArray(r.menu_permissoes) ? r.menu_permissoes : [];
+      if (!itens.includes("simulacoes")) {
+        itens.push("simulacoes");
+        await db.execute(`UPDATE roles SET menu_permissoes = ? WHERE code = ?`, [JSON.stringify(itens), r.code]);
+      }
+    }
   } catch (err) {
     console.warn("⚠️ Erro na migração de simulações:", err);
   }
