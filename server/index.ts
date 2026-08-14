@@ -13,6 +13,7 @@ import { institucionalRouter, institucionalAdminRouter } from "./routes/instituc
 import { codigoCondutaRouter, codigoCondutaAdminRouter } from "./routes/codigoConduta.js";
 import { cursosPublicoRouter } from "./routes/cursosPublico.js";
 import { certificacoesPublicoRouter } from "./routes/certificacoesPublico.js";
+import { runSimulacaoSecuritySelfTest } from "./selfTestSimulacaoSecurity.js";
 import fs from "fs";
 // multer loaded dynamically
 
@@ -275,6 +276,7 @@ async function startServer() {
   server.listen(port, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${port}/`);
     console.log(`📡 API disponível em http://localhost:${port}/api/`);
+    runSimulacaoSecuritySelfTest(port).catch((err) => console.error("Erro no autoteste:", err));
   });
 }
 
