@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -324,49 +324,67 @@ export const DEFAULT_INSTITUCIONAL: InstitucionalConfig = {
   codigoConduta: DEFAULT_CODIGO_CONDUTA,
 };
 
-const STORAGE_KEY = "anefac_institucional_v1";
-
-function loadInstitucional(): InstitucionalConfig {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return DEFAULT_INSTITUCIONAL;
-    const parsed = JSON.parse(saved);
-    return {
-      comite: parsed.comite ?? DEFAULT_INSTITUCIONAL.comite,
-      regulamento: { ...DEFAULT_INSTITUCIONAL.regulamento, ...parsed.regulamento },
-      edital: { ...DEFAULT_INSTITUCIONAL.edital, ...parsed.edital },
-      codigoConduta: { ...DEFAULT_INSTITUCIONAL.codigoConduta, ...parsed.codigoConduta },
-    };
-  } catch {
-    return DEFAULT_INSTITUCIONAL;
-  }
+function getToken(): string | null {
+  return localStorage.getItem("anefac_token");
 }
 
 // ─── Context ─────────────────────────────────────────────────────────────────
+// O conteúdo institucional agora vive no banco (GET /api/institucional é
+// público — qualquer candidato ou visitante lê o texto real publicado pelo
+// admin). Antes ficava só no localStorage de quem editava, então o candidato
+// nunca via a versão de verdade.
 
 interface InstitucionalContextType {
   institucional: InstitucionalConfig;
-  salvarInstitucional: (data: InstitucionalConfig) => void;
-  resetarInstitucional: () => void;
+  codigoCondutaVersao: number;
+  carregando: boolean;
+  salvarInstitucional: (data: InstitucionalConfig) => Promise<void>;
+  resetarInstitucional: () => Promise<void>;
 }
 
 const InstitucionalContext = createContext<InstitucionalContextType | null>(null);
 
 export function InstitucionalProvider({ children }: { children: React.ReactNode }) {
-  const [institucional, setInstitucional] = useState<InstitucionalConfig>(loadInstitucional);
+  const [institucional, setInstitucional] = useState<InstitucionalConfig>(DEFAULT_INSTITUCIONAL);
+  const [codigoCondutaVersao, setCodigoCondutaVersao] = useState(1);
+  const [carregando, setCarregando] = useState(true);
 
-  const salvarInstitucional = (data: InstitucionalConfig) => {
+  useEffect(() => {
+    fetch("/api/institucional")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.institucional) {
+          setInstitucional({
+            comite: data.institucional.comite ?? DEFAULT_INSTITUCIONAL.comite,
+            regulamento: { ...DEFAULT_INSTITUCIONAL.regulamento, ...data.institucional.regulamento },
+            edital: { ...DEFAULT_INSTITUCIONAL.edital, ...data.institucional.edital },
+            codigoConduta: { ...DEFAULT_INSTITUCIONAL.codigoConduta, ...data.institucional.codigoConduta },
+          });
+        }
+        if (data.codigoCondutaVersao) setCodigoCondutaVersao(data.codigoCondutaVersao);
+      })
+      .catch(() => {/* mantém os defaults se a API falhar */})
+      .finally(() => setCarregando(false));
+  }, []);
+
+  const salvarInstitucional = async (data: InstitucionalConfig) => {
+    const res = await fetch("/api/admin/institucional", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+      body: JSON.stringify(data),
+    });
+    const resposta = await res.json();
+    if (!res.ok) throw new Error(resposta.error || "Erro ao salvar conteúdo institucional");
     setInstitucional(data);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    if (resposta.codigoCondutaVersao) setCodigoCondutaVersao(resposta.codigoCondutaVersao);
   };
 
-  const resetarInstitucional = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    setInstitucional(DEFAULT_INSTITUCIONAL);
+  const resetarInstitucional = async () => {
+    await salvarInstitucional(DEFAULT_INSTITUCIONAL);
   };
 
   return (
-    <InstitucionalContext.Provider value={{ institucional, salvarInstitucional, resetarInstitucional }}>
+    <InstitucionalContext.Provider value={{ institucional, codigoCondutaVersao, carregando, salvarInstitucional, resetarInstitucional }}>
       {children}
     </InstitucionalContext.Provider>
   );

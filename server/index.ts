@@ -9,6 +9,8 @@ import { processoRouter } from "./routes/processo.js";
 import { adminRouter } from "./routes/admin.js";
 import { provaRouter } from "./routes/prova.js";
 import { simulacaoRouter } from "./routes/simulacao.js";
+import { institucionalRouter, institucionalAdminRouter } from "./routes/institucional.js";
+import { codigoCondutaRouter, codigoCondutaAdminRouter } from "./routes/codigoConduta.js";
 import { cursosPublicoRouter } from "./routes/cursosPublico.js";
 import { certificacoesPublicoRouter } from "./routes/certificacoesPublico.js";
 import fs from "fs";
@@ -90,9 +92,9 @@ async function startServer() {
         const { db } = await import("./db/connection.js");
 
         // Extrai user_id do token
-        const jwt = await import("jsonwebtoken");
+        const { verifyToken } = await import("./services/authService.js");
         const token = req.headers.authorization?.replace("Bearer ", "");
-        const decoded: any = jwt.default.verify(token, process.env.JWT_SECRET || "anefac2026XyZsecret!");
+        const decoded = verifyToken(token);
         const userId = decoded.userId;
 
         // Salva referência no banco
@@ -127,10 +129,10 @@ async function startServer() {
   // GET /api/upload/documentos — lista documentos já enviados pelo candidato logado
   app.get("/api/upload/documentos", async (req: any, res) => {
     try {
-      const jwt = await import("jsonwebtoken");
+      const { verifyToken } = await import("./services/authService.js");
       const token = req.headers.authorization?.replace("Bearer ", "");
       if (!token) return res.status(401).json({ error: "Não autenticado" });
-      const decoded: any = jwt.default.verify(token, process.env.JWT_SECRET || "anefac2026XyZsecret!");
+      const decoded = verifyToken(token);
       const userId = decoded.userId;
 
       const processoId = req.query.processo_id || null;
@@ -164,10 +166,10 @@ async function startServer() {
   // GET /api/upload/documentos/candidato/:userId — lista documentos de um candidato (admin)
   app.get("/api/upload/documentos/candidato/:userId", async (req: any, res) => {
     try {
-      const jwt = await import("jsonwebtoken");
+      const { verifyToken } = await import("./services/authService.js");
       const token = req.headers.authorization?.replace("Bearer ", "");
       if (!token) return res.status(401).json({ error: "Não autenticado" });
-      jwt.default.verify(token, process.env.JWT_SECRET || "anefac2026XyZsecret!");
+      verifyToken(token);
 
       const { db } = await import("./db/connection.js");
       const [rows] = await db.execute(
@@ -187,10 +189,10 @@ async function startServer() {
   // GET /api/upload/documento/:filename — serve o arquivo
   app.get("/api/upload/documento/:filename", async (req: any, res) => {
     try {
-      const jwt = await import("jsonwebtoken");
+      const { verifyToken } = await import("./services/authService.js");
       const token = req.headers.authorization?.replace("Bearer ", "") ||
                     req.query.token as string;
-      jwt.default.verify(token, process.env.JWT_SECRET || "anefac2026XyZsecret!");
+      verifyToken(token);
 
       const filepath = path.join(uploadDir, req.params.filename);
       if (!fs.existsSync(filepath)) {
@@ -236,6 +238,10 @@ async function startServer() {
   app.use("/api/admin", adminRouter);
   app.use("/api/prova", provaRouter);
   app.use("/api/simulacao", simulacaoRouter);
+  app.use("/api/institucional", institucionalRouter);
+  app.use("/api/admin/institucional", institucionalAdminRouter);
+  app.use("/api/codigo-conduta", codigoCondutaRouter);
+  app.use("/api/admin/codigo-conduta", codigoCondutaAdminRouter);
   app.use("/api/cursos", cursosPublicoRouter);
   app.use("/api/certificacoes", certificacoesPublicoRouter);
 

@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCertification } from "@/contexts/CertificationContext";
 import { useInstitucional } from "@/contexts/InstitucionalContext";
-import { Upload, CheckCircle, X, FileText, AlertCircle, Info, Download } from "lucide-react";
+import { Upload, CheckCircle, X, FileText, AlertCircle, Info, Download, ShieldCheck, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,12 +20,64 @@ interface DocumentoUpload {
 
 export function UploadDocumentos() {
   const { processo, atualizarStatus, getCertificacaoAtual } = useCertification();
-  const { institucional } = useInstitucional();
+  const { institucional, codigoCondutaVersao } = useInstitucional();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const certAtual = getCertificacaoAtual();
 
   const [documentos, setDocumentos] = useState<DocumentoUpload[]>([]);
+
+  const isCodigoConduta = (doc: DocumentoUpload) =>
+    doc.nome.toLowerCase().includes("código de conduta") || doc.nome.toLowerCase().includes("codigo de conduta");
+
+  // ── Assinatura eletrônica do Código de Conduta ──────────────────────────────
+  const [modalAssinatura, setModalAssinatura] = useState<string | null>(null); // doc.id aberto
+  const [concordo, setConcordo] = useState(false);
+  const [nomeAssinatura, setNomeAssinatura] = useState("");
+  const [assinando, setAssinando] = useState(false);
+  const [assinaturaConcluida, setAssinaturaConcluida] = useState<{ codigo: string } | null>(null);
+
+  function abrirModalAssinatura(docId: string) {
+    setModalAssinatura(docId);
+    setConcordo(false);
+    setNomeAssinatura("");
+    setAssinaturaConcluida(null);
+  }
+
+  async function handleAssinar() {
+    if (!concordo) {
+      toast({ title: "Marque que você leu e concorda com o Código de Conduta", variant: "destructive" });
+      return;
+    }
+    if (!nomeAssinatura.trim()) {
+      toast({ title: "Digite seu nome completo para confirmar a assinatura", variant: "destructive" });
+      return;
+    }
+    setAssinando(true);
+    try {
+      const token = localStorage.getItem("anefac_token");
+      const processoId = localStorage.getItem("anefac_processo_id");
+      const res = await fetch("/api/codigo-conduta/assinar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          nome_digitado: nomeAssinatura,
+          versao: codigoCondutaVersao,
+          processo_id: processoId,
+          tipo_documento: modalAssinatura,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      setAssinaturaConcluida({ codigo: data.codigo_assinatura });
+      setDocumentos((prev) => prev.map((d) => d.id === modalAssinatura ? { ...d, status: "enviado" } : d));
+    } catch (err: any) {
+      toast({ title: "Erro ao assinar", description: err.message, variant: "destructive" });
+    } finally {
+      setAssinando(false);
+    }
+  }
 
   useEffect(() => {
     if (!processo.certificacaoId) {
@@ -76,8 +128,25 @@ export function UploadDocumentos() {
           )
         );
       })
+      .then(() => {
+        // O documento de código de conduta pode estar marcado "enviado" de uma
+        // assinatura de versão antiga (se o admin editou o texto depois).
+        // Confirma contra a versão atual antes de considerar válido.
+        const docConduta = listaBase.find((d) => isCodigoConduta(d as any));
+        if (!docConduta) return;
+        fetch(`/api/codigo-conduta/status?versao=${codigoCondutaVersao}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((r) => r.json())
+          .then((statusData) => {
+            if (!statusData.assinado) {
+              setDocumentos((prev) => prev.map((d) => d.id === docConduta.id ? { ...d, status: "pendente" as const } : d));
+            }
+          })
+          .catch(() => {});
+      })
       .catch(() => {/* silently ignore */});
-  }, [certAtual, processo.certificacaoId, navigate]);
+  }, [certAtual, processo.certificacaoId, navigate, codigoCondutaVersao]);
 
   const handleFileChange = async (docId: string, file: File | null) => {
     if (!file) return;
@@ -227,19 +296,7 @@ export function UploadDocumentos() {
                   </div>
                   <p className="text-xs text-muted-foreground">{doc.descricao}</p>
 
-                  {/* Botão de download para o Código de Conduta */}
-                  {doc.nome.toLowerCase().includes("código de conduta") || doc.nome.toLowerCase().includes("codigo de conduta") ? (
-                    <a
-                      href={institucional?.codigoConduta?.urlExterna || "/documentos/codigo-conduta-anefac.pdf"}
-                      download
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 mt-2 text-xs text-blue-700 font-semibold bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors px-3 py-1.5 rounded-lg"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      Baixar Código de Conduta ANEFAC para assinar
-                    </a>
-                  ) : null}
+                  {/* Código de Conduta agora é assinado eletronicamente dentro do sistema — ver botão de ação abaixo */}
 
                   {doc.arquivo && (
                     <div className="flex items-center gap-2 mt-2 bg-white border border-green-200 rounded-lg px-3 py-1.5">
@@ -254,7 +311,18 @@ export function UploadDocumentos() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 shrink-0">
-                  {doc.status === "enviado" ? (
+                  {isCodigoConduta(doc) ? (
+                    doc.status === "enviado" ? (
+                      <span className="flex items-center gap-1.5 text-green-700 text-xs font-semibold bg-green-100 px-3 py-1.5 rounded-lg">
+                        <ShieldCheck className="w-3.5 h-3.5" /> Assinado
+                      </span>
+                    ) : (
+                      <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => abrirModalAssinatura(doc.id)}>
+                        <FileText className="w-3.5 h-3.5 mr-1.5" />
+                        Ler e assinar
+                      </Button>
+                    )
+                  ) : doc.status === "enviado" ? (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -317,6 +385,66 @@ export function UploadDocumentos() {
           Enviar Documentos →
         </Button>
       </div>
+
+      {/* Modal de assinatura eletrônica do Código de Conduta */}
+      {modalAssinatura && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-xl max-h-[90vh] overflow-hidden flex flex-col">
+            <CardContent className="p-0 flex flex-col overflow-hidden">
+              {!assinaturaConcluida ? (
+                <>
+                  <div className="flex items-center justify-between p-5 border-b border-border shrink-0">
+                    <h2 className="font-bold text-foreground">{institucional.codigoConduta.titulo}</h2>
+                    <button onClick={() => setModalAssinatura(null)}><X className="w-5 h-5 text-gray-400" /></button>
+                  </div>
+
+                  <div className="overflow-y-auto p-5 flex-1 text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
+                    {institucional.codigoConduta.conteudo}
+                  </div>
+
+                  <div className="p-5 border-t border-border shrink-0 space-y-4 bg-gray-50">
+                    <label className="flex items-start gap-2 text-sm cursor-pointer">
+                      <input type="checkbox" checked={concordo} onChange={(e) => setConcordo(e.target.checked)} className="mt-0.5 accent-blue-900" />
+                      Li e concordo integralmente com o Código de Conduta ANEFAC.
+                    </label>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">Digite seu nome completo para confirmar a assinatura *</label>
+                      <input
+                        type="text"
+                        value={nomeAssinatura}
+                        onChange={(e) => setNomeAssinatura(e.target.value)}
+                        placeholder="Ex: Maria da Silva Santos"
+                        className="w-full px-3 py-2 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="flex gap-3">
+                      <Button variant="outline" className="flex-1" onClick={() => setModalAssinatura(null)}>Cancelar</Button>
+                      <Button className="flex-1 bg-blue-900 hover:bg-blue-800" onClick={handleAssinar} disabled={assinando}>
+                        {assinando ? <Loader2 className="w-4 h-4 animate-spin" /> : "Assinar digitalmente"}
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="p-8 text-center">
+                  <ShieldCheck className="w-14 h-14 text-green-600 mx-auto mb-4" />
+                  <h2 className="text-lg font-bold text-foreground mb-2">Assinatura registrada com sucesso!</h2>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Sua aceitação do Código de Conduta foi registrada com data, hora e IP, vinculada à sua conta.
+                  </p>
+                  <div className="bg-gray-50 border border-border rounded-xl p-4 mb-6">
+                    <p className="text-xs text-muted-foreground mb-1">Código de verificação</p>
+                    <p className="font-mono font-bold text-lg text-blue-900">{assinaturaConcluida.codigo}</p>
+                  </div>
+                  <Button className="w-full bg-blue-900 hover:bg-blue-800" onClick={() => setModalAssinatura(null)}>
+                    Concluir
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </FluxoLayout>
   );
 }
