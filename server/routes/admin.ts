@@ -330,6 +330,57 @@ adminRouter.delete(
   }
 );
 
+// ── Simulações (configuração por certificação) ────────────────────────────────
+
+// GET /api/admin/simulacoes — lista configs de simulação
+adminRouter.get("/simulacoes",
+  requireRole("administrador", "gestor_n1"),
+  async (_req: Request, res: Response) => {
+    try {
+      const { listarSimulacoesAdmin } = await import("../services/simulacaoService.js");
+      const simulacoes = await listarSimulacoesAdmin();
+      return res.json({ simulacoes });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao listar simulações" });
+    }
+  }
+);
+
+// POST /api/admin/simulacoes — cria/atualiza config de simulação de uma certificação
+adminRouter.post("/simulacoes",
+  requireRole("administrador", "gestor_n1"),
+  async (req: Request, res: Response) => {
+    const { cert_slug, titulo, quantidade_questoes, ativa } = req.body;
+    if (!cert_slug || !titulo || !quantidade_questoes) {
+      return res.status(400).json({ error: "cert_slug, titulo e quantidade_questoes são obrigatórios" });
+    }
+    try {
+      const { salvarSimulacaoAdmin } = await import("../services/simulacaoService.js");
+      const result = await salvarSimulacaoAdmin({
+        cert_slug, titulo, quantidade_questoes: parseInt(quantidade_questoes), ativa: !!ativa,
+      });
+      return res.status(201).json(result);
+    } catch (err: any) {
+      return res.status(400).json({ error: err.message });
+    }
+  }
+);
+
+// DELETE /api/admin/simulacoes/:id
+adminRouter.delete("/simulacoes/:id",
+  requireRole("administrador", "gestor_n1"),
+  async (req: Request, res: Response) => {
+    try {
+      const { excluirSimulacaoAdmin } = await import("../services/simulacaoService.js");
+      await excluirSimulacaoAdmin(parseInt(req.params.id));
+      return res.json({ message: "Simulação removida" });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao remover simulação" });
+    }
+  }
+);
+
 // ── Salas de Prova (agendamento, agenda, fiscal, gravações) ──────────────────
 
 // GET /api/admin/fiscais-disponiveis — qualquer usuário não-candidato pode ser escalado
@@ -699,7 +750,7 @@ adminRouter.get("/questoes/:certSlug",
 adminRouter.post("/questoes",
   requireRole("administrador", "gestor_n1"),
   async (req, res) => {
-    const { cert_slug, enunciado, opcao_a, opcao_b, opcao_c, opcao_d, resposta_correta } = req.body;
+    const { cert_slug, enunciado, opcao_a, opcao_b, opcao_c, opcao_d, resposta_correta, explicacao } = req.body;
     if (!cert_slug || !enunciado || !opcao_a || !opcao_b || resposta_correta === undefined) {
       return res.status(400).json({ error: "Campos obrigatórios: cert_slug, enunciado, opcao_a, opcao_b, resposta_correta" });
     }
@@ -729,15 +780,36 @@ adminRouter.post("/questoes",
       ) as any;
 
       const [result] = await db.execute(
-        `INSERT INTO prova_questoes (prova_id, numero, enunciado, opcao_a, opcao_b, opcao_c, opcao_d, resposta_correta)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [prova_id, count[0].total + 1, enunciado, opcao_a, opcao_b, opcao_c || null, opcao_d || null, resposta_correta]
+        `INSERT INTO prova_questoes (prova_id, numero, enunciado, opcao_a, opcao_b, opcao_c, opcao_d, resposta_correta, explicacao)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [prova_id, count[0].total + 1, enunciado, opcao_a, opcao_b, opcao_c || null, opcao_d || null, resposta_correta, explicacao || null]
       ) as any;
 
       return res.status(201).json({ id: result.insertId });
     } catch (err) {
       console.error(err);
       return res.status(500).json({ error: "Erro ao adicionar questão" });
+    }
+  }
+);
+
+// PUT /api/admin/questoes/:id — edita questão (inclui explicação, usada no simulado)
+adminRouter.put("/questoes/:id",
+  requireRole("administrador", "gestor_n1"),
+  async (req, res) => {
+    const { enunciado, opcao_a, opcao_b, opcao_c, opcao_d, resposta_correta, explicacao } = req.body;
+    try {
+      await db.execute(
+        `UPDATE prova_questoes SET
+          enunciado = COALESCE(?, enunciado), opcao_a = COALESCE(?, opcao_a), opcao_b = COALESCE(?, opcao_b),
+          opcao_c = ?, opcao_d = ?, resposta_correta = COALESCE(?, resposta_correta), explicacao = ?
+         WHERE id = ?`,
+        [enunciado, opcao_a, opcao_b, opcao_c || null, opcao_d || null, resposta_correta, explicacao || null, parseInt(req.params.id)]
+      );
+      return res.json({ message: "Questão atualizada" });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao atualizar questão" });
     }
   }
 );

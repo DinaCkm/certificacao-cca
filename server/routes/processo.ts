@@ -122,7 +122,7 @@ processoRouter.post("/:id/avancar", requireAuth, async (req: Request, res: Respo
 processoRouter.get(
   "/admin/lista",
   requireAuth,
-  requireRole("avaliador", "gestor", "administrador"),
+  requireRole("avaliador", "gestor_n1", "gestor_n2", "administrador"),
   async (req: Request, res: Response) => {
     try {
       const status = req.query.status as string;
@@ -155,7 +155,7 @@ processoRouter.get(
 processoRouter.post(
   "/:id/definir-caminho",
   requireAuth,
-  requireRole("avaliador", "gestor", "administrador"),
+  requireRole("avaliador", "gestor_n1", "gestor_n2", "administrador"),
   async (req: Request, res: Response) => {
     const processoId = parseInt(req.params.id);
     const { caminho } = req.body;

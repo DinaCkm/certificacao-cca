@@ -25,6 +25,8 @@ export async function testConnection() {
     await runDocumentosExigidosMigration();
     await runPerfilCandidatoMigration();
     await runProvaAgendamentoMigrations();
+    await runSimulacoesMigrations();
+    await runAssinaturaCondutaMigration();
   } catch (err) {
     console.error("❌ Erro ao conectar ao MySQL:", err);
     process.exit(1);
@@ -33,23 +35,6 @@ export async function testConnection() {
 
 async function runMigrations() {
   try {
-    // Verifica se a tabela tem as colunas corretas
-    const [cols] = await db.execute(`
-      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
-      WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'documentos_candidato'
-    `) as any;
-    const existentes: string[] = cols.map((c: any) => c.COLUMN_NAME.toLowerCase());
-
-    const precisaRecriar = !existentes.includes("nome_arquivo") ||
-                           !existentes.includes("tipo_documento") ||
-                           !existentes.includes("caminho_arquivo");
-
-    if (precisaRecriar && existentes.length > 0) {
-      console.log("⚠️ Tabela documentos_candidato com estrutura incorreta — recriando...");
-      await db.execute("DROP TABLE documentos_candidato");
-    }
-
     await db.execute(`
       CREATE TABLE IF NOT EXISTS documentos_candidato (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -66,6 +51,31 @@ async function runMigrations() {
         INDEX idx_processo_id (processo_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
+
+    // Se a tabela já existia de uma versão anterior sem alguma dessas colunas,
+    // ADICIONA a coluna que falta — NUNCA apaga a tabela. Apagar destruiria
+    // o vínculo de todos os documentos já enviados pelos candidatos.
+    const [cols] = await db.execute(`
+      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'documentos_candidato'
+    `) as any;
+    const existentes: string[] = cols.map((c: any) => c.COLUMN_NAME.toLowerCase());
+
+    const colunasEsperadas: Record<string, string> = {
+      tipo_documento: "VARCHAR(50) NOT NULL DEFAULT 'documento'",
+      nome_arquivo: "VARCHAR(255) NOT NULL DEFAULT ''",
+      caminho_arquivo: "VARCHAR(255) NOT NULL DEFAULT ''",
+      tamanho_bytes: "INT NOT NULL DEFAULT 0",
+      mime_type: "VARCHAR(100) NOT NULL DEFAULT 'application/octet-stream'",
+      status: "ENUM('enviado','aprovado','reprovado') NOT NULL DEFAULT 'enviado'",
+    };
+    for (const [coluna, definicao] of Object.entries(colunasEsperadas)) {
+      if (!existentes.includes(coluna)) {
+        await db.execute(`ALTER TABLE documentos_candidato ADD COLUMN ${coluna} ${definicao}`);
+        console.log(`✅ Coluna documentos_candidato.${coluna} criada (tabela preservada)`);
+      }
+    }
 
     console.log("✅ Tabela documentos_candidato OK");
 
@@ -553,5 +563,83 @@ export async function runProvaAgendamentoMigrations() {
     console.log("✅ Migração de agendamento de prova concluída");
   } catch (err) {
     console.warn("⚠️ Erro na migração de agendamento de prova:", err);
+  }
+}
+
+// ─── Simulações (pública e do mural) ──────────────────────────────────────────
+// Sempre usam o banco de questões real (prova_questoes) da certificação —
+// nunca um banco de questões separado. O admin só configura quantas questões
+// entram no simulado e se ele está ativo.
+export async function runSimulacoesMigrations() {
+  try {
+    // Coluna opcional de explicação, mostrada ao candidato após responder no simulado
+    const [colsQuestoes] = await db.execute(`
+      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'prova_questoes'
+    `) as any;
+    const colunasQuestoes: string[] = colsQuestoes.map((c: any) => c.COLUMN_NAME.toLowerCase());
+    if (!colunasQuestoes.includes("explicacao")) {
+      await db.execute(`ALTER TABLE prova_questoes ADD COLUMN explicacao TEXT NULL`);
+      console.log("✅ Coluna prova_questoes.explicacao criada");
+    }
+
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS simulacoes_config (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        certification_type_id INT NOT NULL,
+        titulo VARCHAR(255) NOT NULL,
+        quantidade_questoes INT NOT NULL DEFAULT 5,
+        ativa TINYINT(1) NOT NULL DEFAULT 1,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_cert (certification_type_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS simulacoes_tentativas (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        simulacao_id INT NOT NULL,
+        user_id INT NULL,
+        lead_nome VARCHAR(255) NULL,
+        lead_email VARCHAR(255) NULL,
+        questoes_json JSON NOT NULL,
+        respostas_json JSON NULL,
+        acertos INT NULL,
+        total_questoes INT NOT NULL,
+        status ENUM('em_andamento','finalizada') NOT NULL DEFAULT 'em_andamento',
+        origem ENUM('publica','mural') NOT NULL,
+        iniciada_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        finalizada_em TIMESTAMP NULL,
+        INDEX idx_user (user_id),
+        INDEX idx_simulacao (simulacao_id),
+        INDEX idx_status (status)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+
+    console.log("✅ Tabelas de simulação (config/tentativas) verificadas/criadas");
+  } catch (err) {
+    console.warn("⚠️ Erro na migração de simulações:", err);
+  }
+}
+
+// ─── Assinatura digital do Código de Conduta ──────────────────────────────────
+export async function runAssinaturaCondutaMigration() {
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS codigo_conduta_assinaturas (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        nome_digitado VARCHAR(255) NOT NULL,
+        codigo_assinatura VARCHAR(64) NOT NULL,
+        versao VARCHAR(20) NOT NULL DEFAULT '1.0',
+        ip_address VARCHAR(64) NULL,
+        assinado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_user_versao (user_id, versao),
+        UNIQUE KEY uniq_codigo (codigo_assinatura)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    console.log("✅ Tabela codigo_conduta_assinaturas verificada/criada");
+  } catch (err) {
+    console.warn("⚠️ Erro na migração de assinatura do código de conduta:", err);
   }
 }

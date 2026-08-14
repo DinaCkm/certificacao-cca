@@ -2,7 +2,7 @@ import React from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 
-const ROLES_PERMITIDOS = ["avaliador", "gestor", "administrador"];
+const ROLES_PERMITIDOS = ["avaliador", "gestor_n1", "gestor_n2", "administrador", "entrevistador", "fiscal"];
 
 interface AdminRouteProps {
   component: React.ComponentType;
@@ -42,7 +42,7 @@ export function AdminRoute({ component: Component }: AdminRouteProps) {
           <h1 className="text-xl font-bold text-gray-900 mb-2">Acesso Negado</h1>
           <p className="text-sm text-gray-500 mb-6">
             Esta conta não tem permissão de acesso administrativo.
-            Use uma conta de avaliador, gestor ou administrador.
+            Use uma conta de avaliador, gestor, entrevistador, fiscal ou administrador.
           </p>
           <div className="flex gap-3 justify-center">
             <button

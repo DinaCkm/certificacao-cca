@@ -1,0 +1,205 @@
+import { db } from "../db/connection.js";
+
+// ── Admin: CRUD da configuração de simulação por certificação ────────────────
+
+export async function listarSimulacoesAdmin() {
+  const [rows] = await db.execute(
+    `SELECT sc.*, ct.nome as cert_nome, ct.slug as cert_slug,
+            (SELECT COUNT(*) FROM prova_questoes pq JOIN provas p ON p.id = pq.prova_id WHERE p.certification_type_id = sc.certification_type_id) as questoes_no_banco
+     FROM simulacoes_config sc
+     JOIN certification_types ct ON ct.id = sc.certification_type_id
+     ORDER BY ct.nome`
+  ) as any;
+  return rows;
+}
+
+export async function salvarSimulacaoAdmin(dados: {
+  cert_slug: string;
+  titulo: string;
+  quantidade_questoes: number;
+  ativa: boolean;
+}) {
+  const [certs] = await db.execute(`SELECT id FROM certification_types WHERE slug = ?`, [dados.cert_slug]) as any;
+  if (!certs.length) throw new Error("Certificação não encontrada");
+  const certId = certs[0].id;
+
+  const [existentes] = await db.execute(`SELECT id FROM simulacoes_config WHERE certification_type_id = ?`, [certId]) as any;
+
+  if (existentes.length) {
+    await db.execute(
+      `UPDATE simulacoes_config SET titulo = ?, quantidade_questoes = ?, ativa = ? WHERE certification_type_id = ?`,
+      [dados.titulo, dados.quantidade_questoes, dados.ativa ? 1 : 0, certId]
+    );
+    return { id: existentes[0].id };
+  }
+
+  const [result] = await db.execute(
+    `INSERT INTO simulacoes_config (certification_type_id, titulo, quantidade_questoes, ativa) VALUES (?, ?, ?, ?)`,
+    [certId, dados.titulo, dados.quantidade_questoes, dados.ativa ? 1 : 0]
+  ) as any;
+  return { id: result.insertId };
+}
+
+export async function excluirSimulacaoAdmin(id: number) {
+  await db.execute(`DELETE FROM simulacoes_config WHERE id = ?`, [id]);
+}
+
+// ── Simulações ativas (para o seletor de certificação na tela pública) ───────
+
+export async function listarSimulacoesAtivas() {
+  const [rows] = await db.execute(
+    `SELECT sc.id, sc.titulo, sc.quantidade_questoes, ct.slug as cert_slug, ct.nome as cert_nome
+     FROM simulacoes_config sc
+     JOIN certification_types ct ON ct.id = sc.certification_type_id
+     WHERE sc.ativa = 1
+     ORDER BY ct.nome`
+  ) as any;
+  return rows;
+}
+
+// ── Inicia uma tentativa (pública ou do mural) ────────────────────────────────
+
+export async function iniciarSimulacao(dados: {
+  certSlug: string;
+  origem: "publica" | "mural";
+  userId?: number;
+  leadNome?: string;
+  leadEmail?: string;
+}) {
+  const [configs] = await db.execute(
+    `SELECT sc.* FROM simulacoes_config sc
+     JOIN certification_types ct ON ct.id = sc.certification_type_id
+     WHERE ct.slug = ? AND sc.ativa = 1`,
+    [dados.certSlug]
+  ) as any;
+  if (!configs.length) throw new Error("Nenhuma simulação ativa para esta certificação");
+  const config = configs[0];
+
+  // Se for do mural, retoma tentativa em andamento se já existir
+  if (dados.origem === "mural" && dados.userId) {
+    const [emAndamento] = await db.execute(
+      `SELECT id FROM simulacoes_tentativas WHERE simulacao_id = ? AND user_id = ? AND status = 'em_andamento'`,
+      [config.id, dados.userId]
+    ) as any;
+    if (emAndamento.length) {
+      return { tentativa_id: emAndamento[0].id, retomada: true };
+    }
+  }
+
+  const [questoes] = await db.execute(
+    `SELECT pq.id FROM prova_questoes pq
+     JOIN provas p ON p.id = pq.prova_id
+     WHERE p.certification_type_id = ?
+     ORDER BY RAND() LIMIT ?`,
+    [config.certification_type_id, config.quantidade_questoes]
+  ) as any;
+
+  if (!questoes.length) throw new Error("Nenhuma questão cadastrada no banco desta certificação");
+
+  const questoesIds = questoes.map((q: any) => q.id);
+
+  const [result] = await db.execute(
+    `INSERT INTO simulacoes_tentativas
+      (simulacao_id, user_id, lead_nome, lead_email, questoes_json, total_questoes, origem)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [config.id, dados.userId || null, dados.leadNome || null, dados.leadEmail || null,
+     JSON.stringify(questoesIds), questoesIds.length, dados.origem]
+  ) as any;
+
+  return { tentativa_id: result.insertId, retomada: false };
+}
+
+// ── Busca o estado atual de uma tentativa (questões + respostas já dadas) ────
+
+export async function buscarTentativa(tentativaId: number) {
+  const [rows] = await db.execute(`SELECT * FROM simulacoes_tentativas WHERE id = ?`, [tentativaId]) as any;
+  if (!rows.length) throw new Error("Simulação não encontrada");
+  const tentativa = rows[0];
+
+  const questoesIds: number[] = Array.isArray(tentativa.questoes_json) ? tentativa.questoes_json : JSON.parse(tentativa.questoes_json);
+  const [questoes] = await db.execute(
+    `SELECT id, numero, enunciado, opcao_a, opcao_b, opcao_c, opcao_d FROM prova_questoes WHERE id IN (?)`,
+    [questoesIds]
+  ) as any;
+
+  // Mantém a ordem sorteada original
+  const questoesOrdenadas = questoesIds.map((id) => questoes.find((q: any) => q.id === id)).filter(Boolean);
+
+  const respostas = tentativa.respostas_json
+    ? (Array.isArray(tentativa.respostas_json) ? tentativa.respostas_json : JSON.parse(tentativa.respostas_json))
+    : [];
+
+  return {
+    tentativa_id: tentativa.id,
+    status: tentativa.status,
+    total_questoes: tentativa.total_questoes,
+    acertos: tentativa.acertos,
+    questoes: questoesOrdenadas.map((q: any) => ({
+      id: q.id, numero: q.numero, enunciado: q.enunciado,
+      opcoes: [q.opcao_a, q.opcao_b, q.opcao_c, q.opcao_d].filter(Boolean),
+    })),
+    respostas,
+  };
+}
+
+// ── Responde uma questão (revela na hora se acertou + explicação) ────────────
+
+export async function responderSimulacao(tentativaId: number, questaoId: number, resposta: number) {
+  const [rows] = await db.execute(`SELECT * FROM simulacoes_tentativas WHERE id = ?`, [tentativaId]) as any;
+  if (!rows.length) throw new Error("Simulação não encontrada");
+  const tentativa = rows[0];
+  if (tentativa.status !== "em_andamento") throw new Error("Esta simulação já foi finalizada");
+
+  const [questoes] = await db.execute(
+    `SELECT resposta_correta, explicacao FROM prova_questoes WHERE id = ?`, [questaoId]
+  ) as any;
+  if (!questoes.length) throw new Error("Questão não encontrada");
+  const correta = questoes[0].resposta_correta === resposta;
+
+  const respostasAtuais = tentativa.respostas_json
+    ? (Array.isArray(tentativa.respostas_json) ? tentativa.respostas_json : JSON.parse(tentativa.respostas_json))
+    : [];
+  const semDuplicata = respostasAtuais.filter((r: any) => r.questao_id !== questaoId);
+  semDuplicata.push({ questao_id: questaoId, resposta, correta });
+
+  await db.execute(
+    `UPDATE simulacoes_tentativas SET respostas_json = ? WHERE id = ?`,
+    [JSON.stringify(semDuplicata), tentativaId]
+  );
+
+  return { correta, resposta_correta: questoes[0].resposta_correta, explicacao: questoes[0].explicacao };
+}
+
+// ── Finaliza e calcula o resultado ────────────────────────────────────────────
+
+export async function finalizarSimulacao(tentativaId: number) {
+  const [rows] = await db.execute(`SELECT * FROM simulacoes_tentativas WHERE id = ?`, [tentativaId]) as any;
+  if (!rows.length) throw new Error("Simulação não encontrada");
+  const tentativa = rows[0];
+
+  const respostas = tentativa.respostas_json
+    ? (Array.isArray(tentativa.respostas_json) ? tentativa.respostas_json : JSON.parse(tentativa.respostas_json))
+    : [];
+  const acertos = respostas.filter((r: any) => r.correta).length;
+
+  await db.execute(
+    `UPDATE simulacoes_tentativas SET status = 'finalizada', acertos = ?, finalizada_em = NOW() WHERE id = ?`,
+    [acertos, tentativaId]
+  );
+
+  return { acertos, total_questoes: tentativa.total_questoes };
+}
+
+// ── Retoma a simulação em andamento do candidato logado (para o mural) ───────
+
+export async function buscarMinhaSimulacaoEmAndamento(userId: number, certSlug: string) {
+  const [rows] = await db.execute(
+    `SELECT st.id FROM simulacoes_tentativas st
+     JOIN simulacoes_config sc ON sc.id = st.simulacao_id
+     JOIN certification_types ct ON ct.id = sc.certification_type_id
+     WHERE st.user_id = ? AND ct.slug = ? AND st.status = 'em_andamento'
+     ORDER BY st.iniciada_em DESC LIMIT 1`,
+    [userId, certSlug]
+  ) as any;
+  return rows.length ? rows[0].id : null;
+}
