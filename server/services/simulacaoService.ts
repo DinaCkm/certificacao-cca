@@ -1,11 +1,30 @@
+import crypto from "crypto";
 import { db } from "../db/connection.js";
+
+// ── Verificação de posse da tentativa ─────────────────────────────────────────
+// Tentativa do mural (user_id preenchido): só o dono, autenticado, pode
+// consultar/responder/finalizar. Tentativa pública (user_id nulo, lead
+// anônimo): exige o access_token opaco gerado na criação — o ID sequencial
+// sozinho NUNCA autoriza nada, para não permitir que alguém veja ou altere
+// a tentativa de outra pessoa só adivinhando/incrementando o número.
+function verificarPosse(tentativa: any, userId?: number, accessToken?: string) {
+  if (tentativa.user_id) {
+    if (!userId || tentativa.user_id !== userId) {
+      throw new Error("Você não tem permissão para acessar esta simulação");
+    }
+  } else {
+    if (!accessToken || tentativa.access_token !== accessToken) {
+      throw new Error("Token de acesso inválido para esta simulação");
+    }
+  }
+}
 
 // ── Admin: CRUD da configuração de simulação por certificação ────────────────
 
 export async function listarSimulacoesAdmin() {
   const [rows] = await db.execute(
     `SELECT sc.*, ct.nome as cert_nome, ct.slug as cert_slug,
-            (SELECT COUNT(*) FROM prova_questoes pq JOIN provas p ON p.id = pq.prova_id WHERE p.certification_type_id = sc.certification_type_id) as questoes_no_banco
+            (SELECT COUNT(*) FROM prova_questoes pq JOIN provas p ON p.id = pq.prova_id WHERE p.certification_type_id = sc.certification_type_id AND pq.eh_simulacao = 1) as questoes_no_banco
      FROM simulacoes_config sc
      JOIN certification_types ct ON ct.id = sc.certification_type_id
      ORDER BY ct.nome`
@@ -82,39 +101,46 @@ export async function iniciarSimulacao(dados: {
       [config.id, dados.userId]
     ) as any;
     if (emAndamento.length) {
-      return { tentativa_id: emAndamento[0].id, retomada: true };
+      return { tentativa_id: emAndamento[0].id, retomada: true, access_token: null };
     }
   }
 
+  // Sorteia SOMENTE do banco de questões marcado para simulação — nunca das
+  // questões que podem cair na prova oficial (eh_simulacao = 1 é um banco
+  // deliberadamente separado, curado pelo admin).
   const [questoes] = await db.execute(
     `SELECT pq.id FROM prova_questoes pq
      JOIN provas p ON p.id = pq.prova_id
-     WHERE p.certification_type_id = ?
+     WHERE p.certification_type_id = ? AND pq.eh_simulacao = 1
      ORDER BY RAND() LIMIT ?`,
     [config.certification_type_id, config.quantidade_questoes]
   ) as any;
 
-  if (!questoes.length) throw new Error("Nenhuma questão cadastrada no banco desta certificação");
+  if (!questoes.length) {
+    throw new Error("Nenhuma questão de simulação cadastrada para esta certificação ainda");
+  }
 
   const questoesIds = questoes.map((q: any) => q.id);
+  const accessToken = dados.origem === "publica" ? crypto.randomBytes(24).toString("hex") : null;
 
   const [result] = await db.execute(
     `INSERT INTO simulacoes_tentativas
-      (simulacao_id, user_id, lead_nome, lead_email, questoes_json, total_questoes, origem)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      (simulacao_id, user_id, lead_nome, lead_email, questoes_json, total_questoes, origem, access_token)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [config.id, dados.userId || null, dados.leadNome || null, dados.leadEmail || null,
-     JSON.stringify(questoesIds), questoesIds.length, dados.origem]
+     JSON.stringify(questoesIds), questoesIds.length, dados.origem, accessToken]
   ) as any;
 
-  return { tentativa_id: result.insertId, retomada: false };
+  return { tentativa_id: result.insertId, retomada: false, access_token: accessToken };
 }
 
 // ── Busca o estado atual de uma tentativa (questões + respostas já dadas) ────
 
-export async function buscarTentativa(tentativaId: number) {
+export async function buscarTentativa(tentativaId: number, userId?: number, accessToken?: string) {
   const [rows] = await db.execute(`SELECT * FROM simulacoes_tentativas WHERE id = ?`, [tentativaId]) as any;
   if (!rows.length) throw new Error("Simulação não encontrada");
   const tentativa = rows[0];
+  verificarPosse(tentativa, userId, accessToken);
 
   const questoesIds: number[] = Array.isArray(tentativa.questoes_json) ? tentativa.questoes_json : JSON.parse(tentativa.questoes_json);
   const [questoes] = await db.execute(
@@ -144,11 +170,20 @@ export async function buscarTentativa(tentativaId: number) {
 
 // ── Responde uma questão (revela na hora se acertou + explicação) ────────────
 
-export async function responderSimulacao(tentativaId: number, questaoId: number, resposta: number) {
+export async function responderSimulacao(tentativaId: number, questaoId: number, resposta: number, userId?: number, accessToken?: string) {
   const [rows] = await db.execute(`SELECT * FROM simulacoes_tentativas WHERE id = ?`, [tentativaId]) as any;
   if (!rows.length) throw new Error("Simulação não encontrada");
   const tentativa = rows[0];
+  verificarPosse(tentativa, userId, accessToken);
   if (tentativa.status !== "em_andamento") throw new Error("Esta simulação já foi finalizada");
+
+  // Confirma que a questão realmente pertence a esta tentativa (evita que
+  // alguém injete um questao_id fora do sorteio original pra tentar ler
+  // gabarito de outra questão via a resposta desta rota)
+  const questoesIds: number[] = Array.isArray(tentativa.questoes_json) ? tentativa.questoes_json : JSON.parse(tentativa.questoes_json);
+  if (!questoesIds.includes(questaoId)) {
+    throw new Error("Esta questão não faz parte desta simulação");
+  }
 
   const [questoes] = await db.execute(
     `SELECT resposta_correta, explicacao FROM prova_questoes WHERE id = ?`, [questaoId]
@@ -172,10 +207,11 @@ export async function responderSimulacao(tentativaId: number, questaoId: number,
 
 // ── Finaliza e calcula o resultado ────────────────────────────────────────────
 
-export async function finalizarSimulacao(tentativaId: number) {
+export async function finalizarSimulacao(tentativaId: number, userId?: number, accessToken?: string) {
   const [rows] = await db.execute(`SELECT * FROM simulacoes_tentativas WHERE id = ?`, [tentativaId]) as any;
   if (!rows.length) throw new Error("Simulação não encontrada");
   const tentativa = rows[0];
+  verificarPosse(tentativa, userId, accessToken);
 
   const respostas = tentativa.respostas_json
     ? (Array.isArray(tentativa.respostas_json) ? tentativa.respostas_json : JSON.parse(tentativa.respostas_json))
@@ -191,12 +227,13 @@ export async function finalizarSimulacao(tentativaId: number) {
 }
 
 // ── Desempenho por eixo de conhecimento (Fase 4) ──────────────────────────────
-export async function calcularDesempenhoPorEixoSimulacao(tentativaId: number) {
+export async function calcularDesempenhoPorEixoSimulacao(tentativaId: number, userId?: number, accessToken?: string) {
   const [tentativas] = await db.execute(
-    `SELECT respostas_json FROM simulacoes_tentativas WHERE id = ? AND status = 'finalizada'`,
+    `SELECT * FROM simulacoes_tentativas WHERE id = ? AND status = 'finalizada'`,
     [tentativaId]
   ) as any;
   if (!tentativas.length) throw new Error("Simulação não encontrada ou ainda não finalizada");
+  verificarPosse(tentativas[0], userId, accessToken);
 
   const respostas: { questao_id: number; correta: boolean }[] = Array.isArray(tentativas[0].respostas_json)
     ? tentativas[0].respostas_json

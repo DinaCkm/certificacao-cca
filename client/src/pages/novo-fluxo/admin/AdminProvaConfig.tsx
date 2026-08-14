@@ -34,6 +34,7 @@ interface Questao {
   resposta_correta: number;
   eixo_conhecimento_id?: number | null;
   eixo_nome?: string;
+  eh_simulacao?: number | boolean;
 }
 
 interface Eixo {
@@ -70,7 +71,7 @@ export function AdminProvaConfig() {
   // Modal nova questão
   const [modalQuestao, setModalQuestao] = useState(false);
   const [novaQuestao, setNovaQuestao] = useState({
-    enunciado: "", opcao_a: "", opcao_b: "", opcao_c: "", opcao_d: "", resposta_correta: 0, explicacao: "", eixo_conhecimento_id: ""
+    enunciado: "", opcao_a: "", opcao_b: "", opcao_c: "", opcao_d: "", resposta_correta: 0, explicacao: "", eixo_conhecimento_id: "", eh_simulacao: false
   });
   const [salvandoQuestao, setSalvandoQuestao] = useState(false);
 
@@ -131,7 +132,7 @@ export function AdminProvaConfig() {
       await (api.admin as any).adicionarQuestao({ ...novaQuestao, cert_slug: certSelecionada });
       toast({ title: "Questão adicionada!" });
       setModalQuestao(false);
-      setNovaQuestao({ enunciado: "", opcao_a: "", opcao_b: "", opcao_c: "", opcao_d: "", resposta_correta: 0, explicacao: "", eixo_conhecimento_id: "" });
+      setNovaQuestao({ enunciado: "", opcao_a: "", opcao_b: "", opcao_c: "", opcao_d: "", resposta_correta: 0, explicacao: "", eixo_conhecimento_id: "", eh_simulacao: false });
       carregarConfig();
     } catch (err: any) {
       toast({ title: err.message || "Erro ao adicionar questão", variant: "destructive" });
@@ -330,6 +331,11 @@ export function AdminProvaConfig() {
                                 {idx + 1}
                               </span>
                               <p className="text-sm font-medium text-white flex-1">{q.enunciado}</p>
+                              {q.eh_simulacao ? (
+                                <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full shrink-0">Simulação</span>
+                              ) : (
+                                <span className="text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full shrink-0">Prova oficial</span>
+                              )}
                               {q.eixo_nome ? (
                                 <span className="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full shrink-0">{q.eixo_nome}</span>
                               ) : (
@@ -501,6 +507,27 @@ export function AdminProvaConfig() {
                 ))}
 
                 <p className="text-xs text-blue-400">Clique na letra para marcar a resposta correta</p>
+
+                <div>
+                  <Label>Esta questão é para *</Label>
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    <button type="button" onClick={() => setNovaQuestao({ ...novaQuestao, eh_simulacao: false })}
+                      className={`text-xs font-semibold px-3 py-2.5 rounded-lg border-2 transition-all ${
+                        !novaQuestao.eh_simulacao ? "border-blue-500 bg-blue-500/10 text-blue-300" : "border-white/20 text-white/50"
+                      }`}>
+                      Prova oficial
+                    </button>
+                    <button type="button" onClick={() => setNovaQuestao({ ...novaQuestao, eh_simulacao: true })}
+                      className={`text-xs font-semibold px-3 py-2.5 rounded-lg border-2 transition-all ${
+                        novaQuestao.eh_simulacao ? "border-indigo-500 bg-indigo-500/10 text-indigo-300" : "border-white/20 text-white/50"
+                      }`}>
+                      Somente simulação
+                    </button>
+                  </div>
+                  <p className="text-xs text-white/40 mt-1.5">
+                    Os dois bancos são totalmente separados — uma questão de "Somente simulação" nunca cai na prova oficial, e vice-versa. Isso evita que o simulado revele gabarito de questões reais.
+                  </p>
+                </div>
 
                 <div>
                   <Label>Eixo de conhecimento *</Label>

@@ -58,45 +58,49 @@ simulacaoRouter.get("/minha-em-andamento/:certSlug", requireAuth, async (req: Re
 });
 
 // GET /api/simulacao/:tentativaId — estado atual (questões + respostas já dadas)
-simulacaoRouter.get("/:tentativaId", async (req: Request, res: Response) => {
+// optionalAuth: mural valida por user_id (JWT); pública exige access_token na query
+simulacaoRouter.get("/:tentativaId", optionalAuth, async (req: Request, res: Response) => {
   try {
-    const estado = await buscarTentativa(parseInt(req.params.tentativaId));
+    const token = req.query.token as string | undefined;
+    const estado = await buscarTentativa(parseInt(req.params.tentativaId), req.user?.userId, token);
     return res.json(estado);
   } catch (err: any) {
-    return res.status(404).json({ error: err.message });
+    return res.status(403).json({ error: err.message });
   }
 });
 
 // POST /api/simulacao/:tentativaId/responder — responde uma questão (revela na hora)
-simulacaoRouter.post("/:tentativaId/responder", async (req: Request, res: Response) => {
-  const { questao_id, resposta } = req.body;
+simulacaoRouter.post("/:tentativaId/responder", optionalAuth, async (req: Request, res: Response) => {
+  const { questao_id, resposta, token } = req.body;
   if (questao_id === undefined || resposta === undefined) {
     return res.status(400).json({ error: "questao_id e resposta são obrigatórios" });
   }
   try {
-    const result = await responderSimulacao(parseInt(req.params.tentativaId), questao_id, resposta);
+    const result = await responderSimulacao(parseInt(req.params.tentativaId), questao_id, resposta, req.user?.userId, token);
     return res.json(result);
   } catch (err: any) {
-    return res.status(400).json({ error: err.message });
+    return res.status(403).json({ error: err.message });
   }
 });
 
 // POST /api/simulacao/:tentativaId/finalizar — calcula o resultado final
-simulacaoRouter.post("/:tentativaId/finalizar", async (req: Request, res: Response) => {
+simulacaoRouter.post("/:tentativaId/finalizar", optionalAuth, async (req: Request, res: Response) => {
   try {
-    const result = await finalizarSimulacao(parseInt(req.params.tentativaId));
+    const { token } = req.body;
+    const result = await finalizarSimulacao(parseInt(req.params.tentativaId), req.user?.userId, token);
     return res.json(result);
   } catch (err: any) {
-    return res.status(400).json({ error: err.message });
+    return res.status(403).json({ error: err.message });
   }
 });
 
 // GET /api/simulacao/:tentativaId/eixos — desempenho por eixo de conhecimento
-simulacaoRouter.get("/:tentativaId/eixos", async (req: Request, res: Response) => {
+simulacaoRouter.get("/:tentativaId/eixos", optionalAuth, async (req: Request, res: Response) => {
   try {
-    const resultado = await calcularDesempenhoPorEixoSimulacao(parseInt(req.params.tentativaId));
+    const token = req.query.token as string | undefined;
+    const resultado = await calcularDesempenhoPorEixoSimulacao(parseInt(req.params.tentativaId), req.user?.userId, token);
     return res.json(resultado);
   } catch (err: any) {
-    return res.status(400).json({ error: err.message });
+    return res.status(403).json({ error: err.message });
   }
 });

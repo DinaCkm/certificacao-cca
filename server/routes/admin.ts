@@ -827,7 +827,7 @@ adminRouter.get("/questoes/:certSlug",
 adminRouter.post("/questoes",
   requireRole("administrador", "gestor_n1"),
   async (req, res) => {
-    const { cert_slug, enunciado, opcao_a, opcao_b, opcao_c, opcao_d, resposta_correta, explicacao, eixo_conhecimento_id } = req.body;
+    const { cert_slug, enunciado, opcao_a, opcao_b, opcao_c, opcao_d, resposta_correta, explicacao, eixo_conhecimento_id, eh_simulacao } = req.body;
     if (!cert_slug || !enunciado || !opcao_a || !opcao_b || resposta_correta === undefined) {
       return res.status(400).json({ error: "Campos obrigatórios: cert_slug, enunciado, opcao_a, opcao_b, resposta_correta" });
     }
@@ -860,9 +860,9 @@ adminRouter.post("/questoes",
       ) as any;
 
       const [result] = await db.execute(
-        `INSERT INTO prova_questoes (prova_id, numero, enunciado, opcao_a, opcao_b, opcao_c, opcao_d, resposta_correta, explicacao, eixo_conhecimento_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [prova_id, count[0].total + 1, enunciado, opcao_a, opcao_b, opcao_c || null, opcao_d || null, resposta_correta, explicacao || null, eixo_conhecimento_id]
+        `INSERT INTO prova_questoes (prova_id, numero, enunciado, opcao_a, opcao_b, opcao_c, opcao_d, resposta_correta, explicacao, eixo_conhecimento_id, eh_simulacao)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [prova_id, count[0].total + 1, enunciado, opcao_a, opcao_b, opcao_c || null, opcao_d || null, resposta_correta, explicacao || null, eixo_conhecimento_id, eh_simulacao ? 1 : 0]
       ) as any;
 
       return res.status(201).json({ id: result.insertId });
@@ -877,15 +877,16 @@ adminRouter.post("/questoes",
 adminRouter.put("/questoes/:id",
   requireRole("administrador", "gestor_n1"),
   async (req, res) => {
-    const { enunciado, opcao_a, opcao_b, opcao_c, opcao_d, resposta_correta, explicacao, eixo_conhecimento_id } = req.body;
+    const { enunciado, opcao_a, opcao_b, opcao_c, opcao_d, resposta_correta, explicacao, eixo_conhecimento_id, eh_simulacao } = req.body;
     try {
       await db.execute(
         `UPDATE prova_questoes SET
           enunciado = COALESCE(?, enunciado), opcao_a = COALESCE(?, opcao_a), opcao_b = COALESCE(?, opcao_b),
           opcao_c = ?, opcao_d = ?, resposta_correta = COALESCE(?, resposta_correta), explicacao = ?,
-          eixo_conhecimento_id = COALESCE(?, eixo_conhecimento_id)
+          eixo_conhecimento_id = COALESCE(?, eixo_conhecimento_id),
+          eh_simulacao = COALESCE(?, eh_simulacao)
          WHERE id = ?`,
-        [enunciado, opcao_a, opcao_b, opcao_c || null, opcao_d || null, resposta_correta, explicacao || null, eixo_conhecimento_id || null, parseInt(req.params.id)]
+        [enunciado, opcao_a, opcao_b, opcao_c || null, opcao_d || null, resposta_correta, explicacao || null, eixo_conhecimento_id || null, eh_simulacao === undefined ? null : (eh_simulacao ? 1 : 0), parseInt(req.params.id)]
       );
       return res.json({ message: "Questão atualizada" });
     } catch (err) {
