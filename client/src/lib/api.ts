@@ -202,6 +202,36 @@ export const api = {
         "POST", "/prova/violacao", { tentativa_id: tentativaId, tipo }
       ),
   },
+
+  simulacao: {
+    ativas: () =>
+      request<{ simulacoes: { id: number; titulo: string; quantidade_questoes: number; cert_slug: string; cert_nome: string }[] }>(
+        "GET", "/simulacao/ativas"
+      ),
+
+    iniciar: (certSlug: string, nome?: string, email?: string) =>
+      request<{ tentativa_id: number; retomada: boolean }>(
+        "POST", "/simulacao/iniciar", { cert_slug: certSlug, nome, email }
+      ),
+
+    minhaEmAndamento: (certSlug: string) =>
+      request<{ tentativa_id: number | null }>("GET", `/simulacao/minha-em-andamento/${certSlug}`),
+
+    estado: (tentativaId: number) =>
+      request<{
+        tentativa_id: number; status: string; total_questoes: number; acertos: number | null;
+        questoes: { id: number; numero: number; enunciado: string; opcoes: string[] }[];
+        respostas: { questao_id: number; resposta: number; correta: boolean }[];
+      }>("GET", `/simulacao/${tentativaId}`),
+
+    responder: (tentativaId: number, questaoId: number, resposta: number) =>
+      request<{ correta: boolean; resposta_correta: number; explicacao: string | null }>(
+        "POST", `/simulacao/${tentativaId}/responder`, { questao_id: questaoId, resposta }
+      ),
+
+    finalizar: (tentativaId: number) =>
+      request<{ acertos: number; total_questoes: number }>("POST", `/simulacao/${tentativaId}/finalizar`),
+  },
 };
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
