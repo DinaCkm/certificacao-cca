@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCertification } from "@/contexts/CertificationContext";
 import { CheckCircle, XCircle, AlertTriangle, Award, Loader2 } from "lucide-react";
+import { DesempenhoPorEixo } from "@/components/DesempenhoPorEixo";
+import { api } from "@/lib/api";
 
 interface Resultado {
   tentativa_id: number;
@@ -23,6 +25,7 @@ export function ResultadoProva() {
   const certAtual = getCertificacaoAtual();
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const [eixos, setEixos] = useState<{ eixo_id: number | null; nome: string; acertos: number; total: number; percentual: number }[]>([]);
 
   useEffect(() => {
     if (!processo.certificacaoId) { navigate("/novo-fluxo"); return; }
@@ -59,6 +62,14 @@ export function ResultadoProva() {
       }
     }).catch(() => {}).finally(() => setCarregando(false));
   }, [processo.certificacaoId]);
+
+  useEffect(() => {
+    if (resultado?.tentativa_id) {
+      api.provaAgendamento.desempenhoPorEixo(resultado.tentativa_id)
+        .then((r) => setEixos(r.eixos))
+        .catch(() => setEixos([]));
+    }
+  }, [resultado?.tentativa_id]);
 
   if (!certAtual) return null;
 
@@ -175,6 +186,8 @@ export function ResultadoProva() {
             )}
           </CardContent>
         </Card>
+
+        <DesempenhoPorEixo eixos={eixos} />
       </div>
     </FluxoLayout>
   );

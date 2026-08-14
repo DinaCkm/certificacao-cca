@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCertification } from "@/contexts/CertificationContext";
 import { api } from "@/lib/api";
+import { DesempenhoPorEixo } from "@/components/DesempenhoPorEixo";
 import {
   Award, ArrowRight, CheckCircle, XCircle, RotateCcw, BookOpen, Loader2, AlertCircle,
 } from "lucide-react";
@@ -40,6 +41,7 @@ export function SimulacaoMural() {
   const [questaoAtual, setQuestaoAtual] = useState(0);
   const [respondendoAgora, setRespondendoAgora] = useState<{ correta: boolean; resposta_correta: number; explicacao: string | null } | null>(null);
   const [resultadoFinal, setResultadoFinal] = useState<{ acertos: number; total: number } | null>(null);
+  const [eixos, setEixos] = useState<{ eixo_id: number | null; nome: string; acertos: number; total: number; percentual: number }[]>([]);
 
   useEffect(() => {
     if (certAtual) verificar();
@@ -107,6 +109,7 @@ export function SimulacaoMural() {
     } else if (tentativaId) {
       const result = await api.simulacao.finalizar(tentativaId);
       setResultadoFinal({ acertos: result.acertos, total: result.total_questoes });
+      api.simulacao.desempenhoPorEixo(tentativaId).then((r) => setEixos(r.eixos)).catch(() => setEixos([]));
       setFase("resultado");
     }
   }
@@ -245,6 +248,8 @@ export function SimulacaoMural() {
                     <p className="text-xs text-muted-foreground mt-1">Seu nível</p>
                   </div>
                 </div>
+
+                <DesempenhoPorEixo eixos={eixos} mostrarCtaCursos={false} />
 
                 {/* CTA de cursos — sempre sugerido ao final do simulado */}
                 <a href="/cursos" className="flex items-center gap-3 bg-purple-50 border-2 border-purple-200 rounded-xl p-4 mb-4 hover:bg-purple-100 transition-colors text-left">

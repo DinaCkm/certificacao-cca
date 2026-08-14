@@ -162,6 +162,13 @@ export const api = {
     editarCarrossel: (id: number, body: any) => request<{ message: string }>("PUT", `/admin/carrossel/${id}`, body),
     removerCarrossel: (id: number) => request<{ message: string }>("DELETE", `/admin/carrossel/${id}`),
 
+    // Eixos de conhecimento
+    listarEixos: (certSlug: string) => request<{ eixos: any[] }>("GET", `/admin/eixos/${certSlug}`),
+    criarEixo: (body: { cert_slug: string; nome: string; descricao?: string; ordem?: number }) =>
+      request<{ id: number }>("POST", "/admin/eixos", body),
+    editarEixo: (id: number, body: any) => request<{ message: string }>("PUT", `/admin/eixos/${id}`, body),
+    removerEixo: (id: number) => request<{ message: string }>("DELETE", `/admin/eixos/${id}`),
+
     // Prova config
     salvarProvaConfig: (body: any) => request<{ message: string }>("POST", "/admin/prova-config", body),
     adicionarQuestao: (body: any) => request<{ id: number }>("POST", "/admin/questoes", body),
@@ -211,6 +218,11 @@ export const api = {
       request<{ violacoes_count: number; limite: number; anulada: boolean }>(
         "POST", "/prova/violacao", { tentativa_id: tentativaId, tipo }
       ),
+
+    desempenhoPorEixo: (tentativaId: number) =>
+      request<{ eixos: { eixo_id: number | null; nome: string; acertos: number; total: number; percentual: number }[] }>(
+        "GET", `/prova/resultado/${tentativaId}/eixos`
+      ),
   },
 
   simulacao: {
@@ -241,6 +253,11 @@ export const api = {
 
     finalizar: (tentativaId: number) =>
       request<{ acertos: number; total_questoes: number }>("POST", `/simulacao/${tentativaId}/finalizar`),
+
+    desempenhoPorEixo: (tentativaId: number) =>
+      request<{ eixos: { eixo_id: number | null; nome: string; acertos: number; total: number; percentual: number }[] }>(
+        "GET", `/simulacao/${tentativaId}/eixos`
+      ),
   },
 };
 

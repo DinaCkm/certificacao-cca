@@ -190,6 +190,50 @@ export async function finalizarSimulacao(tentativaId: number) {
   return { acertos, total_questoes: tentativa.total_questoes };
 }
 
+// ── Desempenho por eixo de conhecimento (Fase 4) ──────────────────────────────
+export async function calcularDesempenhoPorEixoSimulacao(tentativaId: number) {
+  const [tentativas] = await db.execute(
+    `SELECT respostas_json FROM simulacoes_tentativas WHERE id = ? AND status = 'finalizada'`,
+    [tentativaId]
+  ) as any;
+  if (!tentativas.length) throw new Error("Simulação não encontrada ou ainda não finalizada");
+
+  const respostas: { questao_id: number; correta: boolean }[] = Array.isArray(tentativas[0].respostas_json)
+    ? tentativas[0].respostas_json
+    : JSON.parse(tentativas[0].respostas_json || "[]");
+
+  if (!respostas.length) return { eixos: [] };
+
+  const questaoIds = respostas.map((r) => r.questao_id);
+  const [questoes] = await db.execute(
+    `SELECT pq.id, pq.eixo_conhecimento_id, e.nome as eixo_nome
+     FROM prova_questoes pq
+     LEFT JOIN eixos_conhecimento e ON e.id = pq.eixo_conhecimento_id
+     WHERE pq.id IN (?)`,
+    [questaoIds]
+  ) as any;
+
+  const eixoPorQuestao: Record<number, { id: number | null; nome: string }> = {};
+  questoes.forEach((q: any) => {
+    eixoPorQuestao[q.id] = { id: q.eixo_conhecimento_id, nome: q.eixo_nome || "Sem eixo definido" };
+  });
+
+  const agregados: Record<string, { eixo_id: number | null; nome: string; acertos: number; total: number }> = {};
+  respostas.forEach((r) => {
+    const eixo = eixoPorQuestao[r.questao_id] || { id: null, nome: "Sem eixo definido" };
+    const chave = String(eixo.id ?? "sem_eixo");
+    if (!agregados[chave]) agregados[chave] = { eixo_id: eixo.id, nome: eixo.nome, acertos: 0, total: 0 };
+    agregados[chave].total++;
+    if (r.correta) agregados[chave].acertos++;
+  });
+
+  const eixos = Object.values(agregados)
+    .map((e) => ({ ...e, percentual: e.total > 0 ? Math.round((e.acertos / e.total) * 100) : 0 }))
+    .sort((a, b) => a.percentual - b.percentual);
+
+  return { eixos };
+}
+
 // ── Retoma a simulação em andamento do candidato logado (para o mural) ───────
 
 export async function buscarMinhaSimulacaoEmAndamento(userId: number, certSlug: string) {

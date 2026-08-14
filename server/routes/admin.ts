@@ -726,15 +726,92 @@ adminRouter.post("/prova-config",
   }
 );
 
+// ── Eixos de conhecimento ──────────────────────────────────────────────────────
+
+// GET /api/admin/eixos/:certSlug — lista eixos de uma certificação
+adminRouter.get("/eixos/:certSlug",
+  requireRole("administrador", "gestor_n1", "avaliador"),
+  async (req, res) => {
+    try {
+      const [rows] = await db.execute(
+        `SELECT e.* FROM eixos_conhecimento e
+         JOIN certification_types ct ON ct.id = e.certification_type_id
+         WHERE ct.slug = ? ORDER BY e.ordem, e.nome`,
+        [req.params.certSlug]
+      ) as any;
+      return res.json({ eixos: rows });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao listar eixos de conhecimento" });
+    }
+  }
+);
+
+// POST /api/admin/eixos — cria eixo de conhecimento
+adminRouter.post("/eixos",
+  requireRole("administrador", "gestor_n1"),
+  async (req, res) => {
+    const { cert_slug, nome, descricao, ordem } = req.body;
+    if (!cert_slug || !nome) return res.status(400).json({ error: "cert_slug e nome são obrigatórios" });
+    try {
+      const [certs] = await db.execute("SELECT id FROM certification_types WHERE slug = ?", [cert_slug]) as any;
+      if (!certs.length) return res.status(404).json({ error: "Certificação não encontrada" });
+
+      const [result] = await db.execute(
+        `INSERT INTO eixos_conhecimento (certification_type_id, nome, descricao, ordem) VALUES (?, ?, ?, ?)`,
+        [certs[0].id, nome, descricao || null, ordem || 0]
+      ) as any;
+      return res.status(201).json({ id: result.insertId });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao criar eixo de conhecimento" });
+    }
+  }
+);
+
+// PUT /api/admin/eixos/:id
+adminRouter.put("/eixos/:id",
+  requireRole("administrador", "gestor_n1"),
+  async (req, res) => {
+    const { nome, descricao, ordem, ativo } = req.body;
+    try {
+      await db.execute(
+        `UPDATE eixos_conhecimento SET nome = COALESCE(?, nome), descricao = ?, ordem = COALESCE(?, ordem), ativo = COALESCE(?, ativo) WHERE id = ?`,
+        [nome ?? null, descricao ?? null, ordem ?? null, ativo === undefined ? null : (ativo ? 1 : 0), parseInt(req.params.id)]
+      );
+      return res.json({ message: "Eixo atualizado" });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao atualizar eixo" });
+    }
+  }
+);
+
+// DELETE /api/admin/eixos/:id
+adminRouter.delete("/eixos/:id",
+  requireRole("administrador", "gestor_n1"),
+  async (req, res) => {
+    try {
+      const [emUso] = await db.execute(`SELECT COUNT(*) as total FROM prova_questoes WHERE eixo_conhecimento_id = ?`, [parseInt(req.params.id)]) as any;
+      if (emUso[0].total > 0) {
+        return res.status(400).json({ error: `Este eixo está em uso por ${emUso[0].total} questão(ões) — remova ou reatribua antes de excluir` });
+      }
+      await db.execute(`DELETE FROM eixos_conhecimento WHERE id = ?`, [parseInt(req.params.id)]);
+      return res.json({ message: "Eixo removido" });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao remover eixo" });
+    }
+  }
+);
+
 // GET /api/admin/questoes/:certSlug — lista questões
 adminRouter.get("/questoes/:certSlug",
   requireRole("administrador", "gestor_n1", "avaliador"),
   async (req, res) => {
     try {
       const [rows] = await db.execute(
-        `SELECT pq.* FROM prova_questoes pq
+        `SELECT pq.*, e.nome as eixo_nome FROM prova_questoes pq
          JOIN provas p ON p.id = pq.prova_id
          JOIN certification_types ct ON ct.id = p.certification_type_id
+         LEFT JOIN eixos_conhecimento e ON e.id = pq.eixo_conhecimento_id
          WHERE ct.slug = ?
          ORDER BY pq.numero`,
         [req.params.certSlug]
@@ -750,9 +827,12 @@ adminRouter.get("/questoes/:certSlug",
 adminRouter.post("/questoes",
   requireRole("administrador", "gestor_n1"),
   async (req, res) => {
-    const { cert_slug, enunciado, opcao_a, opcao_b, opcao_c, opcao_d, resposta_correta, explicacao } = req.body;
+    const { cert_slug, enunciado, opcao_a, opcao_b, opcao_c, opcao_d, resposta_correta, explicacao, eixo_conhecimento_id } = req.body;
     if (!cert_slug || !enunciado || !opcao_a || !opcao_b || resposta_correta === undefined) {
       return res.status(400).json({ error: "Campos obrigatórios: cert_slug, enunciado, opcao_a, opcao_b, resposta_correta" });
+    }
+    if (!eixo_conhecimento_id) {
+      return res.status(400).json({ error: "Selecione o eixo de conhecimento desta questão" });
     }
     try {
       // Busca ou cria a prova para esta certificação
@@ -780,9 +860,9 @@ adminRouter.post("/questoes",
       ) as any;
 
       const [result] = await db.execute(
-        `INSERT INTO prova_questoes (prova_id, numero, enunciado, opcao_a, opcao_b, opcao_c, opcao_d, resposta_correta, explicacao)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [prova_id, count[0].total + 1, enunciado, opcao_a, opcao_b, opcao_c || null, opcao_d || null, resposta_correta, explicacao || null]
+        `INSERT INTO prova_questoes (prova_id, numero, enunciado, opcao_a, opcao_b, opcao_c, opcao_d, resposta_correta, explicacao, eixo_conhecimento_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [prova_id, count[0].total + 1, enunciado, opcao_a, opcao_b, opcao_c || null, opcao_d || null, resposta_correta, explicacao || null, eixo_conhecimento_id]
       ) as any;
 
       return res.status(201).json({ id: result.insertId });
@@ -797,14 +877,15 @@ adminRouter.post("/questoes",
 adminRouter.put("/questoes/:id",
   requireRole("administrador", "gestor_n1"),
   async (req, res) => {
-    const { enunciado, opcao_a, opcao_b, opcao_c, opcao_d, resposta_correta, explicacao } = req.body;
+    const { enunciado, opcao_a, opcao_b, opcao_c, opcao_d, resposta_correta, explicacao, eixo_conhecimento_id } = req.body;
     try {
       await db.execute(
         `UPDATE prova_questoes SET
           enunciado = COALESCE(?, enunciado), opcao_a = COALESCE(?, opcao_a), opcao_b = COALESCE(?, opcao_b),
-          opcao_c = ?, opcao_d = ?, resposta_correta = COALESCE(?, resposta_correta), explicacao = ?
+          opcao_c = ?, opcao_d = ?, resposta_correta = COALESCE(?, resposta_correta), explicacao = ?,
+          eixo_conhecimento_id = COALESCE(?, eixo_conhecimento_id)
          WHERE id = ?`,
-        [enunciado, opcao_a, opcao_b, opcao_c || null, opcao_d || null, resposta_correta, explicacao || null, parseInt(req.params.id)]
+        [enunciado, opcao_a, opcao_b, opcao_c || null, opcao_d || null, resposta_correta, explicacao || null, eixo_conhecimento_id || null, parseInt(req.params.id)]
       );
       return res.json({ message: "Questão atualizada" });
     } catch (err) {

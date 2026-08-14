@@ -32,6 +32,13 @@ interface Questao {
   opcao_c: string;
   opcao_d: string;
   resposta_correta: number;
+  eixo_conhecimento_id?: number | null;
+  eixo_nome?: string;
+}
+
+interface Eixo {
+  id: number;
+  nome: string;
 }
 
 const OPCOES_LABEL = ["A", "B", "C", "D"];
@@ -55,6 +62,7 @@ export function AdminProvaConfig() {
   const [msgBoasVindas, setMsgBoasVindas] = useState("");
   const [instrucoes, setInstrucoes] = useState("");
   const [questoes, setQuestoes] = useState<Questao[]>([]);
+  const [eixos, setEixos] = useState<Eixo[]>([]);
   const [salvando, setSalvando] = useState(false);
   const [carregando, setCarregando] = useState(false);
   const [previewAberto, setPreviewAberto] = useState(false);
@@ -62,7 +70,7 @@ export function AdminProvaConfig() {
   // Modal nova questão
   const [modalQuestao, setModalQuestao] = useState(false);
   const [novaQuestao, setNovaQuestao] = useState({
-    enunciado: "", opcao_a: "", opcao_b: "", opcao_c: "", opcao_d: "", resposta_correta: 0, explicacao: ""
+    enunciado: "", opcao_a: "", opcao_b: "", opcao_c: "", opcao_d: "", resposta_correta: 0, explicacao: "", eixo_conhecimento_id: ""
   });
   const [salvandoQuestao, setSalvandoQuestao] = useState(false);
 
@@ -73,13 +81,14 @@ export function AdminProvaConfig() {
   async function carregarConfig() {
     setCarregando(true);
     try {
-      const [configRes, questoesRes] = await Promise.all([
+      const [configRes, questoesRes, eixosRes] = await Promise.all([
         fetch(`/api/admin/prova-config/${certSelecionada}`, {
           headers: { "Authorization": `Bearer ${localStorage.getItem("anefac_token")}` }
         }).then(r => r.json()),
         fetch(`/api/admin/questoes/${certSelecionada}`, {
           headers: { "Authorization": `Bearer ${localStorage.getItem("anefac_token")}` }
         }).then(r => r.json()),
+        (api.admin as any).listarEixos(certSelecionada).catch(() => ({ eixos: [] })),
       ]);
 
       if (configRes.config) {
@@ -88,6 +97,7 @@ export function AdminProvaConfig() {
         setConfig({ total_questoes: 5, duracao_minutos: 30, nota_minima: 60, max_tentativas: 2, prazo_dias: 3, mensagem_boas_vindas: "", instrucoes_extras: "" });
       }
       setQuestoes(questoesRes.questoes || []);
+      setEixos(eixosRes.eixos || []);
     } catch {
       toast({ title: "Erro ao carregar configuração", variant: "destructive" });
     } finally {
@@ -112,12 +122,16 @@ export function AdminProvaConfig() {
       toast({ title: "Preencha enunciado e pelo menos as opções A e B", variant: "destructive" });
       return;
     }
+    if (!novaQuestao.eixo_conhecimento_id) {
+      toast({ title: "Selecione o eixo de conhecimento desta questão", description: eixos.length === 0 ? "Cadastre pelo menos um eixo em Eixos de Conhecimento antes de criar questões." : undefined, variant: "destructive" });
+      return;
+    }
     setSalvandoQuestao(true);
     try {
       await (api.admin as any).adicionarQuestao({ ...novaQuestao, cert_slug: certSelecionada });
       toast({ title: "Questão adicionada!" });
       setModalQuestao(false);
-      setNovaQuestao({ enunciado: "", opcao_a: "", opcao_b: "", opcao_c: "", opcao_d: "", resposta_correta: 0, explicacao: "" });
+      setNovaQuestao({ enunciado: "", opcao_a: "", opcao_b: "", opcao_c: "", opcao_d: "", resposta_correta: 0, explicacao: "", eixo_conhecimento_id: "" });
       carregarConfig();
     } catch (err: any) {
       toast({ title: err.message || "Erro ao adicionar questão", variant: "destructive" });
@@ -315,7 +329,12 @@ export function AdminProvaConfig() {
                               <span className="w-6 h-6 rounded-full bg-blue-900 text-white text-xs font-bold flex items-center justify-center shrink-0">
                                 {idx + 1}
                               </span>
-                              <p className="text-sm font-medium text-white">{q.enunciado}</p>
+                              <p className="text-sm font-medium text-white flex-1">{q.enunciado}</p>
+                              {q.eixo_nome ? (
+                                <span className="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full shrink-0">{q.eixo_nome}</span>
+                              ) : (
+                                <span className="text-xs bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full shrink-0">Sem eixo</span>
+                              )}
                             </div>
                             <div className="grid grid-cols-2 gap-1.5 ml-8">
                               {[q.opcao_a, q.opcao_b, q.opcao_c, q.opcao_d].filter(Boolean).map((op, i) => (
@@ -482,6 +501,27 @@ export function AdminProvaConfig() {
                 ))}
 
                 <p className="text-xs text-blue-400">Clique na letra para marcar a resposta correta</p>
+
+                <div>
+                  <Label>Eixo de conhecimento *</Label>
+                  {eixos.length === 0 ? (
+                    <div className="mt-1 bg-amber-500/10 border border-amber-500/30 rounded-md px-3 py-2 text-xs text-amber-300">
+                      Nenhum eixo cadastrado para esta certificação.{" "}
+                      <a href="/novo-fluxo/admin/eixos-conhecimento" className="underline font-semibold">Cadastre um eixo primeiro →</a>
+                    </div>
+                  ) : (
+                    <select
+                      value={novaQuestao.eixo_conhecimento_id}
+                      onChange={e => setNovaQuestao({ ...novaQuestao, eixo_conhecimento_id: e.target.value })}
+                      className="w-full rounded-md px-3 py-2 text-sm mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white" style={{ border: "1px solid #cbd5e1" }}
+                    >
+                      <option value="">Selecione...</option>
+                      {eixos.map((e) => (
+                        <option key={e.id} value={e.id}>{e.nome}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
 
                 <div>
                   <Label>Explicação (opcional — mostrada no simulado após responder)</Label>

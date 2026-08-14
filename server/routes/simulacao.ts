@@ -7,6 +7,7 @@ import {
   responderSimulacao,
   finalizarSimulacao,
   buscarMinhaSimulacaoEmAndamento,
+  calcularDesempenhoPorEixoSimulacao,
 } from "../services/simulacaoService.js";
 
 export const simulacaoRouter = Router();
@@ -85,6 +86,16 @@ simulacaoRouter.post("/:tentativaId/finalizar", async (req: Request, res: Respon
   try {
     const result = await finalizarSimulacao(parseInt(req.params.tentativaId));
     return res.json(result);
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
+// GET /api/simulacao/:tentativaId/eixos — desempenho por eixo de conhecimento
+simulacaoRouter.get("/:tentativaId/eixos", async (req: Request, res: Response) => {
+  try {
+    const resultado = await calcularDesempenhoPorEixoSimulacao(parseInt(req.params.tentativaId));
+    return res.json(resultado);
   } catch (err: any) {
     return res.status(400).json({ error: err.message });
   }
