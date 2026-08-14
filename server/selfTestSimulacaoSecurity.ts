@@ -105,7 +105,11 @@ export async function runSimulacaoSecuritySelfTest(port: number | string) {
     const tentativaMuralId = iniciarMuralData.tentativa_id;
     if (tentativaMuralId) idsParaLimpar.tentativas.push(tentativaMuralId);
 
-    registrar("Mural: candidato A inicia simulação com sucesso", iniciarMuralRes.status === 201, `status ${iniciarMuralRes.status}`);
+    registrar(
+      "Mural: candidato A inicia simulação com sucesso",
+      iniciarMuralRes.status === 201,
+      `status ${iniciarMuralRes.status}${iniciarMuralRes.status !== 201 ? ` — corpo: ${JSON.stringify(iniciarMuralData)}` : ""}`
+    );
 
     const acessoComoB = await fetch(`${base}/api/simulacao/${tentativaMuralId}`, {
       headers: { Authorization: `Bearer ${tokenB}` },
@@ -142,7 +146,7 @@ export async function runSimulacaoSecuritySelfTest(port: number | string) {
     registrar(
       "Pública: inicia com sucesso e recebe access_token",
       iniciarPublicaRes.status === 201 && !!accessToken,
-      `status ${iniciarPublicaRes.status}, token presente: ${!!accessToken}`
+      `status ${iniciarPublicaRes.status}, token presente: ${!!accessToken}${iniciarPublicaRes.status !== 201 ? ` — corpo: ${JSON.stringify(iniciarPublicaData)}` : ""}`
     );
 
     const acessoSemToken = await fetch(`${base}/api/simulacao/${tentativaPublicaId}`);
@@ -187,6 +191,11 @@ export async function runSimulacaoSecuritySelfTest(port: number | string) {
     );
 
     // ── Resumo ────────────────────────────────────────────────────────────────
+    // Log final em uma única chamada — o Railway às vezes embaralha a ordem
+    // de exibição de linhas de log próximas; um bloco único garante que o
+    // resultado completo, na ordem certa, apareça de forma confiável.
+    console.log("🧪 RELATÓRIO COMPLETO (ordem garantida):\n" + resultados.map((r, i) => `${i + 1}. ${r.passou ? "PASSOU" : "FALHOU"} — ${r.nome}${r.detalhe ? ` :: ${r.detalhe}` : ""}`).join("\n"));
+
     const totalPassou = resultados.filter((r) => r.passou).length;
     console.log(`\n🧪 RESULTADO FINAL: ${totalPassou}/${resultados.length} testes passaram`);
     if (totalPassou === resultados.length) {
