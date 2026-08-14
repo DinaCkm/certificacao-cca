@@ -62,7 +62,7 @@ export function AdminProvaConfig() {
   // Modal nova questão
   const [modalQuestao, setModalQuestao] = useState(false);
   const [novaQuestao, setNovaQuestao] = useState({
-    enunciado: "", opcao_a: "", opcao_b: "", opcao_c: "", opcao_d: "", resposta_correta: 0
+    enunciado: "", opcao_a: "", opcao_b: "", opcao_c: "", opcao_d: "", resposta_correta: 0, explicacao: ""
   });
   const [salvandoQuestao, setSalvandoQuestao] = useState(false);
 
@@ -117,7 +117,7 @@ export function AdminProvaConfig() {
       await (api.admin as any).adicionarQuestao({ ...novaQuestao, cert_slug: certSelecionada });
       toast({ title: "Questão adicionada!" });
       setModalQuestao(false);
-      setNovaQuestao({ enunciado: "", opcao_a: "", opcao_b: "", opcao_c: "", opcao_d: "", resposta_correta: 0 });
+      setNovaQuestao({ enunciado: "", opcao_a: "", opcao_b: "", opcao_c: "", opcao_d: "", resposta_correta: 0, explicacao: "" });
       carregarConfig();
     } catch (err: any) {
       toast({ title: err.message || "Erro ao adicionar questão", variant: "destructive" });
@@ -482,6 +482,17 @@ export function AdminProvaConfig() {
                 ))}
 
                 <p className="text-xs text-blue-400">Clique na letra para marcar a resposta correta</p>
+
+                <div>
+                  <Label>Explicação (opcional — mostrada no simulado após responder)</Label>
+                  <textarea
+                    value={novaQuestao.explicacao}
+                    onChange={e => setNovaQuestao({ ...novaQuestao, explicacao: e.target.value })}
+                    placeholder="Ex: EBITDA mede a geração de caixa operacional antes de deduções financeiras..."
+                    rows={2}
+                    className="w-full rounded-md px-3 py-2 text-sm mt-1 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white" style={{ border: "1px solid #cbd5e1" }}
+                  />
+                </div>
               </div>
 
               <div className="flex gap-3 mt-6">

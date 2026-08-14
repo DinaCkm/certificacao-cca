@@ -165,7 +165,14 @@ export const api = {
     // Prova config
     salvarProvaConfig: (body: any) => request<{ message: string }>("POST", "/admin/prova-config", body),
     adicionarQuestao: (body: any) => request<{ id: number }>("POST", "/admin/questoes", body),
+    editarQuestao: (id: number, body: any) => request<{ message: string }>("PUT", `/admin/questoes/${id}`, body),
     removerQuestao: (id: number) => request<{ message: string }>("DELETE", `/admin/questoes/${id}`),
+
+    // Simulações (configuração por certificação)
+    listarSimulacoes: () => request<{ simulacoes: any[] }>("GET", "/admin/simulacoes"),
+    salvarSimulacao: (body: { cert_slug: string; titulo: string; quantidade_questoes: number; ativa: boolean }) =>
+      request<{ id: number }>("POST", "/admin/simulacoes", body),
+    removerSimulacao: (id: number) => request<{ message: string }>("DELETE", `/admin/simulacoes/${id}`),
 
     // Documentos complementares — avaliador solicita ao candidato dentro do sistema
     solicitarDocumentos: (processoId: number, mensagem: string, documentoIdx?: number) =>
