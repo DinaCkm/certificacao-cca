@@ -3,11 +3,18 @@ import { Link, useLocation } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { MENU_ITEMS } from "@/lib/menuItems";
+import { MENU_GROUPS } from "@/lib/menuItems";
 import {
-  Users, FileText, Award, DollarSign, CheckCircle, Clock,
-  XCircle, BarChart3, Settings, ChevronRight, Globe, BookOpen
+  Users, FileText, FileCheck, Award, DollarSign, CheckCircle, Clock,
+  XCircle, BarChart3, Settings, ChevronRight, Globe, BookOpen, Target,
+  GraduationCap, CalendarDays, CalendarClock, ShieldCheck, Image,
+  MessageCircle, LucideIcon
 } from "lucide-react";
+
+const ICONS_DASHBOARD: Record<string, LucideIcon> = {
+  Users, FileCheck, MessageCircle, CalendarClock, Award, FileText, Target,
+  GraduationCap, CalendarDays, Settings, ShieldCheck, Image, Globe, BookOpen, BarChart3,
+};
 
 const STATUS_LABEL_DASH: Record<string, { label: string; cor: string }> = {
   cadastro:         { label: "Cadastro",              cor: "bg-blue-100 text-blue-800" },
@@ -161,29 +168,30 @@ export function AdminDashboard() {
             <Card>
               <CardContent className="p-5">
                 <h3 className="font-semibold text-foreground mb-4 text-sm">Ações rápidas</h3>
-                <div className="space-y-2">
-                  {[
-                    { key: "validacao", label: "Validar documentos", href: "/novo-fluxo/admin/validacao", icon: FileText, color: "text-yellow-600" },
-                    { key: "resultado_entrevista", label: "Resultado de Entrevistas", href: "/novo-fluxo/admin/resultado-entrevista", icon: Award, color: "text-green-600" },
-                    { key: "fale_conosco", label: "Fale Conosco", href: "/novo-fluxo/admin/fale-conosco", icon: FileText, color: "text-green-600" },
-                    { key: "candidatos", label: "Todos os Candidatos", href: "/novo-fluxo/admin/candidatos", icon: FileText, color: "text-cyan-600" },
-                    { key: "perfis", label: "Perfis e Permissões", href: "/novo-fluxo/admin/perfis", icon: Settings, color: "text-violet-600" },
-                    { key: "prova", label: "Parametrizar Prova", href: "/novo-fluxo/admin/prova-config", icon: FileText, color: "text-purple-600" },
-                    { key: "usuarios", label: "Gestão de Usuários", href: "/novo-fluxo/admin/usuarios", icon: Settings, color: "text-blue-600" },
-                    { key: "carrossel", label: "Carrossel de Imagens", href: "/novo-fluxo/admin/carrossel", icon: Globe, color: "text-pink-600" },
-                    { key: "certificacoes", label: "Certificações ativas", href: "/novo-fluxo/admin/certificacoes", icon: Award, color: "text-blue-600" },
-                    { key: "site", label: "Configurar site", href: "/novo-fluxo/admin/site", icon: Globe, color: "text-indigo-600" },
-                    { key: "institucional", label: "Documentos & Comitê", href: "/novo-fluxo/admin/institucional", icon: BookOpen, color: "text-teal-600" },
-                    { key: "cursos", label: "Cursos e Pacotes", href: "/novo-fluxo/admin/cursos", icon: BookOpen, color: "text-amber-600" },
-                  ].filter(item => podeVerMenuItem(item.key)).map(({ label, href, icon: Icon, color }) => (
-                    <Link key={label} href={href}>
-                      <a className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors group">
-                        <Icon className={`w-4 h-4 ${color} shrink-0`} />
-                        <span className="text-sm text-foreground group-hover:text-blue-700 transition-colors">{label}</span>
-                        <ChevronRight className="w-3.5 h-3.5 text-muted-foreground ml-auto" />
-                      </a>
-                    </Link>
-                  ))}
+                <div className="space-y-4">
+                  {MENU_GROUPS.map((grupo) => {
+                    const itensVisiveis = grupo.items.filter((item) => podeVerMenuItem(item.key));
+                    if (itensVisiveis.length === 0) return null;
+                    return (
+                      <div key={grupo.label}>
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">{grupo.label}</p>
+                        <div className="space-y-0.5">
+                          {itensVisiveis.map((item) => {
+                            const Icon = item.icon ? ICONS_DASHBOARD[item.icon] : null;
+                            return (
+                              <Link key={item.key} href={item.href}>
+                                <a className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors group">
+                                  {Icon && <Icon className="w-4 h-4 text-blue-700 shrink-0" />}
+                                  <span className="text-sm text-foreground group-hover:text-blue-700 transition-colors">{item.label}</span>
+                                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground ml-auto" />
+                                </a>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>

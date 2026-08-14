@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, ChevronLeft, Menu, X, Shield } from "lucide-react";
+import { AdminNavDropdowns, AdminNavMobile } from "@/components/AdminNavMenu";
 
 export function NavbarGlobal() {
   const [, navigate] = useLocation();
@@ -62,13 +63,7 @@ export function NavbarGlobal() {
           {isAdminArea ? (
             <>
               <a href="/novo-fluxo/admin" className={`text-xs px-3 py-1.5 rounded-lg transition-colors ${location === "/novo-fluxo/admin" ? "bg-white/20 text-white" : "text-white/60 hover:text-white hover:bg-white/10"}`}>Dashboard</a>
-              {podeVerMenuItem("validacao") && <a href="/novo-fluxo/admin/validacao" className="text-xs px-3 py-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">Validação</a>}
-              {podeVerMenuItem("entrevistas") && <a href="/novo-fluxo/admin/entrevistas" className="text-xs px-3 py-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">Entrevistas</a>}
-              {podeVerMenuItem("prova") && <a href="/novo-fluxo/admin/prova-config" className="text-xs px-3 py-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">Prova</a>}
-              {podeVerMenuItem("provas_agendadas") && <a href="/novo-fluxo/admin/provas-agendadas" className="text-xs px-3 py-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">Agenda de Provas</a>}
-              {podeVerMenuItem("usuarios") && <a href="/novo-fluxo/admin/usuarios" className="text-xs px-3 py-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">Usuários</a>}
-              {podeVerMenuItem("candidatos") && <a href="/novo-fluxo/admin/candidatos" className="text-xs px-3 py-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">Candidatos</a>}
-              {podeVerMenuItem("fale_conosco") && <a href="/novo-fluxo/admin/fale-conosco" className="text-xs px-3 py-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors">Fale Conosco</a>}
+              <AdminNavDropdowns podeVerMenuItem={podeVerMenuItem} currentPath={location} />
             </>
           ) : (
             <>
@@ -131,12 +126,7 @@ export function NavbarGlobal() {
           {isAdminArea ? (
             <>
               <a href="/novo-fluxo/admin" className="block text-sm text-white/70 hover:text-white py-2 px-3 rounded-lg hover:bg-white/10">Dashboard</a>
-              {podeVerMenuItem("validacao") && <a href="/novo-fluxo/admin/validacao" className="block text-sm text-white/70 hover:text-white py-2 px-3 rounded-lg hover:bg-white/10">Validação Documental</a>}
-              {podeVerMenuItem("prova") && <a href="/novo-fluxo/admin/prova-config" className="block text-sm text-white/70 hover:text-white py-2 px-3 rounded-lg hover:bg-white/10">Parametrizar Prova</a>}
-              {podeVerMenuItem("provas_agendadas") && <a href="/novo-fluxo/admin/provas-agendadas" className="block text-sm text-white/70 hover:text-white py-2 px-3 rounded-lg hover:bg-white/10">Agenda de Provas</a>}
-              {podeVerMenuItem("usuarios") && <a href="/novo-fluxo/admin/usuarios" className="block text-sm text-white/70 hover:text-white py-2 px-3 rounded-lg hover:bg-white/10">Gestão de Usuários</a>}
-              {podeVerMenuItem("candidatos") && <a href="/novo-fluxo/admin/candidatos" className="block text-sm text-white/70 hover:text-white py-2 px-3 rounded-lg hover:bg-white/10">Candidatos</a>}
-              {podeVerMenuItem("fale_conosco") && <a href="/novo-fluxo/admin/fale-conosco" className="block text-sm text-white/70 hover:text-white py-2 px-3 rounded-lg hover:bg-white/10">Fale Conosco</a>}
+              <AdminNavMobile podeVerMenuItem={podeVerMenuItem} />
             </>
           ) : (
             <>

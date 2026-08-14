@@ -12,27 +12,67 @@ export interface MenuItemDef {
   key: string;
   label: string;
   href: string;
+  icon?: string; // nome do ícone lucide-react, resolvido pelos componentes que renderizam o menu
 }
 
-export const MENU_ITEMS: MenuItemDef[] = [
-  { key: "validacao", label: "Validar documentos", href: "/novo-fluxo/admin/validacao" },
-  { key: "resultado_entrevista", label: "Resultado de Entrevistas", href: "/novo-fluxo/admin/resultado-entrevista" },
-  { key: "entrevistas", label: "Entrevistas (agenda)", href: "/novo-fluxo/admin/entrevistas" },
-  { key: "fale_conosco", label: "Fale Conosco", href: "/novo-fluxo/admin/fale-conosco" },
-  { key: "candidatos", label: "Todos os Candidatos", href: "/novo-fluxo/admin/candidatos" },
-  { key: "perfis", label: "Perfis e Permissões", href: "/novo-fluxo/admin/perfis" },
-  { key: "prova", label: "Parametrizar Prova", href: "/novo-fluxo/admin/prova-config" },
-  { key: "provas_agendadas", label: "Agenda de Provas", href: "/novo-fluxo/admin/provas-agendadas" },
-  { key: "simulacoes", label: "Simulações", href: "/novo-fluxo/admin/simulacoes" },
-  { key: "eixos_conhecimento", label: "Eixos de Conhecimento", href: "/novo-fluxo/admin/eixos-conhecimento" },
-  { key: "usuarios", label: "Gestão de Usuários", href: "/novo-fluxo/admin/usuarios" },
-  { key: "carrossel", label: "Carrossel de Imagens", href: "/novo-fluxo/admin/carrossel" },
-  { key: "certificacoes", label: "Certificações ativas", href: "/novo-fluxo/admin/certificacoes" },
-  { key: "site", label: "Configurar site", href: "/novo-fluxo/admin/site" },
-  { key: "institucional", label: "Documentos & Comitê", href: "/novo-fluxo/admin/institucional" },
-  { key: "cursos", label: "Cursos e Pacotes", href: "/novo-fluxo/admin/cursos" },
-  { key: "relatorio_cursos", label: "Relatório de Cursos (acessos/compras)", href: "/novo-fluxo/admin/relatorio-cursos" },
+export interface MenuGroupDef {
+  label: string;
+  items: MenuItemDef[];
+}
+
+// ─── Fonte única de verdade: grupos ──────────────────────────────────────────
+// NavbarGlobal, AdminDashboard (Ações rápidas) e o editor de permissões em
+// AdminUsuarios leem TODOS a partir daqui — nenhum deles mantém sua própria
+// lista de itens. Adicionar uma tela nova ao admin = adicionar uma linha aqui.
+export const MENU_GROUPS: MenuGroupDef[] = [
+  {
+    label: "Candidatos",
+    items: [
+      { key: "candidatos", label: "Todos os Candidatos", href: "/novo-fluxo/admin/candidatos", icon: "Users" },
+      { key: "validacao", label: "Validar Documentos", href: "/novo-fluxo/admin/validacao", icon: "FileCheck" },
+      { key: "fale_conosco", label: "Fale Conosco", href: "/novo-fluxo/admin/fale-conosco", icon: "MessageCircle" },
+    ],
+  },
+  {
+    label: "Entrevistas",
+    items: [
+      { key: "entrevistas", label: "Agenda de Entrevistas", href: "/novo-fluxo/admin/entrevistas", icon: "CalendarClock" },
+      { key: "resultado_entrevista", label: "Resultado de Entrevistas", href: "/novo-fluxo/admin/resultado-entrevista", icon: "Award" },
+    ],
+  },
+  {
+    label: "Provas",
+    items: [
+      { key: "prova", label: "Parametrizar Prova", href: "/novo-fluxo/admin/prova-config", icon: "FileText" },
+      { key: "eixos_conhecimento", label: "Eixos de Conhecimento", href: "/novo-fluxo/admin/eixos-conhecimento", icon: "Target" },
+      { key: "simulacoes", label: "Simulações", href: "/novo-fluxo/admin/simulacoes", icon: "GraduationCap" },
+      { key: "provas_agendadas", label: "Agenda de Provas", href: "/novo-fluxo/admin/provas-agendadas", icon: "CalendarDays" },
+    ],
+  },
+  {
+    label: "Plataforma",
+    items: [
+      { key: "usuarios", label: "Gestão de Usuários", href: "/novo-fluxo/admin/usuarios", icon: "Settings" },
+      { key: "perfis", label: "Perfis e Permissões", href: "/novo-fluxo/admin/perfis", icon: "ShieldCheck" },
+      { key: "certificacoes", label: "Certificações Ativas", href: "/novo-fluxo/admin/certificacoes", icon: "Award" },
+      { key: "carrossel", label: "Carrossel de Imagens", href: "/novo-fluxo/admin/carrossel", icon: "Image" },
+      { key: "site", label: "Configurar Site", href: "/novo-fluxo/admin/site", icon: "Globe" },
+      { key: "institucional", label: "Documentos & Comitê", href: "/novo-fluxo/admin/institucional", icon: "BookOpen" },
+    ],
+  },
+  {
+    label: "Cursos",
+    items: [
+      { key: "cursos", label: "Cursos e Pacotes", href: "/novo-fluxo/admin/cursos", icon: "BookOpen" },
+      { key: "relatorio_cursos", label: "Relatório de Cursos", href: "/novo-fluxo/admin/relatorio-cursos", icon: "BarChart3" },
+    ],
+  },
 ];
+
+// Lista plana derivada dos grupos — mantém compatibilidade com quem já
+// consome MENU_ITEMS (ex: checkboxes do editor de permissões). Nunca editar
+// esta lista diretamente: editar MENU_GROUPS acima.
+export const MENU_ITEMS: MenuItemDef[] = MENU_GROUPS.flatMap(g => g.items);
 
 export const MENU_ITEM_LABELS: Record<string, string> = Object.fromEntries(
   MENU_ITEMS.map(i => [i.key, i.label])
