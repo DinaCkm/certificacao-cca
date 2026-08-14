@@ -157,13 +157,18 @@ export async function buscarQuestoesSemGabarito(tentativaId: number, userId: num
   // questão marcada como exclusiva de simulação (eh_simulacao = 1): o banco
   // da prova oficial e o do simulado são conjuntos disjuntos, pra nunca
   // vazar gabarito real através do simulado.
+  // LIMIT é interpolado diretamente (sanitizado com Number()) em vez de
+  // vinculado como parâmetro — o driver mysql2 rejeita "LIMIT ?" no
+  // protocolo binário de prepared statement ("Incorrect arguments to
+  // mysqld_stmt_execute"), mesmo com valor numérico válido.
+  const limiteSeguro = Number(totalQuestoes) || 5;
   const [questoes] = await db.execute(
     `SELECT id, numero, enunciado, opcao_a, opcao_b, opcao_c, opcao_d
      FROM prova_questoes
      WHERE prova_id = ? AND eh_simulacao = 0
      ORDER BY RAND()
-     LIMIT ?`,
-    [tentativa.prova_id, totalQuestoes]
+     LIMIT ${limiteSeguro}`,
+    [tentativa.prova_id]
   ) as any;
 
   return {

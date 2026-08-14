@@ -108,12 +108,15 @@ export async function iniciarSimulacao(dados: {
   // Sorteia SOMENTE do banco de questões marcado para simulação — nunca das
   // questões que podem cair na prova oficial (eh_simulacao = 1 é um banco
   // deliberadamente separado, curado pelo admin).
+  // LIMIT interpolado diretamente (sanitizado com Number()) — ver nota
+  // equivalente em provaService.ts.
+  const limiteSeguro = Number(config.quantidade_questoes) || 5;
   const [questoes] = await db.execute(
     `SELECT pq.id FROM prova_questoes pq
      JOIN provas p ON p.id = pq.prova_id
      WHERE p.certification_type_id = ? AND pq.eh_simulacao = 1
-     ORDER BY RAND() LIMIT ?`,
-    [config.certification_type_id, config.quantidade_questoes]
+     ORDER BY RAND() LIMIT ${limiteSeguro}`,
+    [config.certification_type_id]
   ) as any;
 
   if (!questoes.length) {
