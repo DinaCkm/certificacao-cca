@@ -146,9 +146,17 @@ export async function buscarTentativa(tentativaId: number, userId?: number, acce
   verificarPosse(tentativa, userId, accessToken);
 
   const questoesIds: number[] = Array.isArray(tentativa.questoes_json) ? tentativa.questoes_json : JSON.parse(tentativa.questoes_json);
+  if (!questoesIds.length) return {
+    tentativa_id: tentativa.id, status: tentativa.status, total_questoes: tentativa.total_questoes,
+    acertos: tentativa.acertos, questoes: [], respostas: [],
+  };
+
+  // Placeholders explícitos em vez de "IN (?)" com array — mesma classe de
+  // problema de binding do mysql2 encontrado no LIMIT (ver provaService.ts).
+  const placeholders = questoesIds.map(() => "?").join(",");
   const [questoes] = await db.execute(
-    `SELECT id, numero, enunciado, opcao_a, opcao_b, opcao_c, opcao_d FROM prova_questoes WHERE id IN (?)`,
-    [questoesIds]
+    `SELECT id, numero, enunciado, opcao_a, opcao_b, opcao_c, opcao_d FROM prova_questoes WHERE id IN (${placeholders})`,
+    questoesIds
   ) as any;
 
   // Mantém a ordem sorteada original
@@ -245,12 +253,13 @@ export async function calcularDesempenhoPorEixoSimulacao(tentativaId: number, us
   if (!respostas.length) return { eixos: [] };
 
   const questaoIds = respostas.map((r) => r.questao_id);
+  const placeholdersEixo = questaoIds.map(() => "?").join(",");
   const [questoes] = await db.execute(
     `SELECT pq.id, pq.eixo_conhecimento_id, e.nome as eixo_nome
      FROM prova_questoes pq
      LEFT JOIN eixos_conhecimento e ON e.id = pq.eixo_conhecimento_id
-     WHERE pq.id IN (?)`,
-    [questaoIds]
+     WHERE pq.id IN (${placeholdersEixo})`,
+    questaoIds
   ) as any;
 
   const eixoPorQuestao: Record<number, { id: number | null; nome: string }> = {};

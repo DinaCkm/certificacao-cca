@@ -338,12 +338,13 @@ export async function calcularDesempenhoPorEixo(tentativaId: number, userId: num
   if (!respostas.length) return { eixos: [] };
 
   const questaoIds = respostas.map((r) => r.questao_id);
+  const placeholdersEixo = questaoIds.map(() => "?").join(",");
   const [questoes] = await db.execute(
     `SELECT pq.id, pq.eixo_conhecimento_id, e.nome as eixo_nome
      FROM prova_questoes pq
      LEFT JOIN eixos_conhecimento e ON e.id = pq.eixo_conhecimento_id
-     WHERE pq.id IN (?)`,
-    [questaoIds]
+     WHERE pq.id IN (${placeholdersEixo})`,
+    questaoIds
   ) as any;
 
   const eixoPorQuestao: Record<number, { id: number | null; nome: string }> = {};
