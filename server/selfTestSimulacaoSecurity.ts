@@ -39,17 +39,18 @@ export async function runSimulacaoSecuritySelfTest(port: number | string) {
     const roleId = roles[0].id;
     const hash = await bcrypt.hash("selftest-" + Date.now(), 4);
     const sufixo = Date.now();
+    const cpfSufixo = String(Date.now()).slice(-6); // curto o bastante pra caber na coluna cpf
 
     const [uA] = await db.execute(
       `INSERT INTO users (email, password_hash, full_name, cpf, role_id, is_active) VALUES (?, ?, ?, ?, ?, 1)`,
-      [`selftest.a.${sufixo}@teste.local`, hash, "Selftest Candidato A", `SELFA${sufixo}`, roleId]
+      [`selftest.a.${sufixo}@teste.local`, hash, "Selftest Candidato A", `S${cpfSufixo}1`, roleId]
     ) as any;
     const userAId = uA.insertId;
     idsParaLimpar.users.push(userAId);
 
     const [uB] = await db.execute(
       `INSERT INTO users (email, password_hash, full_name, cpf, role_id, is_active) VALUES (?, ?, ?, ?, ?, 1)`,
-      [`selftest.b.${sufixo}@teste.local`, hash, "Selftest Candidato B", `SELFB${sufixo}`, roleId]
+      [`selftest.b.${sufixo}@teste.local`, hash, "Selftest Candidato B", `S${cpfSufixo}2`, roleId]
     ) as any;
     const userBId = uB.insertId;
     idsParaLimpar.users.push(userBId);
