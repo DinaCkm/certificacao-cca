@@ -2,7 +2,10 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { db } from "../db/connection.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "anefac_secret_dev_troque_em_producao";
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET não definida nas variáveis de ambiente");
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES = "7d";
 
 export interface JwtPayload {

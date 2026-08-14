@@ -174,6 +174,9 @@ export const api = {
       request<{ id: number }>("POST", "/admin/simulacoes", body),
     removerSimulacao: (id: number) => request<{ message: string }>("DELETE", `/admin/simulacoes/${id}`),
 
+    // Assinaturas do código de conduta
+    listarAssinaturasConduta: () => request<{ assinaturas: any[] }>("GET", "/admin/codigo-conduta/assinaturas"),
+
     // Documentos complementares — avaliador solicita ao candidato dentro do sistema
     solicitarDocumentos: (processoId: number, mensagem: string, documentoIdx?: number) =>
       request<{ id: number; message: string }>("POST", `/admin/validacao/${processoId}/solicitar-documentos`, { mensagem, documento_idx: documentoIdx }),

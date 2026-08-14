@@ -26,6 +26,7 @@ export async function testConnection() {
     await runPerfilCandidatoMigration();
     await runProvaAgendamentoMigrations();
     await runSimulacoesMigrations();
+    await runInstitucionalConfigMigration();
     await runAssinaturaCondutaMigration();
   } catch (err) {
     console.error("❌ Erro ao conectar ao MySQL:", err);
@@ -634,7 +635,27 @@ export async function runSimulacoesMigrations() {
   }
 }
 
-// ─── Assinatura digital do Código de Conduta ──────────────────────────────────
+// ─── Conteúdo institucional (comitê, regulamento, edital, código de conduta) ──
+// Antes vivia só no localStorage do navegador de quem editava — o candidato
+// nunca via a versão real publicada pelo admin. Agora fica no banco, com
+// versionamento do código de conduta (necessário pra assinatura eletrônica
+// saber a qual versão o candidato está aceitando).
+export async function runInstitucionalConfigMigration() {
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS institucional_config (
+        id INT PRIMARY KEY DEFAULT 1,
+        dados JSON NOT NULL,
+        codigo_conduta_versao INT NOT NULL DEFAULT 1,
+        atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        CONSTRAINT chk_singleton CHECK (id = 1)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    console.log("✅ Tabela institucional_config verificada/criada");
+  } catch (err) {
+    console.warn("⚠️ Erro na migração institucional_config:", err);
+  }
+}
 export async function runAssinaturaCondutaMigration() {
   try {
     await db.execute(`

@@ -1,14 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "wouter";
 import {
   ArrowLeft, Save, Plus, Trash2, User, FileText, BookOpen, Shield,
-  ChevronDown, ChevronUp, ExternalLink, RotateCcw
+  ChevronDown, ChevronUp, ExternalLink, RotateCcw, ShieldCheck, Loader2
 } from "lucide-react";
 import {
   useInstitucional,
   MembroComite,
   DEFAULT_INSTITUCIONAL,
 } from "@/contexts/InstitucionalContext";
+import { api } from "@/lib/api";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -82,10 +83,74 @@ function DocumentoEditor({
   );
 }
 
+// ─── Assinaturas do Código de Conduta ─────────────────────────────────────────
+
+function AssinaturasCodigoConduta() {
+  const [assinaturas, setAssinaturas] = useState<any[] | null>(null);
+  const [expandido, setExpandido] = useState(false);
+
+  useEffect(() => {
+    if (expandido && assinaturas === null) {
+      (api.admin as any).listarAssinaturasConduta()
+        .then((res: any) => setAssinaturas(res.assinaturas || []))
+        .catch(() => setAssinaturas([]));
+    }
+  }, [expandido]);
+
+  return (
+    <section className="mb-10 bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
+      <button onClick={() => setExpandido(!expandido)} className="w-full flex items-center justify-between p-5 text-left">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="w-5 h-5 text-green-400" />
+          <h2 className="text-lg font-bold text-white">Assinaturas do Código de Conduta</h2>
+        </div>
+        {expandido ? <ChevronUp className="w-4 h-4 text-white/60" /> : <ChevronDown className="w-4 h-4 text-white/60" />}
+      </button>
+
+      {expandido && (
+        <div className="px-5 pb-5">
+          {assinaturas === null ? (
+            <div className="flex items-center gap-2 text-white/50 text-sm py-6 justify-center"><Loader2 className="w-4 h-4 animate-spin" /> Carregando...</div>
+          ) : assinaturas.length === 0 ? (
+            <p className="text-white/50 text-sm py-6 text-center">Nenhuma assinatura registrada ainda.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-white/50 text-xs uppercase border-b border-white/10">
+                    <th className="py-2 pr-4">Candidato</th>
+                    <th className="py-2 pr-4">Nome digitado</th>
+                    <th className="py-2 pr-4">Versão</th>
+                    <th className="py-2 pr-4">Código</th>
+                    <th className="py-2 pr-4">Data/hora</th>
+                    <th className="py-2 pr-4">IP</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {assinaturas.map((a) => (
+                    <tr key={a.id} className="border-b border-white/5 text-white/80">
+                      <td className="py-2 pr-4">{a.full_name}<br /><span className="text-white/40 text-xs">{a.email}</span></td>
+                      <td className="py-2 pr-4">{a.nome_digitado}</td>
+                      <td className="py-2 pr-4">v{a.versao}</td>
+                      <td className="py-2 pr-4 font-mono text-xs">{a.codigo_assinatura}</td>
+                      <td className="py-2 pr-4 text-xs">{new Date(a.assinado_em).toLocaleString("pt-BR")}</td>
+                      <td className="py-2 pr-4 text-xs">{a.ip_address || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function AdminInstitucional() {
-  const { institucional, salvarInstitucional, resetarInstitucional } = useInstitucional();
+  const { institucional, carregando, salvarInstitucional, resetarInstitucional } = useInstitucional();
   const [comite, setComite] = useState<MembroComite[]>(institucional.comite);
   const [regulamento, setRegulamento] = useState(institucional.regulamento);
   const [edital, setEdital] = useState(institucional.edital);
@@ -93,19 +158,36 @@ export function AdminInstitucional() {
   const [saved, setSaved] = useState(false);
   const [expandedMembro, setExpandedMembro] = useState<string | null>(null);
 
+  // A busca do conteúdo real (banco) é assíncrona — sincroniza assim que chegar,
+  // pra não salvar por cima com os textos padrão que estavam no estado inicial.
+  useEffect(() => {
+    if (!carregando) {
+      setComite(institucional.comite);
+      setRegulamento(institucional.regulamento);
+      setEdital(institucional.edital);
+      setCodigoConduta(institucional.codigoConduta);
+    }
+  }, [carregando]);
+
   function handleSave() {
-    salvarInstitucional({ comite, regulamento, edital, codigoConduta });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    salvarInstitucional({ comite, regulamento, edital, codigoConduta })
+      .then(() => {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2500);
+      })
+      .catch((err: any) => {
+        alert(err.message || "Erro ao salvar conteúdo institucional");
+      });
   }
 
   function handleReset() {
     if (!confirm("Tem certeza? Isso restaurará todos os textos e membros para os valores padrão.")) return;
-    resetarInstitucional();
-    setComite(DEFAULT_INSTITUCIONAL.comite);
-    setRegulamento(DEFAULT_INSTITUCIONAL.regulamento);
-    setEdital(DEFAULT_INSTITUCIONAL.edital);
-    setCodigoConduta(DEFAULT_INSTITUCIONAL.codigoConduta);
+    resetarInstitucional().then(() => {
+      setComite(DEFAULT_INSTITUCIONAL.comite);
+      setRegulamento(DEFAULT_INSTITUCIONAL.regulamento);
+      setEdital(DEFAULT_INSTITUCIONAL.edital);
+      setCodigoConduta(DEFAULT_INSTITUCIONAL.codigoConduta);
+    });
   }
 
   function addMembro() {
@@ -313,6 +395,8 @@ export function AdminInstitucional() {
             />
           </div>
         </section>
+
+        <AssinaturasCodigoConduta />
 
         {/* Save button bottom */}
         <div className="flex justify-end pb-8">
