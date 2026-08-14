@@ -4,6 +4,7 @@ import { Navbar } from "@/components/Navbar";
 import { ArrowRight, CheckCircle, XCircle, Award, RotateCcw, BookOpen, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
+import { DesempenhoPorEixo } from "@/components/DesempenhoPorEixo";
 
 type Fase = "carregando" | "cadastro" | "quiz" | "resultado";
 
@@ -35,6 +36,7 @@ export function Simulacao() {
   const [questaoAtual, setQuestaoAtual] = useState(0);
   const [respondendoAgora, setRespondendoAgora] = useState<{ correta: boolean; resposta_correta: number; explicacao: string | null } | null>(null);
   const [resultadoFinal, setResultadoFinal] = useState<{ acertos: number; total: number } | null>(null);
+  const [eixos, setEixos] = useState<{ eixo_id: number | null; nome: string; acertos: number; total: number; percentual: number }[]>([]);
 
   useEffect(() => {
     inicializar();
@@ -111,6 +113,7 @@ export function Simulacao() {
     } else if (tentativaId) {
       const result = await api.simulacao.finalizar(tentativaId);
       setResultadoFinal({ acertos: result.acertos, total: result.total_questoes });
+      api.simulacao.desempenhoPorEixo(tentativaId).then((r) => setEixos(r.eixos)).catch(() => setEixos([]));
       localStorage.removeItem(STORAGE_KEY);
       setFase("resultado");
     }
@@ -304,6 +307,8 @@ export function Simulacao() {
                   <p className={`text-sm font-semibold ${nivel.cor} mb-1`}>Análise do seu perfil</p>
                   <p className={`text-sm ${nivel.cor}`}>{nivel.cert}</p>
                 </div>
+
+                <DesempenhoPorEixo eixos={eixos} mostrarCtaCursos={false} />
 
                 <Link href="/cursos">
                   <a className="flex items-center gap-3 bg-purple-50 border-2 border-purple-200 rounded-xl p-4 mb-3 hover:bg-purple-100 transition-colors">

@@ -6,6 +6,7 @@ import {
   buscarQuestoesSemGabarito,
   submeterProva,
   buscarHistoricoTentativas,
+  calcularDesempenhoPorEixo,
 } from "../services/provaService.js";
 import {
   listarSalasDisponiveis,
@@ -213,5 +214,17 @@ provaRouter.get("/resultado/:tentativaId", async (req: Request, res: Response) =
     });
   } catch (err) {
     return res.status(500).json({ error: "Erro ao buscar resultado" });
+  }
+});
+
+// ── GET /api/prova/resultado/:tentativaId/eixos ───────────────────────────────
+// Desempenho por eixo de conhecimento (Fase 4)
+
+provaRouter.get("/resultado/:tentativaId/eixos", async (req: Request, res: Response) => {
+  try {
+    const resultado = await calcularDesempenhoPorEixo(parseInt(req.params.tentativaId), req.user!.userId);
+    return res.json(resultado);
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message });
   }
 });

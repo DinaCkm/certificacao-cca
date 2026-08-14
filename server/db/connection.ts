@@ -27,6 +27,7 @@ export async function testConnection() {
     await runProvaAgendamentoMigrations();
     await runSimulacoesMigrations();
     await runInstitucionalConfigMigration();
+    await runEixosConhecimentoMigration();
     await runAssinaturaCondutaMigration();
   } catch (err) {
     console.error("❌ Erro ao conectar ao MySQL:", err);
@@ -656,6 +657,50 @@ export async function runInstitucionalConfigMigration() {
     console.warn("⚠️ Erro na migração institucional_config:", err);
   }
 }
+
+// ─── Eixos de conhecimento (competências avaliadas na prova/simulação) ───────
+export async function runEixosConhecimentoMigration() {
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS eixos_conhecimento (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        certification_type_id INT NOT NULL,
+        nome VARCHAR(255) NOT NULL,
+        descricao TEXT NULL,
+        ordem INT NOT NULL DEFAULT 0,
+        ativo TINYINT(1) NOT NULL DEFAULT 1,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_cert (certification_type_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    console.log("✅ Tabela eixos_conhecimento verificada/criada");
+
+    const [cols] = await db.execute(`
+      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'prova_questoes'
+    `) as any;
+    const existentes: string[] = cols.map((c: any) => c.COLUMN_NAME.toLowerCase());
+    if (!existentes.includes("eixo_conhecimento_id")) {
+      await db.execute(`ALTER TABLE prova_questoes ADD COLUMN eixo_conhecimento_id INT NULL`);
+      console.log("✅ Coluna prova_questoes.eixo_conhecimento_id criada");
+    }
+
+    // Item de menu "eixos_conhecimento" para quem já gerencia a prova
+    const [rolesComMenuEixos] = await db.execute(
+      `SELECT code, menu_permissoes FROM roles WHERE code IN ('administrador','gestor_n1','gestor_n2')`
+    ) as any;
+    for (const r of rolesComMenuEixos) {
+      const itens: string[] = Array.isArray(r.menu_permissoes) ? r.menu_permissoes : [];
+      if (!itens.includes("eixos_conhecimento")) {
+        itens.push("eixos_conhecimento");
+        await db.execute(`UPDATE roles SET menu_permissoes = ? WHERE code = ?`, [JSON.stringify(itens), r.code]);
+      }
+    }
+  } catch (err) {
+    console.warn("⚠️ Erro na migração de eixos de conhecimento:", err);
+  }
+}
+
 export async function runAssinaturaCondutaMigration() {
   try {
     await db.execute(`
