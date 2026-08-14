@@ -620,6 +620,33 @@ export async function runSimulacoesMigrations() {
 
     console.log("✅ Tabelas de simulação (config/tentativas) verificadas/criadas");
 
+    // Correção de segurança: tentativas públicas (sem user_id) precisavam de
+    // um token opaco para autorização — o ID sequencial sozinho permitia que
+    // qualquer pessoa consultasse/respondesse/finalizasse a tentativa de outra
+    // só adivinhando ou incrementando o número.
+    const [colsTentativas] = await db.execute(`
+      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'simulacoes_tentativas'
+    `) as any;
+    const existentesTentativas: string[] = colsTentativas.map((c: any) => c.COLUMN_NAME.toLowerCase());
+    if (!existentesTentativas.includes("access_token")) {
+      await db.execute(`ALTER TABLE simulacoes_tentativas ADD COLUMN access_token VARCHAR(64) NULL`);
+      console.log("✅ Coluna simulacoes_tentativas.access_token criada");
+    }
+
+    // Correção de integridade: separa o banco de questões da prova oficial do
+    // banco usado no simulado. Sem isso, o simulado sorteava e revelava
+    // gabarito/explicação das MESMAS questões que podem cair na prova real.
+    const [colsQuestoesFlag] = await db.execute(`
+      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'prova_questoes'
+    `) as any;
+    const existentesQuestoesFlag: string[] = colsQuestoesFlag.map((c: any) => c.COLUMN_NAME.toLowerCase());
+    if (!existentesQuestoesFlag.includes("eh_simulacao")) {
+      await db.execute(`ALTER TABLE prova_questoes ADD COLUMN eh_simulacao TINYINT(1) NOT NULL DEFAULT 0`);
+      console.log("✅ Coluna prova_questoes.eh_simulacao criada (separa banco de simulação do banco oficial)");
+    }
+
     // Item de menu "simulacoes" para quem já gerencia a prova
     const [rolesComMenuSim] = await db.execute(
       `SELECT code, menu_permissoes FROM roles WHERE code IN ('administrador','gestor_n1','gestor_n2')`

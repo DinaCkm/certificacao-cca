@@ -161,12 +161,12 @@ export function AdminSimulacoes() {
                       <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                         <span>{s.quantidade_questoes} questões por simulado</span>
                         <span className="flex items-center gap-1">
-                          <BookOpen className="w-3 h-3" /> {s.questoes_no_banco} no banco
+                          <BookOpen className="w-3 h-3" /> {s.questoes_no_banco} marcadas p/ simulação
                         </span>
                       </div>
                       {s.questoes_no_banco < s.quantidade_questoes && (
                         <p className="text-xs text-amber-600 font-medium mt-1">
-                          ⚠ O banco tem menos questões do que o simulado pede — cadastre mais em Parametrizar Prova
+                          ⚠ Poucas questões marcadas "só simulação" em Parametrizar Prova — o simulado nunca usa questões do banco oficial
                         </p>
                       )}
                     </div>

@@ -232,31 +232,31 @@ export const api = {
       ),
 
     iniciar: (certSlug: string, nome?: string, email?: string) =>
-      request<{ tentativa_id: number; retomada: boolean }>(
+      request<{ tentativa_id: number; retomada: boolean; access_token: string | null }>(
         "POST", "/simulacao/iniciar", { cert_slug: certSlug, nome, email }
       ),
 
     minhaEmAndamento: (certSlug: string) =>
       request<{ tentativa_id: number | null }>("GET", `/simulacao/minha-em-andamento/${certSlug}`),
 
-    estado: (tentativaId: number) =>
+    estado: (tentativaId: number, accessToken?: string | null) =>
       request<{
         tentativa_id: number; status: string; total_questoes: number; acertos: number | null;
         questoes: { id: number; numero: number; enunciado: string; opcoes: string[] }[];
         respostas: { questao_id: number; resposta: number; correta: boolean }[];
-      }>("GET", `/simulacao/${tentativaId}`),
+      }>("GET", `/simulacao/${tentativaId}${accessToken ? `?token=${encodeURIComponent(accessToken)}` : ""}`),
 
-    responder: (tentativaId: number, questaoId: number, resposta: number) =>
+    responder: (tentativaId: number, questaoId: number, resposta: number, accessToken?: string | null) =>
       request<{ correta: boolean; resposta_correta: number; explicacao: string | null }>(
-        "POST", `/simulacao/${tentativaId}/responder`, { questao_id: questaoId, resposta }
+        "POST", `/simulacao/${tentativaId}/responder`, { questao_id: questaoId, resposta, token: accessToken }
       ),
 
-    finalizar: (tentativaId: number) =>
-      request<{ acertos: number; total_questoes: number }>("POST", `/simulacao/${tentativaId}/finalizar`),
+    finalizar: (tentativaId: number, accessToken?: string | null) =>
+      request<{ acertos: number; total_questoes: number }>("POST", `/simulacao/${tentativaId}/finalizar`, { token: accessToken }),
 
-    desempenhoPorEixo: (tentativaId: number) =>
+    desempenhoPorEixo: (tentativaId: number, accessToken?: string | null) =>
       request<{ eixos: { eixo_id: number | null; nome: string; acertos: number; total: number; percentual: number }[] }>(
-        "GET", `/simulacao/${tentativaId}/eixos`
+        "GET", `/simulacao/${tentativaId}/eixos${accessToken ? `?token=${encodeURIComponent(accessToken)}` : ""}`
       ),
   },
 };

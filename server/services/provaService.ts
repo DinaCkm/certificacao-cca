@@ -153,11 +153,14 @@ export async function buscarQuestoesSemGabarito(tentativaId: number, userId: num
   const tentativa = tentativas[0];
   const totalQuestoes = tentativa.total_questoes || 5;
 
-  // Busca questões — SEM resposta_correta
+  // Busca questões — SEM resposta_correta. Exclui explicitamente qualquer
+  // questão marcada como exclusiva de simulação (eh_simulacao = 1): o banco
+  // da prova oficial e o do simulado são conjuntos disjuntos, pra nunca
+  // vazar gabarito real através do simulado.
   const [questoes] = await db.execute(
     `SELECT id, numero, enunciado, opcao_a, opcao_b, opcao_c, opcao_d
      FROM prova_questoes
-     WHERE prova_id = ?
+     WHERE prova_id = ? AND eh_simulacao = 0
      ORDER BY RAND()
      LIMIT ?`,
     [tentativa.prova_id, totalQuestoes]

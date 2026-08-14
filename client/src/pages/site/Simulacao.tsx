@@ -31,6 +31,7 @@ export function Simulacao() {
   const [erro, setErro] = useState("");
 
   const [tentativaId, setTentativaId] = useState<number | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [questoes, setQuestoes] = useState<Questao[]>([]);
   const [respostas, setRespostas] = useState<Resposta[]>([]);
   const [questaoAtual, setQuestaoAtual] = useState(0);
@@ -48,14 +49,15 @@ export function Simulacao() {
       setSimulacoesAtivas(simulacoes);
       if (simulacoes.length === 1) setCertSelecionada(simulacoes[0].cert_slug);
 
-      // Retoma uma simulação em andamento salva neste navegador
+      // Retoma uma simulação em andamento salva neste navegador (id + token,
+      // nunca só o id — o token é o que autoriza o acesso a esta tentativa)
       const salvo = localStorage.getItem(STORAGE_KEY);
       if (salvo) {
-        const id = parseInt(salvo);
         try {
-          const estado = await api.simulacao.estado(id);
+          const { id, token } = JSON.parse(salvo);
+          const estado = await api.simulacao.estado(id, token);
           if (estado.status === "em_andamento") {
-            carregarEstado(id, estado);
+            carregarEstado(id, token, estado);
             return;
           }
         } catch {
@@ -69,8 +71,9 @@ export function Simulacao() {
     }
   }
 
-  function carregarEstado(id: number, estado: Awaited<ReturnType<typeof api.simulacao.estado>>) {
+  function carregarEstado(id: number, token: string | null, estado: Awaited<ReturnType<typeof api.simulacao.estado>>) {
     setTentativaId(id);
+    setAccessToken(token);
     setQuestoes(estado.questoes);
     setRespostas(estado.respostas);
     setQuestaoAtual(Math.min(estado.respostas.length, estado.questoes.length - 1));
@@ -82,10 +85,10 @@ export function Simulacao() {
     if (!form.nome.trim() || !form.email.trim() || !certSelecionada) return;
     setErro("");
     try {
-      const { tentativa_id } = await api.simulacao.iniciar(certSelecionada, form.nome, form.email);
-      const estado = await api.simulacao.estado(tentativa_id);
-      localStorage.setItem(STORAGE_KEY, String(tentativa_id));
-      carregarEstado(tentativa_id, estado);
+      const { tentativa_id, access_token } = await api.simulacao.iniciar(certSelecionada, form.nome, form.email);
+      const estado = await api.simulacao.estado(tentativa_id, access_token);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ id: tentativa_id, token: access_token }));
+      carregarEstado(tentativa_id, access_token, estado);
     } catch (err: any) {
       setErro(err.message || "Erro ao iniciar simulação");
     }
@@ -98,7 +101,7 @@ export function Simulacao() {
   const handleResponder = async (opcaoIdx: number) => {
     if (respondida || !tentativaId || !questao) return;
     try {
-      const result = await api.simulacao.responder(tentativaId, questao.id, opcaoIdx);
+      const result = await api.simulacao.responder(tentativaId, questao.id, opcaoIdx, accessToken);
       setRespondendoAgora(result);
       setRespostas((prev) => [...prev.filter((r) => r.questao_id !== questao.id), { questao_id: questao.id, resposta: opcaoIdx, correta: result.correta }]);
     } catch (err: any) {
@@ -111,9 +114,9 @@ export function Simulacao() {
     if (questaoAtual < questoes.length - 1) {
       setQuestaoAtual((q) => q + 1);
     } else if (tentativaId) {
-      const result = await api.simulacao.finalizar(tentativaId);
+      const result = await api.simulacao.finalizar(tentativaId, accessToken);
       setResultadoFinal({ acertos: result.acertos, total: result.total_questoes });
-      api.simulacao.desempenhoPorEixo(tentativaId).then((r) => setEixos(r.eixos)).catch(() => setEixos([]));
+      api.simulacao.desempenhoPorEixo(tentativaId, accessToken).then((r) => setEixos(r.eixos)).catch(() => setEixos([]));
       localStorage.removeItem(STORAGE_KEY);
       setFase("resultado");
     }
@@ -124,6 +127,7 @@ export function Simulacao() {
     setFase("cadastro");
     setForm({ nome: "", email: "" });
     setTentativaId(null);
+    setAccessToken(null);
     setQuestoes([]);
     setRespostas([]);
     setQuestaoAtual(0);
