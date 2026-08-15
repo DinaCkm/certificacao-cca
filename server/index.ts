@@ -12,6 +12,7 @@ import { simulacaoRouter } from "./routes/simulacao.js";
 import { institucionalRouter, institucionalAdminRouter } from "./routes/institucional.js";
 import { codigoCondutaRouter, codigoCondutaAdminRouter } from "./routes/codigoConduta.js";
 import { magicLinkRouter } from "./routes/magicLink.js";
+import { runRelatorioProvaSelfTest } from "./selfTestRelatorioProva.js";
 import { cursosPublicoRouter } from "./routes/cursosPublico.js";
 import { certificacoesPublicoRouter } from "./routes/certificacoesPublico.js";
 import fs from "fs";
@@ -277,6 +278,7 @@ async function startServer() {
   server.listen(port, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${port}/`);
     console.log(`📡 API disponível em http://localhost:${port}/api/`);
+    runRelatorioProvaSelfTest(port).catch((err) => console.error("Erro no autoteste:", err));
   });
 }
 
