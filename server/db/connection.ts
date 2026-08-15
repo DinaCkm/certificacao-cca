@@ -28,6 +28,7 @@ export async function testConnection() {
     await runSimulacoesMigrations();
     await runInstitucionalConfigMigration();
     await runEixosConhecimentoMigration();
+    await runRelatorioProvaMenuMigration();
     await runAssinaturaCondutaMigration();
     await runMagicLinkMigration();
   } catch (err) {
@@ -726,6 +727,25 @@ export async function runEixosConhecimentoMigration() {
     }
   } catch (err) {
     console.warn("⚠️ Erro na migração de eixos de conhecimento:", err);
+  }
+}
+
+// ─── Item de menu do relatório administrativo da prova oficial ───────────────
+export async function runRelatorioProvaMenuMigration() {
+  try {
+    const [rolesComMenu] = await db.execute(
+      `SELECT code, menu_permissoes FROM roles WHERE code IN ('administrador','gestor_n1','gestor_n2','avaliador')`
+    ) as any;
+    for (const r of rolesComMenu) {
+      const itens: string[] = Array.isArray(r.menu_permissoes) ? r.menu_permissoes : [];
+      if (!itens.includes("prova_relatorio")) {
+        itens.push("prova_relatorio");
+        await db.execute(`UPDATE roles SET menu_permissoes = ? WHERE code = ?`, [JSON.stringify(itens), r.code]);
+      }
+    }
+    console.log("✅ Item de menu prova_relatorio verificado");
+  } catch (err) {
+    console.warn("⚠️ Erro na migração do menu do relatório da prova:", err);
   }
 }
 

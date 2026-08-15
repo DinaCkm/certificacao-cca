@@ -368,6 +368,102 @@ export async function calcularDesempenhoPorEixo(tentativaId: number, userId: num
   return { eixos };
 }
 
+// ── Relatório administrativo da prova oficial ─────────────────────────────────
+// Lista todas as tentativas finalizadas (aprovadas/reprovadas/anuladas) com
+// desempenho por eixo, e agrega estatísticas gerais por certificação.
+
+export async function relatorioProvaAdmin(certSlug?: string) {
+  const filtroCert = certSlug ? `AND ct.slug = ?` : "";
+  const params = certSlug ? [certSlug] : [];
+
+  const [tentativas] = await db.execute(
+    `SELECT t.id, t.numero_tentativa, t.status, t.acertos, t.total_questoes,
+            t.percentual, t.aprovado, t.anulada, t.anulada_motivo,
+            t.iniciada_em, t.finalizada_em, t.violacoes_count,
+            u.full_name as candidato_nome, u.email as candidato_email,
+            ct.nome as cert_nome, ct.slug as cert_slug,
+            pc.nota_minima
+     FROM tentativas_prova t
+     JOIN candidato_processos cp ON cp.id = t.processo_id
+     JOIN users u ON u.id = t.user_id
+     JOIN provas p ON p.id = t.prova_id
+     JOIN certification_types ct ON ct.id = p.certification_type_id
+     LEFT JOIN prova_config pc ON pc.cert_slug = ct.slug
+     WHERE t.status IN ('finalizada', 'anulada') ${filtroCert}
+     ORDER BY t.finalizada_em DESC`,
+    params
+  ) as any;
+
+  const finalizadas = tentativas.filter((t: any) => t.status === "finalizada");
+  const totalTentativas = tentativas.length;
+  const totalAprovados = finalizadas.filter((t: any) => t.aprovado).length;
+  const totalReprovados = finalizadas.filter((t: any) => !t.aprovado).length;
+  const totalAnuladas = tentativas.filter((t: any) => t.status === "anulada").length;
+  const mediaPercentual = finalizadas.length
+    ? finalizadas.reduce((acc: number, t: any) => acc + parseFloat(t.percentual || 0), 0) / finalizadas.length
+    : 0;
+
+  return {
+    resumo: {
+      total_tentativas: totalTentativas,
+      total_aprovados: totalAprovados,
+      total_reprovados: totalReprovados,
+      total_anuladas: totalAnuladas,
+      taxa_aprovacao: finalizadas.length ? Math.round((totalAprovados / finalizadas.length) * 100) : 0,
+      media_percentual: Math.round(mediaPercentual),
+    },
+    tentativas,
+  };
+}
+
+// ── Desempenho por eixo agregado (visão admin, sem checagem de posse) ────────
+export async function desempenhoPorEixoAdmin(certSlug?: string) {
+  const filtroCert = certSlug ? `AND ct.slug = ?` : "";
+  const params = certSlug ? [certSlug] : [];
+
+  const [tentativas] = await db.execute(
+    `SELECT t.respostas_json
+     FROM tentativas_prova t
+     JOIN provas p ON p.id = t.prova_id
+     JOIN certification_types ct ON ct.id = p.certification_type_id
+     WHERE t.status = 'finalizada' ${filtroCert}`,
+    params
+  ) as any;
+
+  const agregados: Record<string, { eixo_id: number | null; nome: string; acertos: number; total: number }> = {};
+
+  for (const t of tentativas) {
+    const respostas = t.respostas_json
+      ? (Array.isArray(t.respostas_json) ? t.respostas_json : JSON.parse(t.respostas_json))
+      : [];
+    if (!respostas.length) continue;
+
+    const questaoIds = respostas.map((r: any) => r.questao_id);
+    const placeholders = questaoIds.map(() => "?").join(",");
+    const [questoes] = await db.execute(
+      `SELECT pq.id, pq.eixo_conhecimento_id, e.nome as eixo_nome
+       FROM prova_questoes pq
+       LEFT JOIN eixos_conhecimento e ON e.id = pq.eixo_conhecimento_id
+       WHERE pq.id IN (${placeholders})`,
+      questaoIds
+    ) as any;
+    const eixoPorQuestao: Record<number, { id: number | null; nome: string }> = {};
+    questoes.forEach((q: any) => { eixoPorQuestao[q.id] = { id: q.eixo_conhecimento_id, nome: q.eixo_nome || "Sem eixo definido" }; });
+
+    for (const r of respostas) {
+      const eixo = eixoPorQuestao[r.questao_id] || { id: null, nome: "Sem eixo definido" };
+      const chave = String(eixo.id ?? "sem_eixo");
+      if (!agregados[chave]) agregados[chave] = { eixo_id: eixo.id, nome: eixo.nome, acertos: 0, total: 0 };
+      agregados[chave].total++;
+      if (r.correto) agregados[chave].acertos++;
+    }
+  }
+
+  return Object.values(agregados)
+    .map((e) => ({ ...e, percentual: e.total > 0 ? Math.round((e.acertos / e.total) * 100) : 0 }))
+    .sort((a, b) => a.percentual - b.percentual);
+}
+
 // ── Histórico de tentativas ───────────────────────────────────────────────────
 
 export async function buscarHistoricoTentativas(userId: number) {

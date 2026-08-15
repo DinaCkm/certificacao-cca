@@ -169,6 +169,14 @@ export const api = {
     editarEixo: (id: number, body: any) => request<{ message: string }>("PUT", `/admin/eixos/${id}`, body),
     removerEixo: (id: number) => request<{ message: string }>("DELETE", `/admin/eixos/${id}`),
 
+    // Relatório administrativo da prova oficial
+    relatorioProva: (certSlug?: string) =>
+      request<{
+        resumo: { total_tentativas: number; total_aprovados: number; total_reprovados: number; total_anuladas: number; taxa_aprovacao: number; media_percentual: number };
+        tentativas: any[];
+        eixos: { eixo_id: number | null; nome: string; acertos: number; total: number; percentual: number }[];
+      }>("GET", `/admin/prova-relatorio${certSlug ? `?cert_slug=${encodeURIComponent(certSlug)}` : ""}`),
+
     // Prova config
     salvarProvaConfig: (body: any) => request<{ message: string }>("POST", "/admin/prova-config", body),
     adicionarQuestao: (body: any) => request<{ id: number }>("POST", "/admin/questoes", body),
