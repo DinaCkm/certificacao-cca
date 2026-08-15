@@ -11,6 +11,7 @@ import { provaRouter } from "./routes/prova.js";
 import { simulacaoRouter } from "./routes/simulacao.js";
 import { institucionalRouter, institucionalAdminRouter } from "./routes/institucional.js";
 import { codigoCondutaRouter, codigoCondutaAdminRouter } from "./routes/codigoConduta.js";
+import { magicLinkRouter } from "./routes/magicLink.js";
 import { cursosPublicoRouter } from "./routes/cursosPublico.js";
 import { certificacoesPublicoRouter } from "./routes/certificacoesPublico.js";
 import fs from "fs";
@@ -242,6 +243,7 @@ async function startServer() {
   app.use("/api/admin/institucional", institucionalAdminRouter);
   app.use("/api/codigo-conduta", codigoCondutaRouter);
   app.use("/api/admin/codigo-conduta", codigoCondutaAdminRouter);
+  app.use("/api/auth/magic", magicLinkRouter);
   app.use("/api/cursos", cursosPublicoRouter);
   app.use("/api/certificacoes", certificacoesPublicoRouter);
 

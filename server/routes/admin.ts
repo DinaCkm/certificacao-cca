@@ -1790,40 +1790,46 @@ adminRouter.post("/validacao-dupla/:processoId/avaliar",
             const candidatoNome = proc[0]?.candidato_nome || `processo #${processoId}`;
 
             const [destinatarios] = await db.execute(
-              `SELECT u.email FROM users u
+              `SELECT u.id, u.email FROM users u
                JOIN roles r ON r.id = u.role_id
                WHERE r.code IN ('administrador', 'gestor_n1', 'gestor_n2') AND u.is_active = TRUE`
             ) as any;
 
             if (destinatarios.length > 0) {
-              const appUrl = process.env.APP_URL || "https://certificacao-cca-staging.up.railway.app";
-              await fetch("https://api.resend.com/emails", {
-                method: "POST",
-                headers: {
-                  "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  from: process.env.FROM_EMAIL || "ANEFAC <noreply@anefac.com.br>",
-                  to: destinatarios.map((d: any) => d.email),
-                  subject: `ANEFAC — Discordância entre avaliadores: ${candidatoNome}`,
-                  html: `
-                    <div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:20px">
-                      <h2 style="color:#b45309">⚠️ Discordância entre avaliadores</h2>
-                      <p>Os dois avaliadores divergiram na validação documental de
-                         <strong>${candidatoNome}</strong> nos seguintes documentos:</p>
-                      <ul style="color:#374151;font-size:14px">
-                        ${discordanciasAtuais.map((d) => `<li>${d.documento_nome}</li>`).join("")}
-                      </ul>
-                      <p>É necessária a decisão de um administrador para desempate.</p>
-                      <a href="${appUrl}/novo-fluxo/admin/validacao"
-                         style="display:inline-block;background:#1e3a5f;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">
-                        Resolver desempate →
-                      </a>
-                    </div>
-                  `,
-                }),
-              });
+              const { gerarMagicLink } = await import("../services/magicLinkService.js");
+              const destino = `/novo-fluxo/admin/validacao?processoId=${processoId}`;
+
+              for (const dest of destinatarios) {
+                const linkAcao = await gerarMagicLink(dest.id, destino);
+                await fetch("https://api.resend.com/emails", {
+                  method: "POST",
+                  headers: {
+                    "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    from: process.env.FROM_EMAIL || "ANEFAC <noreply@anefac.com.br>",
+                    to: [dest.email],
+                    subject: `ANEFAC — Discordância entre avaliadores: ${candidatoNome}`,
+                    html: `
+                      <div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:20px">
+                        <h2 style="color:#b45309">⚠️ Discordância entre avaliadores</h2>
+                        <p>Os dois avaliadores divergiram na validação documental de
+                           <strong>${candidatoNome}</strong> nos seguintes documentos:</p>
+                        <ul style="color:#374151;font-size:14px">
+                          ${discordanciasAtuais.map((d) => `<li>${d.documento_nome}</li>`).join("")}
+                        </ul>
+                        <p>É necessária a decisão de um administrador para desempate.</p>
+                        <a href="${linkAcao}"
+                           style="display:inline-block;background:#1e3a5f;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">
+                          Resolver desempate →
+                        </a>
+                        <p style="color:#9ca3af;font-size:12px">Este link autentica você automaticamente e já abre o candidato — a decisão final continua sendo tomada na tela, com o documento à vista.</p>
+                      </div>
+                    `,
+                  }),
+                });
+              }
             }
           } catch (emailErr) {
             console.error("[AVALIAR] Falha ao notificar administradores automaticamente:", emailErr);
@@ -1915,40 +1921,46 @@ adminRouter.post("/validacao-dupla/:processoId/fechar",
             const candidatoNome = proc[0]?.candidato_nome || `processo #${processoId}`;
 
             const [destinatarios] = await db.execute(
-              `SELECT u.email FROM users u
+              `SELECT u.id, u.email FROM users u
                JOIN roles r ON r.id = u.role_id
                WHERE r.code IN ('administrador', 'gestor_n1', 'gestor_n2') AND u.is_active = TRUE`
             ) as any;
 
             if (destinatarios.length > 0) {
-              const appUrl = process.env.APP_URL || "https://certificacao-cca-staging.up.railway.app";
-              await fetch("https://api.resend.com/emails", {
-                method: "POST",
-                headers: {
-                  "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  from: process.env.FROM_EMAIL || "ANEFAC <noreply@anefac.com.br>",
-                  to: destinatarios.map((d: any) => d.email),
-                  subject: `ANEFAC — Discordância entre avaliadores: ${candidatoNome}`,
-                  html: `
-                    <div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:20px">
-                      <h2 style="color:#b45309">⚠️ Discordância entre avaliadores</h2>
-                      <p>Os dois avaliadores divergiram na validação documental de
-                         <strong>${candidatoNome}</strong> nos seguintes documentos:</p>
-                      <ul style="color:#374151;font-size:14px">
-                        ${discordancias.map((d: any) => `<li>${d.documento_nome}</li>`).join("")}
-                      </ul>
-                      <p>É necessária a decisão de um administrador para desempate.</p>
-                      <a href="${appUrl}/novo-fluxo/admin/validacao"
-                         style="display:inline-block;background:#1e3a5f;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">
-                        Resolver desempate →
-                      </a>
-                    </div>
-                  `,
-                }),
-              });
+              const { gerarMagicLink } = await import("../services/magicLinkService.js");
+              const destino = `/novo-fluxo/admin/validacao?processoId=${processoId}`;
+
+              for (const dest of destinatarios) {
+                const linkAcao = await gerarMagicLink(dest.id, destino);
+                await fetch("https://api.resend.com/emails", {
+                  method: "POST",
+                  headers: {
+                    "Authorization": `Bearer ${process.env.RESEND_API_KEY}`,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    from: process.env.FROM_EMAIL || "ANEFAC <noreply@anefac.com.br>",
+                    to: [dest.email],
+                    subject: `ANEFAC — Discordância entre avaliadores: ${candidatoNome}`,
+                    html: `
+                      <div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:20px">
+                        <h2 style="color:#b45309">⚠️ Discordância entre avaliadores</h2>
+                        <p>Os dois avaliadores divergiram na validação documental de
+                           <strong>${candidatoNome}</strong> nos seguintes documentos:</p>
+                        <ul style="color:#374151;font-size:14px">
+                          ${discordancias.map((d: any) => `<li>${d.documento_nome}</li>`).join("")}
+                        </ul>
+                        <p>É necessária a decisão de um administrador para desempate.</p>
+                        <a href="${linkAcao}"
+                           style="display:inline-block;background:#1e3a5f;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;margin:16px 0">
+                          Resolver desempate →
+                        </a>
+                        <p style="color:#9ca3af;font-size:12px">Este link autentica você automaticamente e já abre o candidato — a decisão final continua sendo tomada na tela, com o documento à vista.</p>
+                      </div>
+                    `,
+                  }),
+                });
+              }
             }
           } catch (emailErr) {
             console.error("[FECHAR AVALIACAO] Falha ao notificar administradores:", emailErr);
@@ -2028,6 +2040,50 @@ adminRouter.post("/validacao-dupla/:processoId/fechar",
          WHERE id = ?`,
         [novoStatus, novoCaminho, processoId]
       );
+
+      // Audit log tolerante a falhas — antes este fechamento não deixava
+      // nenhum rastro no audit_log
+      try {
+        await db.execute(
+          `INSERT INTO audit_log (user_id, acao, entidade, entidade_id, descricao, resultado)
+           VALUES (?, 'validacao_documental_fechada', 'candidato_processos', ?, ?, 'sucesso')`,
+          [
+            userId,
+            processoId,
+            `Validação fechada: ${todosAprovados ? `aprovado, Caminho ${caminho}` : "reprovado"}. ${parecer_geral || ""}`
+          ]
+        );
+      } catch (auditErr) {
+        console.warn("Audit log falhou (não crítico):", auditErr);
+      }
+
+      // Notifica o candidato por e-mail — antes este fechamento (o endpoint
+      // que o frontend realmente chama) não disparava NENHUM e-mail
+      try {
+        const [proc] = await db.execute(
+          `SELECT u.email, u.full_name, ct.nome as cert_nome
+           FROM candidato_processos cp
+           JOIN users u ON u.id = cp.user_id
+           JOIN certification_types ct ON ct.id = cp.certification_type_id
+           WHERE cp.id = ?`,
+          [processoId]
+        ) as any;
+        if (proc.length) {
+          const { email, full_name, cert_nome } = proc[0];
+          if (!todosAprovados) {
+            const { enviarProcessoEncerrado } = await import("../services/emailService.js");
+            await enviarProcessoEncerrado(email, full_name, cert_nome);
+          } else if (novoCaminho === "A") {
+            const { enviarConviteAgendamentoEntrevista } = await import("../services/emailService.js");
+            await enviarConviteAgendamentoEntrevista(email, full_name, cert_nome);
+          } else if (novoCaminho === "B") {
+            const { enviarConviteAgendamentoProva } = await import("../services/emailService.js");
+            await enviarConviteAgendamentoProva(email, full_name, cert_nome);
+          }
+        }
+      } catch (emailErr) {
+        console.warn("E-mail de decisão de validação falhou (não crítico):", emailErr);
+      }
 
       return res.json({ message: "Avaliação fechada com sucesso", novo_status: novoStatus });
     } catch (err: any) {

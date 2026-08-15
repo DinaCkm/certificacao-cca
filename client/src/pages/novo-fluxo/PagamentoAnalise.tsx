@@ -48,6 +48,19 @@ export function PagamentoAnalise() {
     await new Promise((r) => setTimeout(r, 2000));
     setProcessando(false);
     registrarPagamento1();
+    try {
+      const processoId = localStorage.getItem("anefac_processo_id");
+      const token = localStorage.getItem("anefac_token");
+      if (processoId) {
+        await fetch(`/api/processo/${processoId}/pagamento-confirmado`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ numero: 1 }),
+        });
+      }
+    } catch {
+      // Não bloqueia o fluxo do candidato se o e-mail de confirmação falhar
+    }
     toast({ title: "Pagamento confirmado!", description: "Sua taxa de análise foi processada com sucesso." });
     navigate("/novo-fluxo/upload-documentos");
   };

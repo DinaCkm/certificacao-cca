@@ -223,6 +223,97 @@ export async function enviarConfirmacaoAgendamentoProva(
 }
 
 /**
+ * Confirmação de pagamento — enviado ao candidato após a taxa de análise
+ * ou de emissão ser confirmada
+ */
+export async function enviarConfirmacaoPagamento(
+  candidatoEmail: string,
+  candidatoNome: string,
+  certNome: string,
+  tipo: "analise" | "emissao",
+  valor: number
+) {
+  const valorFormatado = valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const descricao = tipo === "analise" ? "taxa de análise" : "taxa de emissão do certificado";
+  const proximoPasso = tipo === "analise"
+    ? "Agora você já pode enviar seus documentos para análise."
+    : "Seu certificado está sendo preparado.";
+
+  const subject = `Pagamento confirmado — ${certNome}`;
+
+  const html = baseTemplate(`
+    <p>Olá, <strong>${candidatoNome}</strong>!</p>
+
+    <p>Confirmamos o pagamento da <strong>${descricao}</strong> para a <strong>${certNome}</strong>.</p>
+
+    <div class="stat-box" style="text-align: left;">
+      <p style="margin: 0 0 6px; font-size: 15px;">💳 Valor: <strong>${valorFormatado}</strong></p>
+    </div>
+
+    <p>${proximoPasso}</p>
+
+    <a href="${APP_URL}/novo-fluxo" class="btn">
+      Acessar Plataforma →
+    </a>
+  `);
+
+  return sendEmail(candidatoEmail, subject, html);
+}
+
+/**
+ * Convite para agendar entrevista — enviado ao candidato assim que os
+ * documentos são aprovados no Caminho A (sem prova, direto pra entrevista)
+ */
+export async function enviarConviteAgendamentoEntrevista(
+  candidatoEmail: string,
+  candidatoNome: string,
+  certNome: string
+) {
+  const subject = `Seus documentos foram aprovados — agende sua entrevista (${certNome})`;
+
+  const html = baseTemplate(`
+    <p>Olá, <strong>${candidatoNome}</strong>!</p>
+
+    <p>Seus documentos foram validados com sucesso para a <strong>${certNome}</strong>. Agora é hora de agendar sua entrevista técnica.</p>
+
+    <a href="${APP_URL}/novo-fluxo/agendamento-entrevista" class="btn">
+      Agendar minha entrevista →
+    </a>
+  `);
+
+  return sendEmail(candidatoEmail, subject, html);
+}
+
+/**
+ * Processo encerrado — enviado ao candidato quando a validação documental
+ * é reprovada (sem possibilidade de continuar neste ciclo)
+ */
+export async function enviarProcessoEncerrado(
+  candidatoEmail: string,
+  candidatoNome: string,
+  certNome: string,
+  motivo?: string
+) {
+  const subject = `Atualização sobre sua certificação — ${certNome}`;
+
+  const html = baseTemplate(`
+    <p>Olá, <strong>${candidatoNome}</strong>!</p>
+
+    <p>Após a análise dos documentos enviados para a <strong>${certNome}</strong>, informamos que não foi possível dar continuidade ao seu processo neste momento.</p>
+
+    ${motivo ? `<div class="alert-box"><p><strong>Motivo:</strong> ${motivo}</p></div>` : ""}
+
+    <p>Se tiver dúvidas sobre essa decisão ou quiser entender os próximos passos, entre em contato com a nossa equipe pelo Fale Conosco na plataforma.</p>
+
+    <a href="${APP_URL}/novo-fluxo" class="btn">
+      Acessar Plataforma →
+    </a>
+  `);
+
+  return sendEmail(candidatoEmail, subject, html);
+}
+
+/**
  * Aviso ao entrevistador sobre nova entrevista agendada
  */
 export async function enviarAvisoEntrevistador(

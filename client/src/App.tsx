@@ -67,6 +67,7 @@ import { NavbarGlobal } from "./components/NavbarGlobal";
 import { FaleConosco } from "./components/FaleConosco";
 import { CookieConsent } from "./components/CookieConsent";
 import { PoliticaCookies } from "./pages/PoliticaCookies";
+import { MagicLinkAuth } from "./pages/MagicLinkAuth";
 import { NovoFluxoCertificacoes } from "./pages/novo-fluxo/NovoFluxoCertificacoes";
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -83,6 +84,7 @@ function Router() {
       <Route path={"/cursos"} component={Cursos} />
       <Route path={"/cursos/comprar/:id"} component={ComprarCurso} />
       <Route path={"/politica-cookies"} component={PoliticaCookies} />
+      <Route path={"/auth/magic/:token"} component={MagicLinkAuth} />
       {/* ARQUIVADO: <Route path={"/home"} component={Home} /> */}
       {/* ARQUIVADO: <Route path={"/select-certification-type"} component={SelectCertificationType} /> */}
 

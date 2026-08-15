@@ -145,6 +145,17 @@ export function AdminValidacaoDocumental() {
 
   useEffect(() => { carregarCandidatos(); }, []);
 
+  // Deep-link vindo dos e-mails de ação (magic link): ?processoId=123 já abre
+  // direto o candidato certo, em vez de precisar procurar na lista.
+  useEffect(() => {
+    if (candidatos.length === 0) return;
+    const processoIdUrl = new URLSearchParams(window.location.search).get("processoId");
+    if (processoIdUrl) {
+      const alvo = candidatos.find((c) => String(c.processo_id) === processoIdUrl);
+      if (alvo) selecionarCandidato(alvo);
+    }
+  }, [candidatos]);
+
   async function carregarCandidatos() {
     setCarregando(true);
     try {

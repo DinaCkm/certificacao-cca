@@ -38,6 +38,19 @@ export function PagamentoEmissao() {
     await new Promise((r) => setTimeout(r, 2000));
     setProcessando(false);
     registrarPagamento2();
+    try {
+      const processoId = localStorage.getItem("anefac_processo_id");
+      const token = localStorage.getItem("anefac_token");
+      if (processoId) {
+        await fetch(`/api/processo/${processoId}/pagamento-confirmado`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ numero: 2 }),
+        });
+      }
+    } catch {
+      // Não bloqueia o fluxo do candidato se o e-mail de confirmação falhar
+    }
     toast({ title: "Pagamento confirmado!", description: "Seu certificado está sendo emitido." });
     navigate("/novo-fluxo/emissao-certificado");
   };

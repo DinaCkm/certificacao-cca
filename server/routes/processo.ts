@@ -1,4 +1,4 @@
-import { enviarConfirmacaoEntrevista, enviarAvisoEntrevistador } from "../services/emailService.js";
+import { enviarConfirmacaoEntrevista, enviarAvisoEntrevistador, enviarConfirmacaoPagamento } from "../services/emailService.js";
 import { Router, Request, Response } from "express";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { db } from "../db/connection.js";
@@ -112,6 +112,62 @@ processoRouter.post("/:id/avancar", requireAuth, async (req: Request, res: Respo
     return res.json({ status: novo_status, processo_id: processoId });
   } catch (err) {
     console.error("Erro ao avançar processo:", err);
+    return res.status(500).json({ error: "Erro interno no servidor" });
+  }
+});
+
+// ── POST /api/processo/:id/pagamento-confirmado ───────────────────────────────
+// Dispara e-mail de confirmação e audit log — hoje o "pagamento" é simulado
+// no frontend (sem gateway real ainda), mas o evento de confirmação em si
+// já deve ser notificado; quando o gateway real entrar, só troca o que
+// dispara esta chamada.
+
+processoRouter.post("/:id/pagamento-confirmado", requireAuth, async (req: Request, res: Response) => {
+  const processoId = parseInt(req.params.id);
+  const { numero } = req.body; // 1 ou 2
+
+  if (![1, 2].includes(numero)) {
+    return res.status(400).json({ error: "numero deve ser 1 ou 2" });
+  }
+
+  try {
+    const [rows] = await db.execute(
+      `SELECT cp.*, u.email, u.full_name, ct.nome as cert_nome, ct.taxa_analise, ct.taxa_emissao
+       FROM candidato_processos cp
+       JOIN users u ON u.id = cp.user_id
+       JOIN certification_types ct ON ct.id = cp.certification_type_id
+       WHERE cp.id = ? AND cp.user_id = ?`,
+      [processoId, req.user!.userId]
+    ) as any;
+    if (!rows.length) return res.status(404).json({ error: "Processo não encontrado" });
+    const processo = rows[0];
+
+    const coluna = numero === 1 ? "pagamento1_realizado" : "pagamento2_realizado";
+    await db.execute(`UPDATE candidato_processos SET ${coluna} = 1, updated_at = NOW() WHERE id = ?`, [processoId]);
+
+    try {
+      await db.execute(
+        `INSERT INTO audit_log (user_id, processo_id, acao, entidade, entidade_id, descricao, resultado)
+         VALUES (?, ?, 'pagamento_confirmado', 'candidato_processos', ?, ?, 'sucesso')`,
+        [req.user!.userId, processoId, processoId, `Pagamento ${numero} confirmado — ${processo.cert_nome}`]
+      );
+    } catch (auditErr) {
+      console.warn("Audit log falhou (não crítico):", auditErr);
+    }
+
+    try {
+      await enviarConfirmacaoPagamento(
+        processo.email, processo.full_name, processo.cert_nome,
+        numero === 1 ? "analise" : "emissao",
+        numero === 1 ? processo.taxa_analise : processo.taxa_emissao
+      );
+    } catch (emailErr) {
+      console.warn("E-mail de confirmação de pagamento falhou (não crítico):", emailErr);
+    }
+
+    return res.json({ message: "Pagamento confirmado" });
+  } catch (err) {
+    console.error("Erro ao confirmar pagamento:", err);
     return res.status(500).json({ error: "Erro interno no servidor" });
   }
 });
