@@ -27,6 +27,30 @@ export async function runEventosEmailsSelfTest(port: number | string) {
   try {
     console.log("\n🧪 ═══ AUTOTESTE — EVENTOS, E-MAILS E MAGIC LINK (temporário) ═══");
 
+    // Limpeza defensiva: se uma execução anterior falhou no meio da limpeza
+    // (ex: erro de FK), remove qualquer resíduo antes de criar dados novos.
+    try {
+      const [orfaos] = await db.execute(`SELECT id FROM users WHERE email LIKE 'selftest.%@teste.local'`) as any;
+      for (const u of orfaos) {
+        await db.execute(`DELETE FROM audit_log WHERE user_id = ?`, [u.id]);
+        await db.execute(`DELETE FROM magic_link_tokens WHERE user_id = ?`, [u.id]);
+      }
+      const [processosOrfaos] = await db.execute(
+        `SELECT id FROM candidato_processos WHERE candidato_email LIKE 'selftest.%@teste.local'`
+      ) as any;
+      for (const p of processosOrfaos) {
+        await db.execute(`DELETE FROM validacao_documental WHERE processo_id = ?`, [p.id]);
+        await db.execute(`DELETE FROM validacao_avaliadores WHERE processo_id = ?`, [p.id]);
+        await db.execute(`DELETE FROM audit_log WHERE processo_id = ?`, [p.id]);
+        await db.execute(`DELETE FROM candidato_processos WHERE id = ?`, [p.id]);
+      }
+      await db.execute(`DELETE FROM certification_types WHERE slug LIKE 'selftest-%'`);
+      for (const u of orfaos) await db.execute(`DELETE FROM users WHERE id = ?`, [u.id]);
+      if (orfaos.length) console.log(`🧹 Limpeza defensiva: ${orfaos.length} usuário(s) órfão(s) de execuções anteriores removidos`);
+    } catch (preCleanErr) {
+      console.warn("⚠️ Limpeza defensiva falhou (não impede o teste de rodar):", preCleanErr);
+    }
+
     const [rolesRows] = await db.execute(`SELECT code, id FROM roles WHERE code IN ('candidato','avaliador')`) as any;
     const roleCandidatoId = rolesRows.find((r: any) => r.code === "candidato").id;
     const roleAvaliadorId = rolesRows.find((r: any) => r.code === "avaliador").id;
@@ -61,7 +85,7 @@ export async function runEventosEmailsSelfTest(port: number | string) {
     );
 
     const jwtGerado = primeiraData.jwt;
-    const testeJwt = await fetch(`${base}/api/admin/simulacoes`, { headers: { Authorization: `Bearer ${jwtGerado}` } });
+    const testeJwt = await fetch(`${base}/api/admin/eixos/qualquer-slug-inexistente`, { headers: { Authorization: `Bearer ${jwtGerado}` } });
     registrar(
       "Magic link: o JWT retornado autentica normalmente em outras rotas",
       testeJwt.status === 200,
@@ -183,6 +207,7 @@ export async function runEventosEmailsSelfTest(port: number | string) {
       }
       for (const id of limpar.certs) await db.execute(`DELETE FROM certification_types WHERE id = ?`, [id]);
       for (const id of limpar.users) {
+        await db.execute(`DELETE FROM audit_log WHERE user_id = ?`, [id]); // rede de segurança — cobre qualquer linha não pega pelo processo_id
         await db.execute(`DELETE FROM magic_link_tokens WHERE user_id = ?`, [id]);
         await db.execute(`DELETE FROM users WHERE id = ?`, [id]);
       }

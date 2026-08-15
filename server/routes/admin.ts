@@ -2045,10 +2045,11 @@ adminRouter.post("/validacao-dupla/:processoId/fechar",
       // nenhum rastro no audit_log
       try {
         await db.execute(
-          `INSERT INTO audit_log (user_id, acao, entidade, entidade_id, descricao, resultado)
-           VALUES (?, 'validacao_documental_fechada', 'candidato_processos', ?, ?, 'sucesso')`,
+          `INSERT INTO audit_log (user_id, processo_id, acao, entidade, entidade_id, descricao, resultado)
+           VALUES (?, ?, 'validacao_documental_fechada', 'candidato_processos', ?, ?, 'sucesso')`,
           [
             userId,
+            processoId,
             processoId,
             `Validação fechada: ${todosAprovados ? `aprovado, Caminho ${caminho}` : "reprovado"}. ${parecer_geral || ""}`
           ]
