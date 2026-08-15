@@ -68,8 +68,8 @@ export function NavbarGlobal() {
           ) : (
             <>
               {isAuthenticated && !isAdmin && (
-                <a href="/novo-fluxo/aguardando-validacao"
-                  className={`text-xs px-3 py-1.5 rounded-lg transition-colors font-semibold ${location === "/novo-fluxo/aguardando-validacao" ? "bg-white/20 text-white" : "text-yellow-300 hover:text-white hover:bg-white/10"}`}>
+                <a href="/novo-fluxo"
+                  className={`text-xs px-3 py-1.5 rounded-lg transition-colors font-semibold ${location === "/novo-fluxo" ? "bg-white/20 text-white" : "text-yellow-300 hover:text-white hover:bg-white/10"}`}>
                   ⭐ Mural do Candidato
                 </a>
               )}
@@ -131,7 +131,7 @@ export function NavbarGlobal() {
           ) : (
             <>
               {isAuthenticated && !isAdmin && (
-                <a href="/novo-fluxo/aguardando-validacao"
+                <a href="/novo-fluxo"
                   className="block text-sm font-semibold text-yellow-300 hover:text-white py-2 px-3 rounded-lg hover:bg-white/10">
                   ⭐ Mural do Candidato
                 </a>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCertification } from "@/contexts/CertificationContext";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { BoasVindasModal } from "@/pages/novo-fluxo/BoasVindasModal";
@@ -212,11 +213,30 @@ function LoginModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (p
 
 function CertificacaoAtivaCard({ processo }: { processo: any }) {
   const [, navigate] = useLocation();
+  const { selecionarCertificacao } = useCertification();
+  const [trocando, setTrocando] = useState(false);
   const statusInfo = STATUS_LABEL[processo.statusGeral] || STATUS_LABEL["cadastro"];
   const rota = STATUS_ROTA[processo.statusGeral];
   const etapas = ["cadastro","pagamento1","upload","validacao","entrevista","pagamento2","concluido"];
   const etapasLabel = ["Cadastro","Pagamento 1","Documentos","Validação","Entrevista","Pagamento 2","Certificado"];
   const atualIdx = etapas.indexOf(processo.statusGeral);
+
+  // O candidato pode ter várias certificações ativas ao mesmo tempo, mas o
+  // contexto (CertificationContext) só guarda UMA por vez. Sem isso, clicar
+  // em "Continuar processo" de uma certificação específica podia levar pra
+  // tela de acompanhamento mostrando os dados de outra certificação (a que
+  // estava carregada por último) — sempre a mesma, independente de qual
+  // card o candidato clicasse.
+  async function handleContinuar() {
+    setTrocando(true);
+    try {
+      await selecionarCertificacao({ id: processo.certificacaoId } as any);
+      navigate(rota);
+    } finally {
+      setTrocando(false);
+    }
+  }
+
   return (
     <Card className="shadow-xl border-0 overflow-hidden">
       <div className="h-1 w-full" style={{ background: "linear-gradient(to right, #0a1f5e, #1a4a9e, #0099cc)" }} />
@@ -243,8 +263,8 @@ function CertificacaoAtivaCard({ processo }: { processo: any }) {
           })}
         </div>
         {rota && (
-          <Button className="w-full text-white" size="lg" style={{ background: "linear-gradient(to right, #0a1f5e, #1a4a9e)" }} onClick={() => navigate(rota)}>
-            Continuar processo <ChevronRight className="w-4 h-4 ml-1" />
+          <Button className="w-full text-white" size="lg" style={{ background: "linear-gradient(to right, #0a1f5e, #1a4a9e)" }} onClick={handleContinuar} disabled={trocando}>
+            {trocando ? "Carregando..." : <>Continuar processo <ChevronRight className="w-4 h-4 ml-1" /></>}
           </Button>
         )}
       </CardContent>
