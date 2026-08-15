@@ -47,6 +47,7 @@ export const MENU_GROUPS: MenuGroupDef[] = [
       { key: "eixos_conhecimento", label: "Eixos de Conhecimento", href: "/novo-fluxo/admin/eixos-conhecimento", icon: "Target" },
       { key: "simulacoes", label: "Simulações", href: "/novo-fluxo/admin/simulacoes", icon: "GraduationCap" },
       { key: "provas_agendadas", label: "Agenda de Provas", href: "/novo-fluxo/admin/provas-agendadas", icon: "CalendarDays" },
+      { key: "prova_relatorio", label: "Relatório da Prova", href: "/novo-fluxo/admin/prova-relatorio", icon: "BarChart3" },
     ],
   },
   {

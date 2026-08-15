@@ -669,6 +669,26 @@ adminRouter.get("/prova-config/:certSlug", async (req, res) => {
   }
 });
 
+// GET /api/admin/prova-relatorio — relatório administrativo da prova oficial
+// (resumo + lista de tentativas), opcionalmente filtrado por certificação
+adminRouter.get("/prova-relatorio",
+  requireRole("administrador", "gestor_n1", "gestor_n2", "avaliador"),
+  async (req, res) => {
+    try {
+      const { relatorioProvaAdmin, desempenhoPorEixoAdmin } = await import("../services/provaService.js");
+      const certSlug = req.query.cert_slug as string | undefined;
+      const [relatorio, eixos] = await Promise.all([
+        relatorioProvaAdmin(certSlug),
+        desempenhoPorEixoAdmin(certSlug),
+      ]);
+      return res.json({ ...relatorio, eixos });
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Erro ao gerar relatório da prova" });
+    }
+  }
+);
+
 // GET /api/admin/prova-config — lista todas
 adminRouter.get("/prova-config",
   requireRole("administrador", "gestor_n1", "avaliador"),
