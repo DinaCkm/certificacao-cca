@@ -29,6 +29,7 @@ export async function testConnection() {
     await runInstitucionalConfigMigration();
     await runEixosConhecimentoMigration();
     await runAssinaturaCondutaMigration();
+    await runMagicLinkMigration();
   } catch (err) {
     console.error("❌ Erro ao conectar ao MySQL:", err);
     process.exit(1);
@@ -725,6 +726,32 @@ export async function runEixosConhecimentoMigration() {
     }
   } catch (err) {
     console.warn("⚠️ Erro na migração de eixos de conhecimento:", err);
+  }
+}
+
+// ─── Magic links (autenticação de um clique a partir de e-mails) ─────────────
+// Usado pelos e-mails "acionáveis": em vez de aprovar/reprovar direto pelo
+// e-mail (o que pularia a revisão humana), o link autentica a pessoa
+// automaticamente e já abre a tela certa com o item em destaque — a decisão
+// em si continua sendo tomada na tela, com o documento/contexto à vista.
+export async function runMagicLinkMigration() {
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS magic_link_tokens (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        token VARCHAR(64) NOT NULL UNIQUE,
+        destino VARCHAR(500) NOT NULL,
+        usado TINYINT(1) NOT NULL DEFAULT 0,
+        expira_em TIMESTAMP NOT NULL,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_token (token),
+        INDEX idx_user (user_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    console.log("✅ Tabela magic_link_tokens verificada/criada");
+  } catch (err) {
+    console.warn("⚠️ Erro na migração de magic_link_tokens:", err);
   }
 }
 
