@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
   CheckCircle, XCircle, FileText, User, Eye, X, Check,
-  Send, Loader2, AlertTriangle, ShieldAlert, Lock,
+  Send, Loader2, AlertTriangle, ShieldAlert, Lock, AlertCircle,
   ExternalLink, Maximize2, MailPlus, FileWarning, RotateCcw, Clock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -38,7 +38,9 @@ interface Candidato {
   email: string;
   cert_nome: string;
   cert_slug?: string;
+  edital_versao?: number | null;
   documentos: any[];
+  documentos_precisa_vinculacao_admin?: boolean;
   documentos_complementares_atendidos?: { id: number; mensagem: string; atendida_em: string; documento_idx: number | null }[];
   solicitacoes_pendentes?: { id: number; documento_idx: number | null }[];
   tem_solicitacao_pendente?: boolean;
@@ -834,27 +836,44 @@ export function AdminValidacaoDocumental() {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-8">
-        {/* Header candidato */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
-            <User className="w-6 h-6 text-blue-700" />
+        {/* Cabeçalho de contexto — a certificação é a informação principal da
+            página, não um detalhe secundário abaixo do e-mail. Evita decisão
+            de documento vinculada à certificação errada quando o candidato
+            tem mais de um processo simultâneo. */}
+        <div className="bg-blue-900 text-white rounded-2xl p-6 mb-6 shadow-lg">
+          <p className="text-blue-300 text-xs uppercase tracking-wide font-semibold mb-1">Avaliando a certificação</p>
+          <h1 className="text-2xl font-black mb-4">{candidato.cert_nome}</h1>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-white/10">
+            <div>
+              <p className="text-blue-300 text-xs mb-0.5">Candidato</p>
+              <p className="font-semibold text-sm">{candidato.full_name}</p>
+            </div>
+            <div>
+              <p className="text-blue-300 text-xs mb-0.5">Processo</p>
+              <p className="font-semibold text-sm font-mono">#{candidato.processo_id}</p>
+            </div>
+            <div>
+              <p className="text-blue-300 text-xs mb-0.5">Edital</p>
+              <p className="font-semibold text-sm">{candidato.edital_versao ? `Versão ${candidato.edital_versao}` : "Não vinculado"}</p>
+            </div>
+            <div>
+              <p className="text-blue-300 text-xs mb-0.5">Status documental</p>
+              <p className="font-semibold text-sm">
+                {meuNumero ? `Você é o Avaliador ${meuNumero}` : !isAdmin ? "Aguardando atribuição" : "Em análise"}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold">{candidato.full_name}</h1>
-            <p className="text-sm text-muted-foreground">{candidato.email} · {candidato.cert_nome}</p>
-          </div>
-          {meuNumero && (
-            <span className={cn("ml-auto px-4 py-2 rounded-full text-sm font-bold",
-              meuNumero === 1 ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800")}>
-              Você é o Avaliador {meuNumero}
-            </span>
-          )}
-          {!meuNumero && !isAdmin && (
-            <span className="ml-auto px-4 py-2 rounded-full text-sm font-bold bg-gray-100 text-gray-600">
-              Clique em Analisar para se atribuir
-            </span>
-          )}
         </div>
+
+        {candidato.documentos_precisa_vinculacao_admin && (
+          <div className="flex items-start gap-2 bg-amber-50 border border-amber-300 rounded-xl p-4 mb-6">
+            <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+            <div className="text-xs text-amber-800">
+              <p className="font-semibold mb-0.5">Documentos sem processo vinculado</p>
+              <p>Este candidato tem mais de uma certificação e existem documentos antigos sem vínculo claro a um processo específico. Eles NÃO estão sendo exibidos aqui para evitar avaliar o documento errado — peça reenvio ou vincule manualmente antes de decidir.</p>
+            </div>
+          </div>
+        )}
 
         {/* Aviso: candidato enviou os documentos complementares que este avaliador pediu */}
         {docsComplementaresAtendidos.length > 0 && (

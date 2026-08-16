@@ -362,6 +362,48 @@ adminRouter.put("/editais/:certSlug", requireRole("administrador", "gestor_n1"),
   }
 });
 
+// ── Designação de avaliador por certificação ───────────────────────────────────
+
+adminRouter.get("/avaliadores-certificacao/todos", requireRole("administrador", "gestor_n1"), async (_req, res) => {
+  try {
+    const { listarTodosAvaliadores } = await import("../services/avaliadorCertificacaoService.js");
+    return res.json({ avaliadores: await listarTodosAvaliadores() });
+  } catch (err) {
+    return res.status(500).json({ error: "Erro ao listar avaliadores" });
+  }
+});
+
+adminRouter.get("/avaliadores-certificacao/:certSlug", requireRole("administrador", "gestor_n1", "gestor_n2"), async (req, res) => {
+  try {
+    const { listarAvaliadoresDaCertificacao } = await import("../services/avaliadorCertificacaoService.js");
+    return res.json({ avaliadores: await listarAvaliadoresDaCertificacao(req.params.certSlug) });
+  } catch (err) {
+    return res.status(500).json({ error: "Erro ao listar avaliadores designados" });
+  }
+});
+
+adminRouter.post("/avaliadores-certificacao/:certSlug", requireRole("administrador", "gestor_n1"), async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: "userId é obrigatório" });
+  try {
+    const { designarAvaliador } = await import("../services/avaliadorCertificacaoService.js");
+    await designarAvaliador(req.params.certSlug, parseInt(userId));
+    return res.status(201).json({ message: "Avaliador designado" });
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
+adminRouter.delete("/avaliadores-certificacao/:certSlug/:userId", requireRole("administrador", "gestor_n1"), async (req, res) => {
+  try {
+    const { removerDesignacaoAvaliador } = await import("../services/avaliadorCertificacaoService.js");
+    await removerDesignacaoAvaliador(req.params.certSlug, parseInt(req.params.userId));
+    return res.json({ message: "Designação removida" });
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
 // ── Comitê (membros + atribuição por certificação) ────────────────────────────
 
 adminRouter.get("/comite", requireRole("administrador", "gestor_n1", "gestor_n2"), async (_req, res) => {
@@ -1484,8 +1526,24 @@ adminRouter.get("/validacao/pendentes",
   requireRole("administrador", "gestor_n1", "gestor_n2", "avaliador"),
   async (req: any, res) => {
     try {
+      const userRole = req.user!.role;
+      const userId = req.user!.userId;
+
+      // Avaliador só vê as certificações às quais foi designado — admin/gestor
+      // continuam vendo tudo (acesso geral já garantido pelo requireRole acima)
+      let filtroDesignacao = "";
+      let paramsDesignacao: any[] = [];
+      if (userRole === "avaliador") {
+        const { certificacoesDoAvaliador } = await import("../services/avaliadorCertificacaoService.js");
+        const certsPermitidas = await certificacoesDoAvaliador(userId);
+        if (!certsPermitidas.length) return res.json({ candidatos: [] });
+        filtroDesignacao = ` AND cp.certification_type_id IN (${certsPermitidas.map(() => "?").join(",")})`;
+        paramsDesignacao = certsPermitidas;
+      }
+
       const [candidatos] = await db.execute(
-        `SELECT cp.id as processo_id, cp.user_id, cp.status_geral,
+        `SELECT cp.id as processo_id, cp.user_id, cp.status_geral, cp.edital_versao,
+                cp.certification_type_id,
                 u.full_name, u.email,
                 ct.nome as cert_nome, ct.slug as cert_slug
          FROM candidato_processos cp
@@ -1493,22 +1551,40 @@ adminRouter.get("/validacao/pendentes",
          JOIN certification_types ct ON ct.id = cp.certification_type_id
          WHERE cp.status_geral = 'validacao'
            AND u.role_id = 1
-         ORDER BY cp.updated_at ASC`
+           ${filtroDesignacao}
+         ORDER BY cp.updated_at ASC`,
+        paramsDesignacao
       ) as any;
 
-      // Para cada candidato, busca os documentos enviados e eventuais solicitações
-      // de documentos complementares que o AVALIADOR ATUAL pediu e que já foram
-      // atendidas pelo candidato — precisam ser revisadas antes de continuar.
-      const userId = req.user!.userId;
+      // Para cada PROCESSO (não pessoa), busca só os documentos daquele
+      // processo específico. Antes filtrava só por user_id, o que misturava
+      // documentos de outras certificações do mesmo candidato — um avaliador
+      // aprovando/reprovando na certificação errada.
       const resultado = await Promise.all(
         candidatos.map(async (c: any) => {
-          const [docs] = await db.execute(
-            `SELECT id, tipo_documento, nome_arquivo, caminho_arquivo, tamanho_bytes, status, criado_em
+          const [todosDocs] = await db.execute(
+            `SELECT id, tipo_documento, nome_arquivo, caminho_arquivo, tamanho_bytes, status, criado_em, processo_id
              FROM documentos_candidato
              WHERE user_id = ?
              ORDER BY criado_em DESC`,
             [c.user_id]
           ) as any;
+
+          const docsDesteProcesso = todosDocs.filter((d: any) => d.processo_id === c.processo_id);
+          const docsOrfaos = todosDocs.filter((d: any) => d.processo_id === null);
+
+          // Documentos legados (enviados antes de existir vínculo por processo)
+          // só entram automaticamente se este for o ÚNICO processo do
+          // candidato — sem ambiguidade possível. Com 2+ processos, ficam de
+          // fora e são sinalizados pra vinculação manual do admin, nunca
+          // presumidos.
+          const [totalProcessosRows] = await db.execute(
+            `SELECT COUNT(*) as total FROM candidato_processos WHERE user_id = ?`,
+            [c.user_id]
+          ) as any;
+          const totalProcessos = totalProcessosRows[0].total;
+          const docs = totalProcessos <= 1 ? [...docsDesteProcesso, ...docsOrfaos] : docsDesteProcesso;
+          const precisaVinculacaoAdmin = totalProcessos > 1 && docsOrfaos.length > 0;
 
           const [solicitacoesAtendidas] = await db.execute(
             `SELECT id, mensagem, atendida_em, documento_idx FROM solicitacoes_documentos
@@ -1526,6 +1602,7 @@ adminRouter.get("/validacao/pendentes",
           return {
             ...c,
             documentos: docs,
+            documentos_precisa_vinculacao_admin: precisaVinculacaoAdmin,
             documentos_complementares_atendidos: solicitacoesAtendidas,
             solicitacoes_pendentes: solicitacoesPendentes,
             tem_solicitacao_pendente: solicitacoesPendentes.length > 0,
@@ -1665,6 +1742,15 @@ adminRouter.get("/validacao-dupla/:processoId",
     const isAdmin = ["administrador", "gestor_n1", "gestor_n2"].includes(req.user!.role);
 
     try {
+      // Avaliador só acessa processos de certificações às quais foi designado
+      if (!isAdmin) {
+        const [procRows] = await db.execute(`SELECT certification_type_id FROM candidato_processos WHERE id = ?`, [processoId]) as any;
+        if (!procRows.length) return res.status(404).json({ error: "Processo não encontrado" });
+        const { avaliadorDesignado } = await import("../services/avaliadorCertificacaoService.js");
+        const designado = await avaliadorDesignado(userId, procRows[0].certification_type_id);
+        if (!designado) return res.status(403).json({ error: "Você não está designado para avaliar esta certificação" });
+      }
+
       // Descobre qual número de avaliador este user é (se já atribuído)
       const [atrib] = await db.execute(
         `SELECT numero_avaliador FROM validacao_avaliadores
@@ -1796,6 +1882,13 @@ adminRouter.post("/validacao-dupla/:processoId/avaliar",
     const { documento_idx, documento_nome, aprovado, parecer, checklist } = req.body;
 
     try {
+      // Avaliador só avalia documentos de certificações às quais foi designado
+      const [procRowsAv] = await db.execute(`SELECT certification_type_id FROM candidato_processos WHERE id = ?`, [processoId]) as any;
+      if (!procRowsAv.length) return res.status(404).json({ error: "Processo não encontrado" });
+      const { avaliadorDesignado } = await import("../services/avaliadorCertificacaoService.js");
+      const designado = await avaliadorDesignado(userId, procRowsAv[0].certification_type_id);
+      if (!designado) return res.status(403).json({ error: "Você não está designado para avaliar esta certificação" });
+
       // Auto-atribuição: descobre ou atribui número ao avaliador
       const [atrib] = await db.execute(
         `SELECT numero_avaliador FROM validacao_avaliadores
@@ -1991,6 +2084,15 @@ adminRouter.post("/validacao-dupla/:processoId/fechar",
     const { caminho, parecer_geral, desempate_docs } = req.body;
 
     try {
+      // Avaliador só fecha processos de certificações às quais foi designado
+      if (!isAdmin) {
+        const [procRowsDes] = await db.execute(`SELECT certification_type_id FROM candidato_processos WHERE id = ?`, [processoId]) as any;
+        if (!procRowsDes.length) return res.status(404).json({ error: "Processo não encontrado" });
+        const { avaliadorDesignado } = await import("../services/avaliadorCertificacaoService.js");
+        const designado = await avaliadorDesignado(userId, procRowsDes[0].certification_type_id);
+        if (!designado) return res.status(403).json({ error: "Você não está designado para avaliar esta certificação" });
+      }
+
       const [docs] = await db.execute(
         `SELECT * FROM validacao_documental WHERE processo_id = ?`,
         [processoId]

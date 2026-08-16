@@ -194,6 +194,14 @@ export const api = {
     removerMembroDaCertificacao: (certSlug: string, membroId: number) =>
       request<{ message: string }>("DELETE", `/admin/comite/certificacao/${certSlug}/${membroId}`),
 
+    // Designação de avaliador por certificação
+    listarTodosAvaliadoresCertificacao: () => request<{ avaliadores: any[] }>("GET", "/admin/avaliadores-certificacao/todos"),
+    listarAvaliadoresDaCertificacao: (certSlug: string) => request<{ avaliadores: any[] }>("GET", `/admin/avaliadores-certificacao/${certSlug}`),
+    designarAvaliadorCertificacao: (certSlug: string, userId: number) =>
+      request<{ message: string }>("POST", `/admin/avaliadores-certificacao/${certSlug}`, { userId }),
+    removerDesignacaoAvaliador: (certSlug: string, userId: number) =>
+      request<{ message: string }>("DELETE", `/admin/avaliadores-certificacao/${certSlug}/${userId}`),
+
     // Relatório administrativo da prova oficial
     relatorioProva: (certSlug?: string) =>
       request<{

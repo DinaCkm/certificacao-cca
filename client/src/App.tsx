@@ -62,6 +62,7 @@ import { AdminResultadoEntrevista } from "./pages/novo-fluxo/admin/AdminResultad
 import { AdminProvasAgendadas } from "./pages/novo-fluxo/admin/AdminProvasAgendadas";
 import { AdminSimulacoes } from "./pages/novo-fluxo/admin/AdminSimulacoes";
 import { AdminEixosConhecimento } from "./pages/novo-fluxo/admin/AdminEixosConhecimento";
+import { AdminAvaliadoresCertificacao } from "./pages/novo-fluxo/admin/AdminAvaliadoresCertificacao";
 import { AdminRelatorioProva } from "./pages/novo-fluxo/admin/AdminRelatorioProva";
 import { AdminComiteEdital } from "./pages/novo-fluxo/admin/AdminComiteEdital";
 import { AceiteLGPD } from "./pages/novo-fluxo/AceiteLGPD";
@@ -169,6 +170,7 @@ function Router() {
       <Route path={"/novo-fluxo/admin/provas-agendadas"} component={() => <AdminRoute component={AdminProvasAgendadas} />} />
       <Route path={"/novo-fluxo/admin/simulacoes"} component={() => <AdminRoute component={AdminSimulacoes} />} />
       <Route path={"/novo-fluxo/admin/eixos-conhecimento"} component={() => <AdminRoute component={AdminEixosConhecimento} />} />
+      <Route path={"/novo-fluxo/admin/avaliadores-certificacao"} component={() => <AdminRoute component={AdminAvaliadoresCertificacao} />} />
       <Route path={"/novo-fluxo/admin/prova-relatorio"} component={() => <AdminRoute component={AdminRelatorioProva} />} />
       <Route path={"/novo-fluxo/admin/comite"} component={() => <AdminRoute component={AdminComiteEdital} />} />
       <Route path={"/novo-fluxo/lgpd"} component={AceiteLGPD} />

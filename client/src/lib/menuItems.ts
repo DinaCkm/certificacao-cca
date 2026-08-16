@@ -45,6 +45,7 @@ export const MENU_GROUPS: MenuGroupDef[] = [
     items: [
       { key: "prova", label: "Parametrizar Prova", href: "/novo-fluxo/admin/prova-config", icon: "FileText" },
       { key: "eixos_conhecimento", label: "Eixos de Conhecimento", href: "/novo-fluxo/admin/eixos-conhecimento", icon: "Target" },
+      { key: "avaliadores_certificacao", label: "Avaliadores por Certificação", href: "/novo-fluxo/admin/avaliadores-certificacao", icon: "ShieldCheck" },
       { key: "simulacoes", label: "Simulações", href: "/novo-fluxo/admin/simulacoes", icon: "GraduationCap" },
       { key: "provas_agendadas", label: "Agenda de Provas", href: "/novo-fluxo/admin/provas-agendadas", icon: "CalendarDays" },
       { key: "prova_relatorio", label: "Relatório da Prova", href: "/novo-fluxo/admin/prova-relatorio", icon: "BarChart3" },

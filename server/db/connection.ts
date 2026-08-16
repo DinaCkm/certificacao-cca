@@ -29,6 +29,7 @@ export async function testConnection() {
     await runInstitucionalConfigMigration();
     await runEixosConhecimentoMigration();
     await runRelatorioProvaMenuMigration();
+    await runAvaliadoresCertificacaoMigration();
     await runEditalComiteMigration();
     await runAssinaturaCondutaMigration();
     await runMagicLinkMigration();
@@ -855,6 +856,67 @@ export async function runRelatorioProvaMenuMigration() {
     console.log("✅ Item de menu prova_relatorio verificado");
   } catch (err) {
     console.warn("⚠️ Erro na migração do menu do relatório da prova:", err);
+  }
+}
+
+// ─── Designação de avaliador por certificação ─────────────────────────────────
+// Antes um avaliador tinha acesso genérico a QUALQUER certificação. Isso
+// permitia (e ainda mais grave: não impedia) um avaliador sem contexto
+// analisar documentos de uma certificação que não é a dele. Agora cada
+// avaliador só acessa as certificações às quais foi explicitamente designado
+// — administrador e gestor continuam vendo tudo.
+export async function runAvaliadoresCertificacaoMigration() {
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS avaliadores_certificacao (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        certification_type_id INT NOT NULL,
+        user_id INT NOT NULL,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_cert_avaliador (certification_type_id, user_id),
+        INDEX idx_cert (certification_type_id),
+        INDEX idx_user (user_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    console.log("✅ Tabela avaliadores_certificacao verificada/criada");
+
+    // Migração única: sem isso, avaliadores já cadastrados ficariam
+    // subitamente sem acesso a NENHUMA certificação assim que a restrição
+    // entrar em vigor. Designa automaticamente todo avaliador existente pra
+    // todas as certificações ativas — é o comportamento que eles já tinham
+    // até agora (acesso geral). Dali em diante, o admin ajusta manualmente.
+    const [jaTemDesignacao] = await db.execute(`SELECT COUNT(*) as total FROM avaliadores_certificacao`) as any;
+    if (jaTemDesignacao[0].total === 0) {
+      const [avaliadores] = await db.execute(
+        `SELECT u.id FROM users u JOIN roles r ON r.id = u.role_id WHERE r.code = 'avaliador' AND u.is_active = 1`
+      ) as any;
+      const [certsAtivas] = await db.execute(`SELECT id FROM certification_types WHERE status = 'ativa'`) as any;
+      let designacoesCriadas = 0;
+      for (const av of avaliadores) {
+        for (const cert of certsAtivas) {
+          await db.execute(
+            `INSERT IGNORE INTO avaliadores_certificacao (certification_type_id, user_id) VALUES (?, ?)`,
+            [cert.id, av.id]
+          );
+          designacoesCriadas++;
+        }
+      }
+      if (designacoesCriadas) console.log(`✅ ${designacoesCriadas} designação(ões) de avaliador migradas (acesso geral preservado)`);
+    }
+
+    // Item de menu "avaliadores_certificacao" (gestão de designações)
+    const [rolesComMenu] = await db.execute(
+      `SELECT code, menu_permissoes FROM roles WHERE code IN ('administrador','gestor_n1')`
+    ) as any;
+    for (const r of rolesComMenu) {
+      const itens: string[] = Array.isArray(r.menu_permissoes) ? r.menu_permissoes : [];
+      if (!itens.includes("avaliadores_certificacao")) {
+        itens.push("avaliadores_certificacao");
+        await db.execute(`UPDATE roles SET menu_permissoes = ? WHERE code = ?`, [JSON.stringify(itens), r.code]);
+      }
+    }
+  } catch (err) {
+    console.warn("⚠️ Erro na migração de designação de avaliadores:", err);
   }
 }
 
