@@ -441,8 +441,8 @@ processoRouter.post("/sincronizar", requireAuth, async (req: Request, res: Respo
           pagamento1_realizado = ?, pagamento2_realizado = ?,
           aprovado_entrevista = ?, updated_at = NOW()
          WHERE id = ?`,
-        [statusFinal, candidatoNome, candidatoEmail,
-         candidatoCPF, candidatoTelefone, candidatoCargo,
+        [statusFinal, candidatoNome ?? null, candidatoEmail ?? null,
+         candidatoCPF ?? null, candidatoTelefone ?? null, candidatoCargo ?? null,
          caminhoAvaliacao || null, tentativasProva || 0,
          pagamento1Realizado ? 1 : 0, pagamento2Realizado ? 1 : 0,
          aprovadoEntrevista === null ? null : (aprovadoEntrevista ? 1 : 0),
@@ -465,11 +465,11 @@ processoRouter.post("/sincronizar", requireAuth, async (req: Request, res: Respo
            caminho_avaliacao, tentativas_prova, pagamento1_realizado,
            pagamento2_realizado, aprovado_entrevista, edital_versao)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [req.user!.userId, certificationTypeId, statusGeral, candidatoNome,
-         candidatoEmail, candidatoCPF, candidatoTelefone, candidatoCargo,
+        [req.user!.userId, certificationTypeId, statusGeral, candidatoNome ?? null,
+         candidatoEmail ?? null, candidatoCPF ?? null, candidatoTelefone ?? null, candidatoCargo ?? null,
          caminhoAvaliacao || null, tentativasProva || 0,
          pagamento1Realizado ? 1 : 0, pagamento2Realizado ? 1 : 0,
-         aprovadoEntrevista === null ? null : (aprovadoEntrevista ? 1 : 0), editalVersao]
+         aprovadoEntrevista === null ? null : (aprovadoEntrevista ? 1 : 0), editalVersao ?? null]
       ) as any;
 
       return res.json({ processo_id: result.insertId, status: statusGeral });
