@@ -249,10 +249,13 @@ export function NovoFluxoCertificacoes() {
                             </span>
                           ) : (
                             <>
-                              {/* Mais detalhes */}
+                              {/* Pré-requisitos / Documentos exigidos — antes era um "Mais detalhes"
+                                  genérico, pouco visível; agora é um botão próprio, claro sobre
+                                  o que mostra */}
                               <button onClick={() => setExpandida(expandida === idx ? null : idx)}
-                                className="flex items-center justify-center gap-2 border border-white/10 text-white/40 hover:text-white/70 px-5 py-2 rounded-xl text-xs transition-colors">
-                                {expandida === idx ? <><ChevronUp className="w-3 h-3" /> Ver menos</> : <><ChevronDown className="w-3 h-3" /> Mais detalhes</>}
+                                className="flex items-center justify-center gap-2 border border-white/25 text-white/80 hover:text-white hover:border-white/50 font-medium px-5 py-2.5 rounded-xl text-sm transition-colors">
+                                {expandida === idx ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                Pré-requisitos e Documentos
                               </button>
 
                               {/* Como funciona */}
@@ -276,9 +279,10 @@ export function NovoFluxoCertificacoes() {
                                 Quero me certificar
                               </button>
 
-                              {/* Edital — busca do banco, por certificação */}
+                              {/* Edital — busca do banco, por certificação; mesmo grupo de botões,
+                                  visível igual aos demais (não escondido) */}
                               <EditalLink certSlug={cert.id}
-                                className="flex items-center justify-center gap-2 border border-white/10 text-white/40 hover:text-white/70 px-5 py-2 rounded-xl text-xs transition-colors" />
+                                className="flex items-center justify-center gap-2 border border-white/20 text-blue-200 hover:text-white font-medium px-5 py-2.5 rounded-xl text-sm transition-colors" />
                             </>
                           )}
                         </div>
