@@ -1,8 +1,7 @@
 import React from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
-
-const ROLES_PERMITIDOS = ["avaliador", "gestor_n1", "gestor_n2", "administrador", "entrevistador", "fiscal"];
+import { isAdminRole } from "@/lib/roles";
 
 interface AdminRouteProps {
   component: React.ComponentType;
@@ -32,7 +31,7 @@ export function AdminRoute({ component: Component }: AdminRouteProps) {
 
   // Candidato logado tentando acessar admin → redireciona para login admin
   // (não desloga o candidato, apenas bloqueia o acesso)
-  if (!ROLES_PERMITIDOS.includes(user.role)) {
+  if (!isAdminRole(user.role)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center max-w-md p-8">

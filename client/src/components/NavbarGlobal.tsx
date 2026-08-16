@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, ChevronLeft, Menu, X, Shield } from "lucide-react";
 import { AdminNavDropdowns, AdminNavMobile } from "@/components/AdminNavMenu";
+import { isAdminRole } from "@/lib/roles";
 
 export function NavbarGlobal() {
   const [, navigate] = useLocation();
@@ -10,7 +11,9 @@ export function NavbarGlobal() {
   const [menuAberto, setMenuAberto] = useState(false);
   const location = window.location.pathname;
 
-  const isAdmin = user && ["administrador", "gestor_n1", "gestor_n2", "avaliador", "entrevistador"].includes((user as any).role);
+  // Fonte única de perfis administrativos (client/src/lib/roles.ts) — antes
+  // esta lista vivia duplicada aqui e ficava fora de sincronia com as outras.
+  const isAdmin = isAdminRole(user?.role);
   const isAdminArea = location.startsWith("/novo-fluxo/admin");
   const isNovoFluxo = location.startsWith("/novo-fluxo") && !isAdminArea;
 

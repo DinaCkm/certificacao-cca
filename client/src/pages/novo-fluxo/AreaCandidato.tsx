@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCertification } from "@/contexts/CertificationContext";
+import { isAdminRole } from "@/lib/roles";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { BoasVindasModal } from "@/pages/novo-fluxo/BoasVindasModal";
@@ -161,9 +162,8 @@ function LoginModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: (p
         headers: { "Authorization": `Bearer ${localStorage.getItem("anefac_token")}` }
       });
       const meData = await meRes.json();
-      const rolesAdmin = ["administrador", "gestor_n1", "gestor_n2", "avaliador", "entrevistador"];
 
-      if (rolesAdmin.includes(meData.user?.role)) {
+      if (isAdminRole(meData.user?.role)) {
         // É admin — redireciona para área administrativa
         setErro("");
         window.location.href = "/novo-fluxo/admin";
@@ -334,10 +334,9 @@ export function AreaCandidato() {
     }
   }, [isAuthenticated]);
 
-  // Admin/gestor/avaliador logado não deve ver painel de candidato
-  const rolesAdmin = ["administrador", "gestor_n1", "gestor_n2", "avaliador", "entrevistador"];
+  // Admin/gestor/avaliador/fiscal logado não deve ver painel de candidato
   const { user } = useAuth();
-  const isAdminUser = user && rolesAdmin.includes((user as any).role);
+  const isAdminUser = isAdminRole(user?.role);
 
   if (isAuthenticated && processosAtivos && processosAtivos.length > 0 && !isAdminUser) {
     return <PainelCandidato processos={processosAtivos} onNovaCertificacao={() => navigate("/novo-fluxo/certificacoes")} />;
