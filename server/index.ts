@@ -15,6 +15,7 @@ import { magicLinkRouter } from "./routes/magicLink.js";
 import { editalPublicoRouter } from "./routes/editalPublico.js";
 import { cursosPublicoRouter } from "./routes/cursosPublico.js";
 import { certificacoesPublicoRouter } from "./routes/certificacoesPublico.js";
+import { runEditalComiteSelfTest } from "./selfTestEditalComite.js";
 import fs from "fs";
 // multer loaded dynamically
 
@@ -279,6 +280,7 @@ async function startServer() {
   server.listen(port, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${port}/`);
     console.log(`📡 API disponível em http://localhost:${port}/api/`);
+    runEditalComiteSelfTest(port).catch((err) => console.error("Erro no autoteste:", err));
   });
 }
 
