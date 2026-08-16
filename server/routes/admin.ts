@@ -330,6 +330,112 @@ adminRouter.delete(
   }
 );
 
+// ── Edital por certificação ────────────────────────────────────────────────────
+
+adminRouter.get("/editais", requireRole("administrador", "gestor_n1", "gestor_n2"), async (_req, res) => {
+  try {
+    const { listarEditaisAdmin } = await import("../services/editalService.js");
+    return res.json({ editais: await listarEditaisAdmin() });
+  } catch (err) {
+    return res.status(500).json({ error: "Erro ao listar editais" });
+  }
+});
+
+adminRouter.get("/editais/:certSlug", requireRole("administrador", "gestor_n1", "gestor_n2"), async (req, res) => {
+  try {
+    const { buscarEdital } = await import("../services/editalService.js");
+    return res.json({ edital: await buscarEdital(req.params.certSlug) });
+  } catch (err) {
+    return res.status(500).json({ error: "Erro ao buscar edital" });
+  }
+});
+
+adminRouter.put("/editais/:certSlug", requireRole("administrador", "gestor_n1"), async (req, res) => {
+  const { titulo, conteudo, urlExterna, dataAbertura, dataEncerramento } = req.body;
+  if (!titulo) return res.status(400).json({ error: "Título é obrigatório" });
+  try {
+    const { salvarEdital } = await import("../services/editalService.js");
+    const result = await salvarEdital(req.params.certSlug, { titulo, conteudo, urlExterna, dataAbertura, dataEncerramento });
+    return res.json({ message: "Edital salvo", ...result });
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
+// ── Comitê (membros + atribuição por certificação) ────────────────────────────
+
+adminRouter.get("/comite", requireRole("administrador", "gestor_n1", "gestor_n2"), async (_req, res) => {
+  try {
+    const { listarMembrosComite } = await import("../services/comiteService.js");
+    return res.json({ membros: await listarMembrosComite() });
+  } catch (err) {
+    return res.status(500).json({ error: "Erro ao listar comitê" });
+  }
+});
+
+adminRouter.post("/comite", requireRole("administrador", "gestor_n1"), async (req, res) => {
+  const { nome, cargo, miniCurriculo, fotoUrl, linkedin, userId } = req.body;
+  if (!nome) return res.status(400).json({ error: "Nome é obrigatório" });
+  try {
+    const { criarMembroComite } = await import("../services/comiteService.js");
+    const result = await criarMembroComite({ nome, cargo, miniCurriculo, fotoUrl, linkedin, userId });
+    return res.status(201).json(result);
+  } catch (err) {
+    return res.status(500).json({ error: "Erro ao criar membro do comitê" });
+  }
+});
+
+adminRouter.put("/comite/:id", requireRole("administrador", "gestor_n1"), async (req, res) => {
+  try {
+    const { editarMembroComite } = await import("../services/comiteService.js");
+    await editarMembroComite(parseInt(req.params.id), req.body);
+    return res.json({ message: "Membro atualizado" });
+  } catch (err) {
+    return res.status(500).json({ error: "Erro ao atualizar membro" });
+  }
+});
+
+adminRouter.delete("/comite/:id", requireRole("administrador", "gestor_n1"), async (req, res) => {
+  try {
+    const { removerMembroComite } = await import("../services/comiteService.js");
+    await removerMembroComite(parseInt(req.params.id));
+    return res.json({ message: "Membro removido" });
+  } catch (err) {
+    return res.status(500).json({ error: "Erro ao remover membro" });
+  }
+});
+
+adminRouter.get("/comite/certificacao/:certSlug", requireRole("administrador", "gestor_n1", "gestor_n2"), async (req, res) => {
+  try {
+    const { listarComiteDaCertificacao } = await import("../services/comiteService.js");
+    return res.json({ membros: await listarComiteDaCertificacao(req.params.certSlug) });
+  } catch (err) {
+    return res.status(500).json({ error: "Erro ao listar comitê da certificação" });
+  }
+});
+
+adminRouter.post("/comite/certificacao/:certSlug", requireRole("administrador", "gestor_n1"), async (req, res) => {
+  const { comiteMembroId, papel } = req.body;
+  if (!comiteMembroId) return res.status(400).json({ error: "comiteMembroId é obrigatório" });
+  try {
+    const { atribuirMembroACertificacao } = await import("../services/comiteService.js");
+    await atribuirMembroACertificacao(req.params.certSlug, parseInt(comiteMembroId), papel);
+    return res.status(201).json({ message: "Membro atribuído" });
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
+adminRouter.delete("/comite/certificacao/:certSlug/:membroId", requireRole("administrador", "gestor_n1"), async (req, res) => {
+  try {
+    const { removerMembroDaCertificacao } = await import("../services/comiteService.js");
+    await removerMembroDaCertificacao(req.params.certSlug, parseInt(req.params.membroId));
+    return res.json({ message: "Membro removido da certificação" });
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
 // ── Simulações (configuração por certificação) ────────────────────────────────
 
 // GET /api/admin/simulacoes — lista configs de simulação

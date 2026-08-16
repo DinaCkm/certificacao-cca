@@ -12,6 +12,7 @@ import { simulacaoRouter } from "./routes/simulacao.js";
 import { institucionalRouter, institucionalAdminRouter } from "./routes/institucional.js";
 import { codigoCondutaRouter, codigoCondutaAdminRouter } from "./routes/codigoConduta.js";
 import { magicLinkRouter } from "./routes/magicLink.js";
+import { editalPublicoRouter } from "./routes/editalPublico.js";
 import { cursosPublicoRouter } from "./routes/cursosPublico.js";
 import { certificacoesPublicoRouter } from "./routes/certificacoesPublico.js";
 import fs from "fs";
@@ -246,6 +247,7 @@ async function startServer() {
   app.use("/api/auth/magic", magicLinkRouter);
   app.use("/api/cursos", cursosPublicoRouter);
   app.use("/api/certificacoes", certificacoesPublicoRouter);
+  app.use("/api/certificacoes", editalPublicoRouter);
 
   // Health check
   app.get("/api/health", (_req, res) => {

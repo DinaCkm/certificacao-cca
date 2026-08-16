@@ -59,6 +59,7 @@ export const MENU_GROUPS: MenuGroupDef[] = [
       { key: "carrossel", label: "Carrossel de Imagens", href: "/novo-fluxo/admin/carrossel", icon: "Image" },
       { key: "site", label: "Configurar Site", href: "/novo-fluxo/admin/site", icon: "Globe" },
       { key: "institucional", label: "Documentos & Comitê", href: "/novo-fluxo/admin/institucional", icon: "BookOpen" },
+      { key: "comite_edital", label: "Comitê & Edital", href: "/novo-fluxo/admin/comite", icon: "ShieldCheck" },
     ],
   },
   {

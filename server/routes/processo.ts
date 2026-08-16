@@ -452,18 +452,24 @@ processoRouter.post("/sincronizar", requireAuth, async (req: Request, res: Respo
     } else {
       // Cria novo processo — independente de quaisquer outras certificações
       // que este candidato já tenha em andamento.
+      // Registra a versão do edital vigente NESTE MOMENTO — se o admin
+      // mudar o edital depois, este processo continua referenciando a
+      // versão que o candidato realmente teve acesso ao começar.
+      const { versaoAtualEdital } = await import("../services/editalService.js");
+      const editalVersao = await versaoAtualEdital(certificationTypeId).catch(() => null);
+
       const [result] = await db.execute(
         `INSERT INTO candidato_processos
           (user_id, certification_type_id, status_geral, candidato_nome,
            candidato_email, candidato_cpf, candidato_telefone, formacao,
            caminho_avaliacao, tentativas_prova, pagamento1_realizado,
-           pagamento2_realizado, aprovado_entrevista)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           pagamento2_realizado, aprovado_entrevista, edital_versao)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [req.user!.userId, certificationTypeId, statusGeral, candidatoNome,
          candidatoEmail, candidatoCPF, candidatoTelefone, candidatoCargo,
          caminhoAvaliacao || null, tentativasProva || 0,
          pagamento1Realizado ? 1 : 0, pagamento2Realizado ? 1 : 0,
-         aprovadoEntrevista === null ? null : (aprovadoEntrevista ? 1 : 0)]
+         aprovadoEntrevista === null ? null : (aprovadoEntrevista ? 1 : 0), editalVersao]
       ) as any;
 
       return res.json({ processo_id: result.insertId, status: statusGeral });
