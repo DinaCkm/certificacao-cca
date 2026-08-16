@@ -169,6 +169,26 @@ export const api = {
     editarEixo: (id: number, body: any) => request<{ message: string }>("PUT", `/admin/eixos/${id}`, body),
     removerEixo: (id: number) => request<{ message: string }>("DELETE", `/admin/eixos/${id}`),
 
+    // Edital por certificação
+    listarEditais: () => request<{ editais: any[] }>("GET", "/admin/editais"),
+    buscarEdital: (certSlug: string) => request<{ edital: any }>("GET", `/admin/editais/${certSlug}`),
+    salvarEdital: (certSlug: string, body: { titulo: string; conteudo?: string; urlExterna?: string; dataAbertura?: string | null; dataEncerramento?: string | null }) =>
+      request<{ message: string; versao: number }>("PUT", `/admin/editais/${certSlug}`, body),
+
+    // Comitê — membros
+    listarComite: () => request<{ membros: any[] }>("GET", "/admin/comite"),
+    criarMembroComite: (body: { nome: string; cargo?: string; miniCurriculo?: string; fotoUrl?: string; linkedin?: string; userId?: number | null }) =>
+      request<{ id: number }>("POST", "/admin/comite", body),
+    editarMembroComite: (id: number, body: any) => request<{ message: string }>("PUT", `/admin/comite/${id}`, body),
+    removerMembroComite: (id: number) => request<{ message: string }>("DELETE", `/admin/comite/${id}`),
+
+    // Comitê — atribuição por certificação
+    listarComiteDaCertificacao: (certSlug: string) => request<{ membros: any[] }>("GET", `/admin/comite/certificacao/${certSlug}`),
+    atribuirMembroACertificacao: (certSlug: string, comiteMembroId: number, papel?: string) =>
+      request<{ message: string }>("POST", `/admin/comite/certificacao/${certSlug}`, { comiteMembroId, papel }),
+    removerMembroDaCertificacao: (certSlug: string, membroId: number) =>
+      request<{ message: string }>("DELETE", `/admin/comite/certificacao/${certSlug}/${membroId}`),
+
     // Relatório administrativo da prova oficial
     relatorioProva: (certSlug?: string) =>
       request<{

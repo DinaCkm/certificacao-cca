@@ -29,6 +29,7 @@ export async function testConnection() {
     await runInstitucionalConfigMigration();
     await runEixosConhecimentoMigration();
     await runRelatorioProvaMenuMigration();
+    await runEditalComiteMigration();
     await runAssinaturaCondutaMigration();
     await runMagicLinkMigration();
   } catch (err) {
@@ -727,6 +728,114 @@ export async function runEixosConhecimentoMigration() {
     }
   } catch (err) {
     console.warn("⚠️ Erro na migração de eixos de conhecimento:", err);
+  }
+}
+
+// ─── Edital por certificação + comitê vinculável a contas de login ───────────
+// O edital vivia só como um campo solto no objeto Certification, persistido
+// só no localStorage de quem editou (nunca chegava ao banco de verdade) —
+// mesmo problema já corrigido antes para o conteúdo institucional genérico.
+// Aqui cada certificação ganha seu próprio edital versionado no banco.
+//
+// O comitê (banca) também sai do JSON genérico e vira registros reais,
+// já pensados pra reaproveitar na emissão do certificado (próxima fase):
+// cada membro pode ter uma conta de login vinculada (pra assinar de
+// verdade), e cada certificação tem seus próprios membros responsáveis.
+export async function runEditalComiteMigration() {
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS certificacao_edital (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        certification_type_id INT NOT NULL UNIQUE,
+        titulo VARCHAR(255) NOT NULL DEFAULT 'Edital',
+        conteudo LONGTEXT NULL,
+        url_externa VARCHAR(500) NULL,
+        data_abertura DATE NULL,
+        data_encerramento DATE NULL,
+        versao INT NOT NULL DEFAULT 1,
+        atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_cert (certification_type_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    console.log("✅ Tabela certificacao_edital verificada/criada");
+
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS comite_membros (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NULL,
+        nome VARCHAR(255) NOT NULL,
+        cargo VARCHAR(255) NULL,
+        mini_curriculo TEXT NULL,
+        foto_url VARCHAR(500) NULL,
+        linkedin VARCHAR(500) NULL,
+        ordem INT NOT NULL DEFAULT 0,
+        ativo TINYINT(1) NOT NULL DEFAULT 1,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_user (user_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    console.log("✅ Tabela comite_membros verificada/criada");
+
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS certificacao_comite (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        certification_type_id INT NOT NULL,
+        comite_membro_id INT NOT NULL,
+        papel VARCHAR(255) NULL,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_cert_membro (certification_type_id, comite_membro_id),
+        INDEX idx_cert (certification_type_id),
+        INDEX idx_membro (comite_membro_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    console.log("✅ Tabela certificacao_comite verificada/criada");
+
+    // candidato_processos registra QUAL VERSÃO do edital valia no momento
+    // em que o candidato iniciou — se o edital mudar depois, o processo já
+    // em andamento continua referenciando a versão que ele realmente aceitou.
+    const [colsProc] = await db.execute(`
+      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'candidato_processos'
+    `) as any;
+    const existentesProc: string[] = colsProc.map((c: any) => c.COLUMN_NAME.toLowerCase());
+    if (!existentesProc.includes("edital_versao")) {
+      await db.execute(`ALTER TABLE candidato_processos ADD COLUMN edital_versao INT NULL`);
+      console.log("✅ Coluna candidato_processos.edital_versao criada");
+    }
+
+    // Migração única: se já existirem membros do comitê no JSON genérico
+    // (institucional_config) e a tabela nova ainda estiver vazia, importa
+    // pra não perder o que já foi cadastrado.
+    const [jaTemMembros] = await db.execute(`SELECT COUNT(*) as total FROM comite_membros`) as any;
+    if (jaTemMembros[0].total === 0) {
+      const [instRows] = await db.execute(`SELECT dados FROM institucional_config WHERE id = 1`) as any;
+      if (instRows.length) {
+        const dados = typeof instRows[0].dados === "string" ? JSON.parse(instRows[0].dados) : instRows[0].dados;
+        const comiteAntigo = Array.isArray(dados?.comite) ? dados.comite : [];
+        for (let i = 0; i < comiteAntigo.length; i++) {
+          const m = comiteAntigo[i];
+          await db.execute(
+            `INSERT INTO comite_membros (nome, cargo, mini_curriculo, foto_url, linkedin, ordem) VALUES (?, ?, ?, ?, ?, ?)`,
+            [m.nome || "Sem nome", m.cargo || null, m.miniCurriculo || null, m.fotoUrl || null, m.linkedin || null, i]
+          );
+        }
+        if (comiteAntigo.length) console.log(`✅ ${comiteAntigo.length} membro(s) do comitê migrado(s) do conteúdo institucional genérico`);
+      }
+    }
+
+    // Item de menu "comite_edital"
+    const [rolesComMenuComite] = await db.execute(
+      `SELECT code, menu_permissoes FROM roles WHERE code IN ('administrador','gestor_n1','gestor_n2')`
+    ) as any;
+    for (const r of rolesComMenuComite) {
+      const itens: string[] = Array.isArray(r.menu_permissoes) ? r.menu_permissoes : [];
+      if (!itens.includes("comite_edital")) {
+        itens.push("comite_edital");
+        await db.execute(`UPDATE roles SET menu_permissoes = ? WHERE code = ?`, [JSON.stringify(itens), r.code]);
+      }
+    }
+  } catch (err) {
+    console.warn("⚠️ Erro na migração de edital/comitê:", err);
   }
 }
 

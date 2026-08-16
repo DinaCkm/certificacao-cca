@@ -252,9 +252,9 @@ export function AdminInstitucional() {
 
         {/* ── Comitê de Certificação ── */}
         <section>
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center justify-between mb-3">
             <div>
-              <h2 className="text-xl font-black text-gray-900">Comitê de Certificação</h2>
+              <h2 className="text-xl font-black text-gray-900">Comitê de Certificação (exibição pública)</h2>
               <p className="text-sm text-gray-500 mt-0.5">Membros exibidos na seção pública "Avaliação por especialistas"</p>
             </div>
             <button
@@ -265,6 +265,13 @@ export function AdminInstitucional() {
               <Plus className="w-4 h-4" />
               Adicionar membro
             </button>
+          </div>
+
+          <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-5 text-sm text-indigo-900">
+            Para vincular um membro do comitê a uma <strong>conta de login</strong> (necessário pra assinatura no
+            certificado) e para definir quem é responsável por <strong>cada certificação</strong> especificamente,
+            use a nova tela <a href="/novo-fluxo/admin/comite" className="underline font-semibold">Comitê &amp; Edital</a>.
+            Esta seção aqui continua controlando só o texto exibido na página pública.
           </div>
 
           <div className="space-y-3">
