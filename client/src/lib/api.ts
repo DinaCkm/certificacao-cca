@@ -91,6 +91,11 @@ export const api = {
       ),
   },
 
+  certificacoes: {
+    // Edital vigente de uma certificação — público, qualquer visitante/candidato pode consultar
+    buscarEdital: (certSlug: string) => request<{ edital: any | null }>("GET", `/certificacoes/${certSlug}/edital`),
+  },
+
   processo: {
     atual: () =>
       request<{ processo: any | null }>("GET", "/processo/atual"),

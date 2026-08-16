@@ -3,6 +3,7 @@ import { Link, useParams, useLocation } from "wouter";
 import { Navbar } from "@/components/Navbar";
 import { useCertification } from "@/contexts/CertificationContext";
 import { ArrowRight, FileText, DollarSign, Clock, Users, CheckCircle, ExternalLink, ArrowLeft, BookOpen, Award, X, User, Mail, Heart } from "lucide-react";
+import { EditalLink } from "@/components/EditalLink";
 
 type LeadDestino = "cursos" | "certificar" | null;
 
@@ -214,19 +215,10 @@ export function CertificacaoDetalhe() {
                 <span>Estou pronto, quero me certificar</span>
               </button>
 
-              {/* Botão 3 — Edital/Comunicado (somente se cadastrado) */}
-              {cert.editalUrl && (
-                <a
-                  href={cert.editalUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full flex items-center gap-3 border border-blue-200 text-blue-700 font-medium py-3.5 px-4 rounded-xl hover:bg-blue-50 transition-colors text-sm"
-                >
-                  <FileText className="w-5 h-5 shrink-0" />
-                  <span>Edital / Comunicado</span>
-                  <ExternalLink className="w-3.5 h-3.5 ml-auto" />
-                </a>
-              )}
+              {/* Botão 3 — Edital/Comunicado (busca do banco, por certificação) */}
+              <EditalLink certSlug={cert.id}
+                className="w-full flex items-center gap-3 border border-blue-200 text-blue-700 font-medium py-3.5 px-4 rounded-xl hover:bg-blue-50 transition-colors text-sm"
+              />
             </div>
           </div>
         </div>

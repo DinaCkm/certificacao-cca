@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, LogIn, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { EditalLink } from "@/components/EditalLink";
 import { api } from "@/lib/api";
 import {
   Award, BookOpen, FileText, DollarSign, Clock,
@@ -275,13 +276,9 @@ export function NovoFluxoCertificacoes() {
                                 Quero me certificar
                               </button>
 
-                              {/* Edital — só se tiver URL */}
-                              {cert.editalUrl && (
-                                <a href={cert.editalUrl} target="_blank" rel="noopener noreferrer"
-                                  className="flex items-center justify-center gap-2 border border-white/10 text-white/40 hover:text-white/70 px-5 py-2 rounded-xl text-xs transition-colors">
-                                  <ExternalLink className="w-3 h-3" /> Edital / Comunicado
-                                </a>
-                              )}
+                              {/* Edital — busca do banco, por certificação */}
+                              <EditalLink certSlug={cert.id}
+                                className="flex items-center justify-center gap-2 border border-white/10 text-white/40 hover:text-white/70 px-5 py-2 rounded-xl text-xs transition-colors" />
                             </>
                           )}
                         </div>
