@@ -23,7 +23,7 @@ export function NovoFluxoCertificacoes() {
   const [boasVindasAberto, setBoasVindasAberto] = useState(false);
   const [certSelecionada, setCertSelecionada] = useState<any>(null);
   const [loginAberto, setLoginAberto] = useState(false);
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [loginEmail, setLoginEmail] = useState("");
   const [loginSenha, setLoginSenha] = useState("");
@@ -118,8 +118,21 @@ export function NovoFluxoCertificacoes() {
     finally { setLoginCarregando(false); }
   };
 
-  const handleQueroMeCertificar = (cert: any) => {
+  const handleQueroMeCertificar = async (cert: any) => {
     setCertSelecionada(cert);
+
+    // Já está logado nesta sessão? Não faz sentido pedir CPF/senha de novo —
+    // usa a sessão que já existe e vai direto pro status real da certificação
+    // (retoma se já tiver processo, começa do zero se não tiver). Sem isso,
+    // o candidato podia acabar reiniciando o cadastro de uma certificação
+    // que já estava em andamento, porque o fluxo de "CPF novo" ignorava
+    // o status devolvido e sempre forçava LGPD/Cadastro de novo.
+    if (isAuthenticated) {
+      const status = await selecionarCertificacao(cert);
+      navigate(STATUS_ROTA[status] || "/novo-fluxo/cadastro");
+      return;
+    }
+
     setVCpf(""); setVExiste(null); setVEmail(""); setVSenha(""); setVErro("");
     setVerificarAberto(true);
   };
