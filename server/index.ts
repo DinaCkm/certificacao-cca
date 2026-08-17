@@ -16,7 +16,6 @@ import { editalPublicoRouter } from "./routes/editalPublico.js";
 import { certificadoPublicoRouter } from "./routes/certificadoPublico.js";
 import { cursosPublicoRouter } from "./routes/cursosPublico.js";
 import { certificacoesPublicoRouter } from "./routes/certificacoesPublico.js";
-import { runCertificadoSelfTest } from "./selfTestCertificado.js";
 import fs from "fs";
 // multer loaded dynamically
 
@@ -313,7 +312,6 @@ async function startServer() {
   server.listen(port, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${port}/`);
     console.log(`📡 API disponível em http://localhost:${port}/api/`);
-    runCertificadoSelfTest(port).catch((err) => console.error("Erro no autoteste:", err));
   });
 }
 
