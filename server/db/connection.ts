@@ -943,6 +943,35 @@ export async function runCertificadosMigration() {
     }
   }
 
+  // Varredura final: a tabela pode ter colunas que este código nem conhece
+  // (ex: de uma tentativa anterior com um desenho diferente) marcadas como
+  // NOT NULL sem valor padrão — isso quebra qualquer INSERT que não as
+  // preencha explicitamente. Em vez de corrigir uma de cada vez conforme
+  // cada erro aparece, torna TODA coluna fora da lista esperada opcional
+  // de uma vez, sem apagar nada (ALTER MODIFY só relaxa a restrição).
+  try {
+    const nomesEsperados = new Set([...colunasCertificados.map(([c]) => c), "id"]);
+    const [todasColunas] = await db.query(`
+      SELECT COLUMN_NAME, IS_NULLABLE, COLUMN_TYPE, COLUMN_DEFAULT, EXTRA
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'certificados'
+    `) as any;
+    for (const col of todasColunas) {
+      const nome = col.COLUMN_NAME;
+      if (nomesEsperados.has(nome)) continue;
+      if (col.IS_NULLABLE === "NO" && col.COLUMN_DEFAULT === null && !col.EXTRA?.includes("auto_increment")) {
+        try {
+          await db.query(`ALTER TABLE certificados MODIFY COLUMN \`${nome}\` ${col.COLUMN_TYPE} NULL`);
+          console.log(`✅ Coluna certificados.${nome} (não usada pelo código) tornada opcional`);
+        } catch (err) {
+          console.warn(`⚠️ Erro ao tornar certificados.${nome} opcional:`, (err as any)?.message);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("⚠️ Erro na varredura de colunas extras de certificados:", (err as any)?.message);
+  }
+
   // Validade configurável por certificação (antes era texto fixo "3 anos"
   // direto na tela, sem nenhuma configuração real por trás)
   try {
