@@ -480,6 +480,16 @@ function CertEditor({
                       className="rounded-xl"
                     />
                   </div>
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Validade do certificado (anos)</Label>
+                    <Input
+                      type="number" min={0}
+                      value={(form as any).validadeAnos || ""}
+                      onChange={(e) => set("validadeAnos" as any, e.target.value ? parseInt(e.target.value) : null)}
+                      placeholder="Ex: 3 (deixe em branco para validade indeterminada)"
+                      className="rounded-xl"
+                    />
+                  </div>
                   <div className="col-span-2">
                     <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Caminho padrão de avaliação</Label>
                     <div className="flex gap-3">
@@ -686,6 +696,7 @@ export function AdminCertificacoes() {
         numero: form.numero,
         taxaAnalise: form.taxaAnalise,
         taxaEmissao: form.taxaEmissao,
+        validadeAnos: (form as any).validadeAnos ?? null,
         caminhoDefault: form.caminhoDefault ?? null,
         documentosExigidos: (form.documentosExigidos || []).slice(0, 10),
         status: form.status || "ativa",

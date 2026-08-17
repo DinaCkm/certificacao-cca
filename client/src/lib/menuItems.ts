@@ -64,6 +64,12 @@ export const MENU_GROUPS: MenuGroupDef[] = [
     ],
   },
   {
+    label: "Certificados",
+    items: [
+      { key: "certificados", label: "Certificados Emitidos", href: "/novo-fluxo/admin/certificados", icon: "Award" },
+    ],
+  },
+  {
     label: "Cursos",
     items: [
       { key: "cursos", label: "Cursos e Pacotes", href: "/novo-fluxo/admin/cursos", icon: "BookOpen" },

@@ -96,9 +96,16 @@ export const api = {
     buscarEdital: (certSlug: string) => request<{ edital: any | null }>("GET", `/certificacoes/${certSlug}/edital`),
   },
 
+  // Validação pública de certificado — o que o QR Code abre, sem login
+  validarCertificado: (codigo: string) =>
+    request<{ certificado: any }>("GET", `/validar-certificado/${codigo}`),
+
   processo: {
     atual: () =>
       request<{ processo: any | null }>("GET", "/processo/atual"),
+
+    certificado: (processoId: number) =>
+      request<{ certificado: any }>("GET", `/processo/${processoId}/certificado`),
 
     iniciar: (body: {
       certification_type_id: number;
@@ -201,6 +208,22 @@ export const api = {
       request<{ message: string }>("POST", `/admin/avaliadores-certificacao/${certSlug}`, { userId }),
     removerDesignacaoAvaliador: (certSlug: string, userId: number) =>
       request<{ message: string }>("DELETE", `/admin/avaliadores-certificacao/${certSlug}/${userId}`),
+
+    // Certificados
+    listarCertificados: (filtro?: { certSlug?: string; status?: string; candidatoNome?: string; dataInicio?: string; dataFim?: string }) => {
+      const params = new URLSearchParams();
+      if (filtro?.certSlug) params.set("cert_slug", filtro.certSlug);
+      if (filtro?.status) params.set("status", filtro.status);
+      if (filtro?.candidatoNome) params.set("candidato_nome", filtro.candidatoNome);
+      if (filtro?.dataInicio) params.set("data_inicio", filtro.dataInicio);
+      if (filtro?.dataFim) params.set("data_fim", filtro.dataFim);
+      const qs = params.toString();
+      return request<{ certificados: any[] }>("GET", `/admin/certificados${qs ? `?${qs}` : ""}`);
+    },
+    revogarCertificado: (id: number, motivo: string) =>
+      request<{ message: string }>("POST", `/admin/certificados/${id}/revogar`, { motivo }),
+    reemitirCertificado: (id: number, motivo: string) =>
+      request<{ certificado: any }>("POST", `/admin/certificados/${id}/reemitir`, { motivo }),
 
     // Relatório administrativo da prova oficial
     relatorioProva: (certSlug?: string) =>

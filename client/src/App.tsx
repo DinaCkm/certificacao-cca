@@ -71,6 +71,8 @@ import { FaleConosco } from "./components/FaleConosco";
 import { CookieConsent } from "./components/CookieConsent";
 import { PoliticaCookies } from "./pages/PoliticaCookies";
 import { MagicLinkAuth } from "./pages/MagicLinkAuth";
+import { ValidarCertificado } from "./pages/site/ValidarCertificado";
+import { AdminCertificados } from "./pages/novo-fluxo/admin/AdminCertificados";
 import { NovoFluxoCertificacoes } from "./pages/novo-fluxo/NovoFluxoCertificacoes";
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -88,6 +90,9 @@ function Router() {
       <Route path={"/cursos/comprar/:id"} component={ComprarCurso} />
       <Route path={"/politica-cookies"} component={PoliticaCookies} />
       <Route path={"/auth/magic/:token"} component={MagicLinkAuth} />
+      <Route path={"/validar-certificado/:codigo"} component={ValidarCertificado} />
+      <Route path={"/validar-certificado"} component={ValidarCertificado} />
+      <Route path={"/novo-fluxo/admin/certificados"} component={() => <AdminRoute component={AdminCertificados} />} />
       {/* ARQUIVADO: <Route path={"/home"} component={Home} /> */}
       {/* ARQUIVADO: <Route path={"/select-certification-type"} component={SelectCertificationType} /> */}
 

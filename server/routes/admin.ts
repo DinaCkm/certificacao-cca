@@ -1,8 +1,29 @@
 import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
+import multer from "multer";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { db } from "../db/connection.js";
+
+// Upload de assinatura (PNG) dos membros do comitê — usada no PDF do certificado
+const diretorioAssinaturas = process.env.RAILWAY_VOLUME_MOUNT_PATH
+  ? path.join(process.env.RAILWAY_VOLUME_MOUNT_PATH, "assinaturas")
+  : path.join(process.cwd(), "uploads", "assinaturas");
+if (!fs.existsSync(diretorioAssinaturas)) fs.mkdirSync(diretorioAssinaturas, { recursive: true });
+
+const uploadAssinatura = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, diretorioAssinaturas),
+    filename: (req, _file, cb) => cb(null, `membro_${req.params.id}_${Date.now()}.png`),
+  }),
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB — é só uma assinatura
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype === "image/png") cb(null, true);
+    else cb(new Error("Envie a assinatura em formato PNG"));
+  },
+});
 
 export const adminRouter = Router();
 
@@ -404,6 +425,56 @@ adminRouter.delete("/avaliadores-certificacao/:certSlug/:userId", requireRole("a
   }
 });
 
+// ── Certificados (emissão real, revogação, reemissão) ─────────────────────────
+
+adminRouter.get("/certificados", requireRole("administrador", "gestor_n1", "gestor_n2"), async (req, res) => {
+  try {
+    const { listarCertificadosAdmin } = await import("../services/certificadoService.js");
+    const { cert_slug, status, candidato_nome, data_inicio, data_fim } = req.query as Record<string, string | undefined>;
+    const certificados = await listarCertificadosAdmin({ certSlug: cert_slug, status, candidatoNome: candidato_nome, dataInicio: data_inicio, dataFim: data_fim });
+    return res.json({ certificados });
+  } catch (err) {
+    return res.status(500).json({ error: "Erro ao listar certificados" });
+  }
+});
+
+// Download pelo ADMIN — qualquer administrador/gestor pode baixar qualquer
+// certificado (diferente do download do candidato, que só vê o próprio)
+adminRouter.get("/certificados/:id/pdf", requireRole("administrador", "gestor_n1", "gestor_n2"), async (req, res) => {
+  try {
+    const [rows] = await db.execute(`SELECT caminho_pdf, codigo FROM certificados WHERE id = ?`, [parseInt(req.params.id)]) as any;
+    if (!rows.length || !rows[0].caminho_pdf) return res.status(404).json({ error: "Certificado não encontrado" });
+    return res.download(rows[0].caminho_pdf, `certificado-${rows[0].codigo}.pdf`);
+  } catch (err) {
+    return res.status(500).json({ error: "Erro ao baixar certificado" });
+  }
+});
+
+// Revogação liberada pra administrador ou gestor_n1/n2 (definido com a Dina)
+adminRouter.post("/certificados/:id/revogar", requireRole("administrador", "gestor_n1", "gestor_n2"), async (req: any, res) => {
+  const { motivo } = req.body;
+  if (!motivo || !motivo.trim()) return res.status(400).json({ error: "Informe o motivo da revogação" });
+  try {
+    const { revogarCertificado } = await import("../services/certificadoService.js");
+    await revogarCertificado(parseInt(req.params.id), motivo, req.user!.userId);
+    return res.json({ message: "Certificado revogado" });
+  } catch (err) {
+    return res.status(500).json({ error: "Erro ao revogar certificado" });
+  }
+});
+
+adminRouter.post("/certificados/:id/reemitir", requireRole("administrador", "gestor_n1", "gestor_n2"), async (req: any, res) => {
+  const { motivo } = req.body;
+  if (!motivo || !motivo.trim()) return res.status(400).json({ error: "Informe o motivo da reemissão" });
+  try {
+    const { reemitirCertificado } = await import("../services/certificadoService.js");
+    const novo = await reemitirCertificado(parseInt(req.params.id), req.user!.userId, motivo);
+    return res.status(201).json({ certificado: novo });
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
 // ── Comitê (membros + atribuição por certificação) ────────────────────────────
 
 adminRouter.get("/comite", requireRole("administrador", "gestor_n1", "gestor_n2"), async (_req, res) => {
@@ -436,6 +507,22 @@ adminRouter.put("/comite/:id", requireRole("administrador", "gestor_n1"), async 
     return res.status(500).json({ error: "Erro ao atualizar membro" });
   }
 });
+
+// Upload da imagem de assinatura (PNG) — embutida no PDF do certificado
+adminRouter.post("/comite/:id/assinatura",
+  requireRole("administrador", "gestor_n1"),
+  uploadAssinatura.single("assinatura"),
+  async (req, res) => {
+    if (!req.file) return res.status(400).json({ error: "Nenhum arquivo enviado" });
+    try {
+      const { editarMembroComite } = await import("../services/comiteService.js");
+      await editarMembroComite(parseInt(req.params.id), { assinaturaUrl: req.file.path } as any);
+      return res.json({ message: "Assinatura salva", caminho: req.file.path });
+    } catch (err) {
+      return res.status(500).json({ error: "Erro ao salvar assinatura" });
+    }
+  }
+);
 
 adminRouter.delete("/comite/:id", requireRole("administrador", "gestor_n1"), async (req, res) => {
   try {
@@ -802,7 +889,9 @@ adminRouter.delete("/carrossel/:id",
 // ── Parametrização da Prova ───────────────────────────────────────────────────
 
 // GET /api/admin/prova-config/:certSlug — busca config da prova
-adminRouter.get("/prova-config/:certSlug", async (req, res) => {
+adminRouter.get("/prova-config/:certSlug",
+  requireRole("administrador", "gestor_n1", "avaliador"),
+  async (req, res) => {
   try {
     const [rows] = await db.execute(
       `SELECT pc.*, ct.nome as cert_nome
@@ -2792,7 +2881,7 @@ adminRouter.get("/relatorios/cursos-cliques",
 adminRouter.put("/certificacoes/:slug/sincronizar",
   requireRole("administrador", "gestor_n1"),
   async (req: Request, res: Response) => {
-    const { nome, numero, taxaAnalise, taxaEmissao, caminhoDefault, documentosExigidos, status } = req.body;
+    const { nome, numero, taxaAnalise, taxaEmissao, validadeAnos, caminhoDefault, documentosExigidos, status } = req.body;
     const slug = req.params.slug;
 
     if (!nome) return res.status(400).json({ error: "Nome é obrigatório" });
@@ -2815,10 +2904,10 @@ adminRouter.put("/certificacoes/:slug/sincronizar",
         // por candidatos) — atualiza os campos sem mexer no id.
         await db.execute(
           `UPDATE certification_types SET
-             nome = ?, numero = ?, taxa_analise = ?, taxa_emissao = ?,
+             nome = ?, numero = ?, taxa_analise = ?, taxa_emissao = ?, validade_anos = ?,
              caminho_default = ?, documentos_exigidos = ?, status = ?
            WHERE slug = ?`,
-          [nome, numero || null, taxaAnalise || 0, taxaEmissao || 0,
+          [nome, numero || null, taxaAnalise || 0, taxaEmissao || 0, validadeAnos || null,
            caminhoDefault || null, JSON.stringify(documentos), statusValido, slug]
         );
         return res.json({ message: "Certificação sincronizada com o banco", criado: false });
@@ -2836,9 +2925,9 @@ adminRouter.put("/certificacoes/:slug/sincronizar",
 
       await db.execute(
         `INSERT INTO certification_types
-          (slug, nome, numero, taxa_analise, taxa_emissao, caminho_default, documentos_exigidos, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [slug, nome, proximoNumero, taxaAnalise || 0, taxaEmissao || 0,
+          (slug, nome, numero, taxa_analise, taxa_emissao, validade_anos, caminho_default, documentos_exigidos, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [slug, nome, proximoNumero, taxaAnalise || 0, taxaEmissao || 0, validadeAnos || null,
          caminhoDefault || null, JSON.stringify(documentos), statusValido]
       );
       return res.json({ message: "Certificação criada no banco", criado: true, numero: proximoNumero });

@@ -165,10 +165,71 @@ processoRouter.post("/:id/pagamento-confirmado", requireAuth, async (req: Reques
       console.warn("E-mail de confirmação de pagamento falhou (não crítico):", emailErr);
     }
 
+    // Taxa de emissão confirmada — emite o certificado de verdade (PDF real,
+    // código único, QR Code). Antes disso não existia: a tela mostrava um
+    // "certificado" 100% simulado, com número aleatório gerado no navegador
+    // a cada carregamento, nunca salvo em lugar nenhum.
+    if (numero === 2) {
+      try {
+        const { emitirCertificado } = await import("../services/certificadoService.js");
+        await emitirCertificado(processoId);
+      } catch (certErr) {
+        console.warn("Emissão de certificado falhou (candidato pode tentar novamente na tela de emissão):", certErr);
+      }
+    }
+
     return res.json({ message: "Pagamento confirmado" });
   } catch (err) {
     console.error("Erro ao confirmar pagamento:", err);
     return res.status(500).json({ error: "Erro interno no servidor" });
+  }
+});
+
+// ── GET /api/processo/:id/certificado ─────────────────────────────────────────
+// Candidato consulta o próprio certificado (ou tenta emitir se ainda não existe
+// e o pagamento já foi confirmado — cobre o caso do e-mail de confirmação ter
+// falhado silenciosamente na hora do pagamento)
+
+processoRouter.get("/:id/certificado", requireAuth, async (req: Request, res: Response) => {
+  const processoId = parseInt(req.params.id);
+  try {
+    const [donoRows] = await db.execute(
+      `SELECT id FROM candidato_processos WHERE id = ? AND user_id = ?`,
+      [processoId, req.user!.userId]
+    ) as any;
+    if (!donoRows.length) return res.status(404).json({ error: "Processo não encontrado" });
+
+    const [certRows] = await db.execute(
+      `SELECT * FROM certificados WHERE processo_id = ? AND status = 'ativo'`,
+      [processoId]
+    ) as any;
+
+    if (certRows.length) return res.json({ certificado: certRows[0] });
+
+    // Ainda não emitido — tenta emitir agora (idempotente; só funciona se o
+    // pagamento 2 já foi confirmado, senão lança erro tratado abaixo)
+    const { emitirCertificado } = await import("../services/certificadoService.js");
+    const certificado = await emitirCertificado(processoId);
+    return res.json({ certificado });
+  } catch (err: any) {
+    return res.status(400).json({ error: err.message || "Certificado ainda não disponível" });
+  }
+});
+
+// GET /api/processo/:id/certificado/pdf — baixa o PDF do próprio certificado
+processoRouter.get("/:id/certificado/pdf", requireAuth, async (req: Request, res: Response) => {
+  const processoId = parseInt(req.params.id);
+  try {
+    const [rows] = await db.execute(
+      `SELECT c.caminho_pdf, c.codigo FROM certificados c
+       JOIN candidato_processos cp ON cp.id = c.processo_id
+       WHERE c.processo_id = ? AND cp.user_id = ? AND c.status = 'ativo'`,
+      [processoId, req.user!.userId]
+    ) as any;
+    if (!rows.length || !rows[0].caminho_pdf) return res.status(404).json({ error: "Certificado não encontrado" });
+    return res.download(rows[0].caminho_pdf, `certificado-${rows[0].codigo}.pdf`);
+  } catch (err) {
+    return res.status(500).json({ error: "Erro ao baixar certificado" });
   }
 });
 
