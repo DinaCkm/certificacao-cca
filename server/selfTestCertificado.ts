@@ -149,15 +149,19 @@ export async function runCertificadoSelfTest(port: number | string) {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenCand}` },
       body: JSON.stringify({ numero: 2 }),
     });
-    await emitirNovoRes.json().catch(() => {});
-    const [totalCertificadosAtivos] = await db.query(
-      `SELECT COUNT(*) as total FROM certificados WHERE processo_id = ? AND status = 'ativo'`,
+    const emitirNovoData = await emitirNovoRes.json().catch(() => null);
+    const [todosCertificadosDoProcesso] = await db.query(
+      `SELECT id, codigo, status FROM certificados WHERE processo_id = ?`,
       [processoId]
     ) as any;
+    const totalAtivos = todosCertificadosDoProcesso.filter((c: any) => c.status === "ativo").length;
+    // Rastreia qualquer certificado extra que a idempotência tenha
+    // eventualmente criado, pra não vazar na limpeza
+    for (const c of todosCertificadosDoProcesso) if (!limpar.certificados.includes(c.codigo)) limpar.certificados.push(c.codigo);
     registrar(
       "Idempotência: confirmar pagamento de novo NÃO gera um segundo certificado ativo",
-      totalCertificadosAtivos[0].total === 1,
-      `total ativos: ${totalCertificadosAtivos[0].total}`
+      totalAtivos === 1,
+      `total ativos: ${totalAtivos}, todas as linhas: ${JSON.stringify(todosCertificadosDoProcesso)}, resposta do endpoint: ${JSON.stringify(emitirNovoData)}`
     );
 
     // ── TESTE 4: assinatura correta (só o comitê DESTA certificação) ───────
@@ -237,7 +241,15 @@ export async function runCertificadoSelfTest(port: number | string) {
       for (const codigo of limpar.certificados) {
         const [rows] = await db.query(`SELECT caminho_pdf FROM certificados WHERE codigo = ?`, [codigo]) as any;
         if (rows[0]?.caminho_pdf && fs.existsSync(rows[0].caminho_pdf)) fs.unlinkSync(rows[0].caminho_pdf);
-        await db.query(`DELETE FROM certificados WHERE codigo = ?`, [codigo]);
+      }
+      // Apaga TODOS os certificados vinculados aos certs/processos de teste,
+      // não só os códigos rastreados individualmente — protege contra
+      // qualquer linha extra gerada por um bug (é exatamente o que este
+      // autoteste existe pra pegar) travar a limpeza por causa da FK.
+      for (const id of limpar.certs) {
+        const [pdfs] = await db.query(`SELECT caminho_pdf FROM certificados WHERE certification_type_id = ?`, [id]) as any;
+        for (const p of pdfs) if (p.caminho_pdf && fs.existsSync(p.caminho_pdf)) fs.unlinkSync(p.caminho_pdf);
+        await db.query(`DELETE FROM certificados WHERE certification_type_id = ?`, [id]);
       }
       for (const id of limpar.processos) {
         await db.query(`DELETE FROM audit_log WHERE processo_id = ?`, [id]);
