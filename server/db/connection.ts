@@ -865,6 +865,13 @@ export async function runEditalComiteMigration() {
 
 // ─── Emissão real de certificado (PDF, QR Code, validação pública) ───────────
 export async function runCertificadosMigration() {
+  // Cada etapa roda no seu próprio try/catch — uma falha isolada (ex: coluna
+  // que já existia numa versão anterior da tabela, criada num teste
+  // anterior) não pode mais travar as demais etapas independentes. Foi
+  // exatamente isso que aconteceu em staging: um erro no ALTER de
+  // certificados.edital_versao abortou o restante da função inteira,
+  // deixando certification_types.validade_anos e
+  // comite_membros.assinatura_url sem serem criados também.
   try {
     await db.execute(`
       CREATE TABLE IF NOT EXISTS certificados (
@@ -891,22 +898,37 @@ export async function runCertificadosMigration() {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     `);
     console.log("✅ Tabela certificados verificada/criada");
+  } catch (err) {
+    console.warn("⚠️ Erro ao criar tabela certificados:", (err as any)?.message);
+  }
 
-    // Coluna edital_versao pode não existir se a tabela já tiver sido criada
-    // numa versão anterior desta migração — checagem via INFORMATION_SCHEMA
-    // antes do ALTER, seguindo o padrão do projeto.
-    const [colsCertificados] = await db.execute(`
-      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
-      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'certificados'
-    `) as any;
-    const existentesCertificados: string[] = colsCertificados.map((c: any) => c.COLUMN_NAME.toLowerCase());
-    if (!existentesCertificados.includes("edital_versao")) {
-      await db.execute(`ALTER TABLE certificados ADD COLUMN edital_versao INT NULL AFTER validade_ate`);
-      console.log("✅ Coluna certificados.edital_versao criada");
+  // Colunas que podem faltar se a tabela já existia de uma versão anterior
+  // desta migração (ex: testes anteriores nesta mesma sessão de trabalho).
+  // Cada uma checada e adicionada de forma independente, sem AFTER (posição
+  // não importa pra funcionalidade, e remove uma dependência frágil).
+  const colunasCertificados: [string, string][] = [
+    ["validade_ate", "DATE NULL"],
+    ["edital_versao", "INT NULL"],
+  ];
+  for (const [coluna, tipo] of colunasCertificados) {
+    try {
+      const [cols] = await db.execute(`
+        SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'certificados'
+      `) as any;
+      const existentes: string[] = cols.map((c: any) => c.COLUMN_NAME.toLowerCase());
+      if (!existentes.includes(coluna)) {
+        await db.execute(`ALTER TABLE certificados ADD COLUMN ${coluna} ${tipo}`);
+        console.log(`✅ Coluna certificados.${coluna} criada`);
+      }
+    } catch (err) {
+      console.warn(`⚠️ Erro ao verificar/criar certificados.${coluna}:`, (err as any)?.message);
     }
+  }
 
-    // Validade configurável por certificação (antes era texto fixo "3 anos"
-    // direto na tela, sem nenhuma configuração real por trás)
+  // Validade configurável por certificação (antes era texto fixo "3 anos"
+  // direto na tela, sem nenhuma configuração real por trás)
+  try {
     const [colsCert] = await db.execute(`
       SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'certification_types'
@@ -916,8 +938,12 @@ export async function runCertificadosMigration() {
       await db.execute(`ALTER TABLE certification_types ADD COLUMN validade_anos INT NULL`);
       console.log("✅ Coluna certification_types.validade_anos criada");
     }
+  } catch (err) {
+    console.warn("⚠️ Erro ao verificar/criar certification_types.validade_anos:", (err as any)?.message);
+  }
 
-    // Assinatura (imagem) de cada membro do comitê, pra embutir no PDF
+  // Assinatura (imagem) de cada membro do comitê, pra embutir no PDF
+  try {
     const [colsComite] = await db.execute(`
       SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'comite_membros'
@@ -927,8 +953,12 @@ export async function runCertificadosMigration() {
       await db.execute(`ALTER TABLE comite_membros ADD COLUMN assinatura_url VARCHAR(500) NULL`);
       console.log("✅ Coluna comite_membros.assinatura_url criada");
     }
+  } catch (err) {
+    console.warn("⚠️ Erro ao verificar/criar comite_membros.assinatura_url:", (err as any)?.message);
+  }
 
-    // Item de menu "certificados" (emissão/consulta administrativa)
+  // Item de menu "certificados" (emissão/consulta administrativa)
+  try {
     const [rolesComMenu] = await db.execute(
       `SELECT code, menu_permissoes FROM roles WHERE code IN ('administrador','gestor_n1','gestor_n2')`
     ) as any;
