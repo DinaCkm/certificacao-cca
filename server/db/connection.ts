@@ -972,6 +972,30 @@ export async function runCertificadosMigration() {
     console.warn("⚠️ Erro na varredura de colunas extras de certificados:", (err as any)?.message);
   }
 
+  // Remove uma constraint UNIQUE legada em processo_id (de uma tabela
+  // pré-existente com desenho diferente) — o design atual PRECISA permitir
+  // múltiplas linhas por processo ao longo do tempo (histórico de
+  // reemissões: uma revogada + uma ativa), a exclusividade de "só um ativo
+  // por vez" é garantida na aplicação, não por constraint de banco.
+  try {
+    const [indices] = await db.query(`
+      SELECT DISTINCT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'certificados'
+        AND INDEX_NAME != 'PRIMARY' AND NON_UNIQUE = 0
+        AND COLUMN_NAME = 'processo_id'
+    `) as any;
+    for (const idx of indices) {
+      try {
+        await db.query(`ALTER TABLE certificados DROP INDEX \`${idx.INDEX_NAME}\``);
+        console.log(`✅ Constraint UNIQUE legada certificados.${idx.INDEX_NAME} removida (incompatível com histórico de reemissão)`);
+      } catch (err) {
+        console.warn(`⚠️ Erro ao remover índice legado ${idx.INDEX_NAME}:`, (err as any)?.message);
+      }
+    }
+  } catch (err) {
+    console.warn("⚠️ Erro ao verificar índices legados de certificados:", (err as any)?.message);
+  }
+
   // Validade configurável por certificação (antes era texto fixo "3 anos"
   // direto na tela, sem nenhuma configuração real por trás)
   try {

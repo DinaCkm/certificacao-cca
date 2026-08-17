@@ -111,21 +111,38 @@ export async function emitirCertificado(processoId: number) {
     // edital e validade calculada ficam gravados como estavam NESTE
     // momento. Se o comitê ou o edital mudar depois, este certificado já
     // emitido não é afetado retroativamente.
-    await conn.query(
-      `INSERT INTO certificados
-        (codigo, processo_id, user_id, certification_type_id, candidato_nome, certificacao_nome,
-         emitido_em, validade_ate, edital_versao, caminho_pdf, assinantes_json)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [codigo, processoId, processo.user_id, processo.cert_type_id, processo.candidato_nome, processo.cert_nome,
-       emitidoEm, validadeAte, processo.edital_versao ?? null, caminhoPdf,
-       JSON.stringify(assinantes.map((a: any) => ({ nome: a.nome, cargo: a.cargo, papel: a.papel })))]
-    );
+    //
+    // Se por qualquer motivo (concorrência, ou uma constraint legada na
+    // tabela) o INSERT colidir com um certificado que já existe pra este
+    // processo, trata como sucesso idempotente em vez de erro — busca e
+    // devolve o que já existe, em vez de quebrar a requisição.
+    try {
+      await conn.query(
+        `INSERT INTO certificados
+          (codigo, processo_id, user_id, certification_type_id, candidato_nome, certificacao_nome,
+           emitido_em, validade_ate, edital_versao, caminho_pdf, assinantes_json)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [codigo, processoId, processo.user_id, processo.cert_type_id, processo.candidato_nome, processo.cert_nome,
+         emitidoEm, validadeAte, processo.edital_versao ?? null, caminhoPdf,
+         JSON.stringify(assinantes.map((a: any) => ({ nome: a.nome, cargo: a.cargo, papel: a.papel })))]
+      );
+    } catch (insertErr: any) {
+      if (insertErr?.code === "ER_DUP_ENTRY") {
+        await conn.rollback();
+        const [jaExiste] = await db.query(
+          `SELECT * FROM certificados WHERE processo_id = ? ORDER BY id DESC LIMIT 1`,
+          [processoId]
+        ) as any;
+        if (jaExiste.length) return jaExiste[0];
+      }
+      throw insertErr;
+    }
 
     await conn.query(`UPDATE candidato_processos SET status_geral = 'concluido', updated_at = NOW() WHERE id = ?`, [processoId]);
 
     await conn.commit();
 
-    const [criado] = await db.execute(`SELECT * FROM certificados WHERE codigo = ?`, [codigo]) as any;
+    const [criado] = await db.query(`SELECT * FROM certificados WHERE codigo = ?`, [codigo]) as any;
     const certificado = criado[0];
 
     // E-mail de notificação — só aqui, fora da transação (não segura o lock
