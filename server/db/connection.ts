@@ -978,6 +978,22 @@ export async function runCertificadosMigration() {
   // reemissões: uma revogada + uma ativa), a exclusividade de "só um ativo
   // por vez" é garantida na aplicação, não por constraint de banco.
   try {
+    // Primeiro remove qualquer FK que dependa desse índice (senão o DROP
+    // INDEX falha com "needed in a foreign key constraint")
+    const [fks] = await db.query(`
+      SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'certificados'
+        AND COLUMN_NAME = 'processo_id' AND REFERENCED_TABLE_NAME IS NOT NULL
+    `) as any;
+    for (const fk of fks) {
+      try {
+        await db.query(`ALTER TABLE certificados DROP FOREIGN KEY \`${fk.CONSTRAINT_NAME}\``);
+        console.log(`✅ FK legada certificados.${fk.CONSTRAINT_NAME} removida`);
+      } catch (err) {
+        console.warn(`⚠️ Erro ao remover FK legada ${fk.CONSTRAINT_NAME}:`, (err as any)?.message);
+      }
+    }
+
     const [indices] = await db.query(`
       SELECT DISTINCT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS
       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'certificados'
