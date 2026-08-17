@@ -42,7 +42,7 @@ export async function emitirCertificado(processoId: number) {
     // Trava a linha do processo até o fim da transação — qualquer outra
     // chamada concorrente pra este mesmo processo fica bloqueada aqui até
     // esta terminar (commit ou rollback), nunca rodando em paralelo.
-    const [processos] = await conn.execute(
+    const [processos] = await conn.query(
       `SELECT cp.*, u.full_name as candidato_nome, u.email as candidato_email,
               ct.id as cert_type_id, ct.nome as cert_nome, ct.slug as cert_slug, ct.validade_anos
        FROM candidato_processos cp
@@ -57,7 +57,7 @@ export async function emitirCertificado(processoId: number) {
     // Idempotência real: com a linha travada, essa checagem é segura contra
     // corrida — não existe janela onde duas transações passem por aqui ao
     // mesmo tempo pro mesmo processo.
-    const [existente] = await conn.execute(
+    const [existente] = await conn.query(
       `SELECT * FROM certificados WHERE processo_id = ? AND status = 'ativo'`,
       [processoId]
     ) as any;
@@ -78,7 +78,7 @@ export async function emitirCertificado(processoId: number) {
     }
 
     // Membros do comitê responsáveis por esta certificação — assinam o certificado
-    const [assinantes] = await conn.execute(
+    const [assinantes] = await conn.query(
       `SELECT cm.nome, cm.cargo, cm.assinatura_url, cc.papel
        FROM certificacao_comite cc
        JOIN comite_membros cm ON cm.id = cc.comite_membro_id
@@ -111,7 +111,7 @@ export async function emitirCertificado(processoId: number) {
     // edital e validade calculada ficam gravados como estavam NESTE
     // momento. Se o comitê ou o edital mudar depois, este certificado já
     // emitido não é afetado retroativamente.
-    await conn.execute(
+    await conn.query(
       `INSERT INTO certificados
         (codigo, processo_id, user_id, certification_type_id, candidato_nome, certificacao_nome,
          emitido_em, validade_ate, edital_versao, caminho_pdf, assinantes_json)
@@ -121,7 +121,7 @@ export async function emitirCertificado(processoId: number) {
        JSON.stringify(assinantes.map((a: any) => ({ nome: a.nome, cargo: a.cargo, papel: a.papel })))]
     );
 
-    await conn.execute(`UPDATE candidato_processos SET status_geral = 'concluido', updated_at = NOW() WHERE id = ?`, [processoId]);
+    await conn.query(`UPDATE candidato_processos SET status_geral = 'concluido', updated_at = NOW() WHERE id = ?`, [processoId]);
 
     await conn.commit();
 
@@ -153,7 +153,7 @@ async function gerarCodigoUnicoNaTransacao(conn: any): Promise<string> {
   for (let tentativa = 0; tentativa < 10; tentativa++) {
     const sufixo = crypto.randomBytes(6).toString("hex").toUpperCase();
     const codigo = `ANEFAC-${sufixo}`;
-    const [existe] = await conn.execute(`SELECT id FROM certificados WHERE codigo = ?`, [codigo]) as any;
+    const [existe] = await conn.query(`SELECT id FROM certificados WHERE codigo = ?`, [codigo]) as any;
     if (!existe.length) return codigo;
   }
   throw new Error("Não foi possível gerar um código único para o certificado");
