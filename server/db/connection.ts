@@ -904,6 +904,32 @@ export async function runCertificadosMigration() {
     console.warn("⚠️ Erro ao criar tabela certificados:", (err as any)?.message);
   }
 
+  // A coluna "status" já existia na tabela legada, mas com ENUM/default
+  // diferentes (ex: 'emitido' em vez de 'ativo') — isso é MAIS perigoso que
+  // uma coluna faltando, porque o INSERT não falha, só grava o valor
+  // errado silenciosamente (foi exatamente o bug pego pelo autoteste: os
+  // certificados eram criados com status='emitido', e toda consulta
+  // filtrando por status='ativo' simplesmente não os encontrava). Por isso
+  // esta, diferente das outras, é forçada via MODIFY sempre, não só
+  // quando "falta".
+  try {
+    const [colStatus] = await db.query(`
+      SELECT COLUMN_TYPE, COLUMN_DEFAULT FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'certificados' AND COLUMN_NAME = 'status'
+    `) as any;
+    const definicaoAtual = colStatus[0]?.COLUMN_TYPE || "";
+    const defaultAtual = colStatus[0]?.COLUMN_DEFAULT || "";
+    if (definicaoAtual !== "enum('ativo','revogado')" || defaultAtual !== "ativo") {
+      await db.query(`
+        ALTER TABLE certificados
+        MODIFY COLUMN status ENUM('ativo','revogado') NOT NULL DEFAULT 'ativo'
+      `);
+      console.log(`✅ ENUM certificados.status normalizado para ('ativo','revogado') — era "${definicaoAtual}" default "${defaultAtual}"`);
+    }
+  } catch (err) {
+    console.warn("⚠️ Erro ao normalizar ENUM certificados.status:", (err as any)?.message);
+  }
+
   // Verifica TODAS as colunas da tabela individualmente — não só as que
   // foram adicionadas depois via ALTER, mas também as que já estavam na
   // CREATE TABLE original. Isso protege contra qualquer divergência entre

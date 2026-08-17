@@ -44,6 +44,7 @@ export async function runCertificadoSelfTest(port: number | string) {
       }
       const [orfaosCerts] = await db.query(`SELECT id FROM certification_types WHERE slug LIKE 'selftest-cert-%'`) as any;
       for (const c of orfaosCerts) {
+        await db.query(`DELETE FROM certificados WHERE certification_type_id = ?`, [c.id]);
         await db.query(`DELETE FROM certificacao_comite WHERE certification_type_id = ?`, [c.id]);
         await db.query(`DELETE FROM certification_types WHERE id = ?`, [c.id]);
       }

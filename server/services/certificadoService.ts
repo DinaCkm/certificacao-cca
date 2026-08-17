@@ -120,8 +120,8 @@ export async function emitirCertificado(processoId: number) {
       await conn.query(
         `INSERT INTO certificados
           (codigo, processo_id, user_id, certification_type_id, candidato_nome, certificacao_nome,
-           emitido_em, validade_ate, edital_versao, caminho_pdf, assinantes_json)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+           emitido_em, validade_ate, edital_versao, status, caminho_pdf, assinantes_json)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ativo', ?, ?)`,
         [codigo, processoId, processo.user_id, processo.cert_type_id, processo.candidato_nome, processo.cert_nome,
          emitidoEm, validadeAte, processo.edital_versao ?? null, caminhoPdf,
          JSON.stringify(assinantes.map((a: any) => ({ nome: a.nome, cargo: a.cargo, papel: a.papel })))]
