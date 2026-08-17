@@ -916,6 +916,7 @@ export async function runCertificadosMigration() {
     ["certification_type_id", "INT NOT NULL"],
     ["candidato_nome", "VARCHAR(255) NULL"],
     ["certificacao_nome", "VARCHAR(255) NULL"],
+    ["emitido_em", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"],
     ["validade_ate", "DATE NULL"],
     ["edital_versao", "INT NULL"],
     ["status", "ENUM('ativo','revogado') NOT NULL DEFAULT 'ativo'"],
@@ -924,6 +925,7 @@ export async function runCertificadosMigration() {
     ["motivo_revogacao", "TEXT NULL"],
     ["caminho_pdf", "VARCHAR(500) NULL"],
     ["assinantes_json", "JSON NULL"],
+    ["criado_em", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"],
   ];
   for (const [coluna, tipo] of colunasCertificados) {
     try {
