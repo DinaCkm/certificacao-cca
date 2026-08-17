@@ -23,8 +23,12 @@ export async function criarMembroComite(dados: {
 }
 
 export async function editarMembroComite(id: number, dados: {
-  nome?: string; cargo?: string; miniCurriculo?: string; fotoUrl?: string; linkedin?: string; userId?: number | null; ativo?: boolean;
+  nome?: string; cargo?: string; miniCurriculo?: string; fotoUrl?: string; linkedin?: string; userId?: number | null; ativo?: boolean; assinaturaUrl?: string;
 }) {
+  if (dados.assinaturaUrl !== undefined) {
+    await db.execute(`UPDATE comite_membros SET assinatura_url = ? WHERE id = ?`, [dados.assinaturaUrl, id]);
+    return;
+  }
   await db.execute(
     `UPDATE comite_membros SET
        nome = COALESCE(?, nome), cargo = ?, mini_curriculo = ?, foto_url = ?, linkedin = ?,

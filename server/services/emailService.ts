@@ -261,6 +261,31 @@ export async function enviarConfirmacaoPagamento(
 }
 
 /**
+ * Certificado emitido — enviado assim que o certificado real (PDF + QR Code)
+ * é gerado, com link direto pra área do aluno pra baixar/consultar
+ */
+export async function enviarCertificadoEmitido(
+  candidatoEmail: string,
+  candidatoNome: string,
+  certNome: string
+) {
+  const subject = `🎉 Seu certificado foi emitido — ${certNome}`;
+
+  const html = baseTemplate(`
+    <p>Parabéns, <strong>${candidatoNome}</strong>!</p>
+
+    <p>Seu certificado da <strong>${certNome}</strong> foi emitido com sucesso. Ele já está disponível
+    pra download na sua área do aluno, junto com o QR Code de validação pública.</p>
+
+    <a href="${APP_URL}/novo-fluxo/emissao-certificado" class="btn">
+      Acessar meu certificado →
+    </a>
+  `);
+
+  return sendEmail(candidatoEmail, subject, html);
+}
+
+/**
  * Convite para agendar entrevista — enviado ao candidato assim que os
  * documentos são aprovados no Caminho A (sem prova, direto pra entrevista)
  */

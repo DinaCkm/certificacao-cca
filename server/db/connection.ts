@@ -31,6 +31,7 @@ export async function testConnection() {
     await runRelatorioProvaMenuMigration();
     await runAvaliadoresCertificacaoMigration();
     await runEditalComiteMigration();
+    await runCertificadosMigration();
     await runAssinaturaCondutaMigration();
     await runMagicLinkMigration();
   } catch (err) {
@@ -140,21 +141,43 @@ async function runMigrations() {
     }
     console.log("✅ Permissões de menu padrão verificadas");
 
-    // Garante que status_geral aceita todos os valores necessários
+    // Garante que status_geral aceita todos os valores necessários — só
+    // roda o ALTER se o ENUM atual realmente não tiver todos os valores
+    // (antes rodava incondicionalmente em TODO boot, mascarado por
+    // try/catch; ALTER TABLE MODIFY em ENUM pode reconstruir a tabela
+    // dependendo da versão do MySQL, então rodar sem necessidade é um
+    // risco desnecessário).
     try {
-      // Modifica o ENUM para incluir todos os valores
-      await db.execute(`
-        ALTER TABLE candidato_processos
-        MODIFY COLUMN status_geral ENUM(
-          'selecao','cadastro','pagamento1','upload','validacao',
-          'agendamento','entrevista','prova','pagamento2','emissao',
-          'concluido','encerrado'
-        ) NOT NULL DEFAULT 'selecao'
-      `);
-      console.log("✅ ENUM status_geral atualizado");
+      const valoresNecessarios = [
+        "selecao", "cadastro", "pagamento1", "upload", "validacao",
+        "agendamento", "entrevista", "prova", "pagamento2", "emissao",
+        "concluido", "encerrado",
+      ];
+      const [colInfo] = await db.execute(`
+        SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'candidato_processos' AND COLUMN_NAME = 'status_geral'
+      `) as any;
+
+      const tipoAtual: string = colInfo[0]?.COLUMN_TYPE || "";
+      const regexValor = /'([^']+)'/g;
+      const valoresAtuais: string[] = [];
+      let m: RegExpExecArray | null;
+      while ((m = regexValor.exec(tipoAtual)) !== null) valoresAtuais.push(m[1]);
+      const faltando = valoresNecessarios.filter((v) => !valoresAtuais.includes(v));
+
+      if (faltando.length > 0) {
+        await db.execute(`
+          ALTER TABLE candidato_processos
+          MODIFY COLUMN status_geral ENUM(
+            'selecao','cadastro','pagamento1','upload','validacao',
+            'agendamento','entrevista','prova','pagamento2','emissao',
+            'concluido','encerrado'
+          ) NOT NULL DEFAULT 'selecao'
+        `);
+        console.log(`✅ ENUM status_geral atualizado (adicionados: ${faltando.join(", ")})`);
+      }
     } catch (enumErr) {
-      // Ignora erro se o ENUM já está correto
-      console.warn("⚠️ ALTER TABLE ENUM (pode já estar correto):", (enumErr as any)?.message);
+      console.warn("⚠️ Erro ao verificar/atualizar ENUM status_geral:", (enumErr as any)?.message);
     }
   } catch (err) {
     console.error("⚠️ Erro na migração:", err);
@@ -837,6 +860,87 @@ export async function runEditalComiteMigration() {
     }
   } catch (err) {
     console.warn("⚠️ Erro na migração de edital/comitê:", err);
+  }
+}
+
+// ─── Emissão real de certificado (PDF, QR Code, validação pública) ───────────
+export async function runCertificadosMigration() {
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS certificados (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        codigo VARCHAR(24) NOT NULL UNIQUE,
+        processo_id INT NOT NULL,
+        user_id INT NOT NULL,
+        certification_type_id INT NOT NULL,
+        candidato_nome VARCHAR(255) NOT NULL,
+        certificacao_nome VARCHAR(255) NOT NULL,
+        emitido_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        validade_ate DATE NULL,
+        edital_versao INT NULL,
+        status ENUM('ativo','revogado') NOT NULL DEFAULT 'ativo',
+        revogado_em TIMESTAMP NULL,
+        revogado_por INT NULL,
+        motivo_revogacao TEXT NULL,
+        caminho_pdf VARCHAR(500) NULL,
+        assinantes_json JSON NULL,
+        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_processo (processo_id),
+        INDEX idx_codigo (codigo),
+        INDEX idx_user (user_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    `);
+    console.log("✅ Tabela certificados verificada/criada");
+
+    // Coluna edital_versao pode não existir se a tabela já tiver sido criada
+    // numa versão anterior desta migração — checagem via INFORMATION_SCHEMA
+    // antes do ALTER, seguindo o padrão do projeto.
+    const [colsCertificados] = await db.execute(`
+      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'certificados'
+    `) as any;
+    const existentesCertificados: string[] = colsCertificados.map((c: any) => c.COLUMN_NAME.toLowerCase());
+    if (!existentesCertificados.includes("edital_versao")) {
+      await db.execute(`ALTER TABLE certificados ADD COLUMN edital_versao INT NULL AFTER validade_ate`);
+      console.log("✅ Coluna certificados.edital_versao criada");
+    }
+
+    // Validade configurável por certificação (antes era texto fixo "3 anos"
+    // direto na tela, sem nenhuma configuração real por trás)
+    const [colsCert] = await db.execute(`
+      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'certification_types'
+    `) as any;
+    const existentesCert: string[] = colsCert.map((c: any) => c.COLUMN_NAME.toLowerCase());
+    if (!existentesCert.includes("validade_anos")) {
+      await db.execute(`ALTER TABLE certification_types ADD COLUMN validade_anos INT NULL`);
+      console.log("✅ Coluna certification_types.validade_anos criada");
+    }
+
+    // Assinatura (imagem) de cada membro do comitê, pra embutir no PDF
+    const [colsComite] = await db.execute(`
+      SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'comite_membros'
+    `) as any;
+    const existentesComite: string[] = colsComite.map((c: any) => c.COLUMN_NAME.toLowerCase());
+    if (!existentesComite.includes("assinatura_url")) {
+      await db.execute(`ALTER TABLE comite_membros ADD COLUMN assinatura_url VARCHAR(500) NULL`);
+      console.log("✅ Coluna comite_membros.assinatura_url criada");
+    }
+
+    // Item de menu "certificados" (emissão/consulta administrativa)
+    const [rolesComMenu] = await db.execute(
+      `SELECT code, menu_permissoes FROM roles WHERE code IN ('administrador','gestor_n1','gestor_n2')`
+    ) as any;
+    for (const r of rolesComMenu) {
+      const itens: string[] = Array.isArray(r.menu_permissoes) ? r.menu_permissoes : [];
+      if (!itens.includes("certificados")) {
+        itens.push("certificados");
+        await db.execute(`UPDATE roles SET menu_permissoes = ? WHERE code = ?`, [JSON.stringify(itens), r.code]);
+      }
+    }
+  } catch (err) {
+    console.warn("⚠️ Erro na migração de certificados:", err);
   }
 }
 

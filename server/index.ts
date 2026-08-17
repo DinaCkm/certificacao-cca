@@ -13,8 +13,10 @@ import { institucionalRouter, institucionalAdminRouter } from "./routes/instituc
 import { codigoCondutaRouter, codigoCondutaAdminRouter } from "./routes/codigoConduta.js";
 import { magicLinkRouter } from "./routes/magicLink.js";
 import { editalPublicoRouter } from "./routes/editalPublico.js";
+import { certificadoPublicoRouter } from "./routes/certificadoPublico.js";
 import { cursosPublicoRouter } from "./routes/cursosPublico.js";
 import { certificacoesPublicoRouter } from "./routes/certificacoesPublico.js";
+import { runCertificadoSelfTest } from "./selfTestCertificado.js";
 import fs from "fs";
 // multer loaded dynamically
 
@@ -189,12 +191,43 @@ async function startServer() {
   });
 
   // GET /api/upload/documento/:filename — serve o arquivo
+  // Corrigido: antes só validava que o token era válido, sem checar se quem
+  // pedia tinha qualquer relação com o documento — qualquer pessoa
+  // autenticada que soubesse (ou adivinhasse) um nome de arquivo conseguia
+  // baixar o documento de QUALQUER outro candidato. O nome do arquivo
+  // inclusive embute o user_id (Date.now()_userId_campo.ext), o que tornava
+  // isso ainda mais previsível.
   app.get("/api/upload/documento/:filename", async (req: any, res) => {
     try {
       const { verifyToken } = await import("./services/authService.js");
       const token = req.headers.authorization?.replace("Bearer ", "") ||
                     req.query.token as string;
-      verifyToken(token);
+      const decoded = verifyToken(token);
+
+      const { db } = await import("./db/connection.js");
+      const [docs] = await db.execute(
+        `SELECT dc.user_id, cp.certification_type_id
+         FROM documentos_candidato dc
+         LEFT JOIN candidato_processos cp ON cp.id = dc.processo_id
+         WHERE dc.caminho_arquivo = ?`,
+        [req.params.filename]
+      ) as any;
+
+      if (!docs.length) return res.status(404).json({ error: "Arquivo não encontrado" });
+      const doc = docs[0];
+
+      const rolesComAcessoTotal = ["administrador", "gestor_n1", "gestor_n2"];
+      const isDono = doc.user_id === decoded.userId;
+      const isAdmin = rolesComAcessoTotal.includes(decoded.role);
+      let isAvaliadorDesignado = false;
+      if (!isDono && !isAdmin && decoded.role === "avaliador" && doc.certification_type_id) {
+        const { avaliadorDesignado } = await import("./services/avaliadorCertificacaoService.js");
+        isAvaliadorDesignado = await avaliadorDesignado(decoded.userId, doc.certification_type_id);
+      }
+
+      if (!isDono && !isAdmin && !isAvaliadorDesignado) {
+        return res.status(403).json({ error: "Você não tem permissão para acessar este documento" });
+      }
 
       const filepath = path.join(uploadDir, req.params.filename);
       if (!fs.existsSync(filepath)) {
@@ -248,6 +281,7 @@ async function startServer() {
   app.use("/api/cursos", cursosPublicoRouter);
   app.use("/api/certificacoes", certificacoesPublicoRouter);
   app.use("/api/certificacoes", editalPublicoRouter);
+  app.use("/api/validar-certificado", certificadoPublicoRouter);
 
   // Health check
   app.get("/api/health", (_req, res) => {
@@ -279,6 +313,7 @@ async function startServer() {
   server.listen(port, () => {
     console.log(`🚀 Servidor rodando em http://localhost:${port}/`);
     console.log(`📡 API disponível em http://localhost:${port}/api/`);
+    runCertificadoSelfTest(port).catch((err) => console.error("Erro no autoteste:", err));
   });
 }
 
