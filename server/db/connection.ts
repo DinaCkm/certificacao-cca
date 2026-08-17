@@ -865,15 +865,17 @@ export async function runEditalComiteMigration() {
 
 // ─── Emissão real de certificado (PDF, QR Code, validação pública) ───────────
 export async function runCertificadosMigration() {
-  // Cada etapa roda no seu próprio try/catch — uma falha isolada (ex: coluna
-  // que já existia numa versão anterior da tabela, criada num teste
-  // anterior) não pode mais travar as demais etapas independentes. Foi
-  // exatamente isso que aconteceu em staging: um erro no ALTER de
-  // certificados.edital_versao abortou o restante da função inteira,
-  // deixando certification_types.validade_anos e
-  // comite_membros.assinatura_url sem serem criados também.
+  // NOTA IMPORTANTE: esta migração usa .query() em vez de .execute() em
+  // TODA consulta. Motivo: em staging, consultas via .execute() (prepared
+  // statement) rodando logo após um ALTER TABLE no mesmo boot retornavam
+  // "Unknown column" para colunas que o próprio log da migração, linhas
+  // acima, confirmava terem acabado de ser criadas — e pior, até colunas
+  // que nunca foram tocadas por ALTER (estavam na CREATE TABLE original)
+  // apresentaram o mesmo sintoma em deploys seguintes. .query() não usa
+  // prepared statement do lado do servidor MySQL, evitando esse problema
+  // por completo. Mesma classe de bug já vista antes com LIMIT ? e IN (?).
   try {
-    await db.execute(`
+    await db.query(`
       CREATE TABLE IF NOT EXISTS certificados (
         id INT AUTO_INCREMENT PRIMARY KEY,
         codigo VARCHAR(24) NOT NULL UNIQUE,
@@ -902,23 +904,36 @@ export async function runCertificadosMigration() {
     console.warn("⚠️ Erro ao criar tabela certificados:", (err as any)?.message);
   }
 
-  // Colunas que podem faltar se a tabela já existia de uma versão anterior
-  // desta migração (ex: testes anteriores nesta mesma sessão de trabalho).
-  // Cada uma checada e adicionada de forma independente, sem AFTER (posição
-  // não importa pra funcionalidade, e remove uma dependência frágil).
+  // Verifica TODAS as colunas da tabela individualmente — não só as que
+  // foram adicionadas depois via ALTER, mas também as que já estavam na
+  // CREATE TABLE original. Isso protege contra qualquer divergência entre
+  // o que o código espera e o que a tabela realmente tem, seja qual for a
+  // causa (schema antigo, cache, execução parcial anterior etc.).
   const colunasCertificados: [string, string][] = [
+    ["codigo", "VARCHAR(24) NOT NULL"],
+    ["processo_id", "INT NOT NULL"],
+    ["user_id", "INT NOT NULL"],
+    ["certification_type_id", "INT NOT NULL"],
+    ["candidato_nome", "VARCHAR(255) NULL"],
+    ["certificacao_nome", "VARCHAR(255) NULL"],
     ["validade_ate", "DATE NULL"],
     ["edital_versao", "INT NULL"],
+    ["status", "ENUM('ativo','revogado') NOT NULL DEFAULT 'ativo'"],
+    ["revogado_em", "TIMESTAMP NULL"],
+    ["revogado_por", "INT NULL"],
+    ["motivo_revogacao", "TEXT NULL"],
+    ["caminho_pdf", "VARCHAR(500) NULL"],
+    ["assinantes_json", "JSON NULL"],
   ];
   for (const [coluna, tipo] of colunasCertificados) {
     try {
-      const [cols] = await db.execute(`
+      const [cols] = await db.query(`
         SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'certificados'
       `) as any;
       const existentes: string[] = cols.map((c: any) => c.COLUMN_NAME.toLowerCase());
       if (!existentes.includes(coluna)) {
-        await db.execute(`ALTER TABLE certificados ADD COLUMN ${coluna} ${tipo}`);
+        await db.query(`ALTER TABLE certificados ADD COLUMN ${coluna} ${tipo}`);
         console.log(`✅ Coluna certificados.${coluna} criada`);
       }
     } catch (err) {
@@ -929,13 +944,13 @@ export async function runCertificadosMigration() {
   // Validade configurável por certificação (antes era texto fixo "3 anos"
   // direto na tela, sem nenhuma configuração real por trás)
   try {
-    const [colsCert] = await db.execute(`
+    const [colsCert] = await db.query(`
       SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'certification_types'
     `) as any;
     const existentesCert: string[] = colsCert.map((c: any) => c.COLUMN_NAME.toLowerCase());
     if (!existentesCert.includes("validade_anos")) {
-      await db.execute(`ALTER TABLE certification_types ADD COLUMN validade_anos INT NULL`);
+      await db.query(`ALTER TABLE certification_types ADD COLUMN validade_anos INT NULL`);
       console.log("✅ Coluna certification_types.validade_anos criada");
     }
   } catch (err) {
@@ -944,13 +959,13 @@ export async function runCertificadosMigration() {
 
   // Assinatura (imagem) de cada membro do comitê, pra embutir no PDF
   try {
-    const [colsComite] = await db.execute(`
+    const [colsComite] = await db.query(`
       SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'comite_membros'
     `) as any;
     const existentesComite: string[] = colsComite.map((c: any) => c.COLUMN_NAME.toLowerCase());
     if (!existentesComite.includes("assinatura_url")) {
-      await db.execute(`ALTER TABLE comite_membros ADD COLUMN assinatura_url VARCHAR(500) NULL`);
+      await db.query(`ALTER TABLE comite_membros ADD COLUMN assinatura_url VARCHAR(500) NULL`);
       console.log("✅ Coluna comite_membros.assinatura_url criada");
     }
   } catch (err) {
@@ -959,14 +974,14 @@ export async function runCertificadosMigration() {
 
   // Item de menu "certificados" (emissão/consulta administrativa)
   try {
-    const [rolesComMenu] = await db.execute(
+    const [rolesComMenu] = await db.query(
       `SELECT code, menu_permissoes FROM roles WHERE code IN ('administrador','gestor_n1','gestor_n2')`
     ) as any;
     for (const r of rolesComMenu) {
       const itens: string[] = Array.isArray(r.menu_permissoes) ? r.menu_permissoes : [];
       if (!itens.includes("certificados")) {
         itens.push("certificados");
-        await db.execute(`UPDATE roles SET menu_permissoes = ? WHERE code = ?`, [JSON.stringify(itens), r.code]);
+        await db.query(`UPDATE roles SET menu_permissoes = ? WHERE code = ?`, [JSON.stringify(itens), r.code]);
       }
     }
   } catch (err) {
